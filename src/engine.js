@@ -59,7 +59,7 @@ function nearest(){
   const m=targetOf(step().target);if(m){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:"main",label:step().action||(m.kind==="npc"?`找${CHARS[m.id].name}`:`到${m.name}`)});}
   for(const sd of activeSides()){const t=targetOf(sd.target);if(t){const ds=d(t.x,t.z);if(ds<1.9)c.push({dist:ds,type:"side",sd,label:sd.action||`找${t.name}`});}}
   for(const it of ITEMS){if(itemMarks[it.id]&&!G.items.includes(it.id)){const di=d(it.pos[0],it.pos[1]);if(di<1.3)c.push({dist:di-.3,type:"item",it,label:"撿起來"});}}
-  for(const id of chatTargets()){const n=npcs[id],dc=d(n.position.x,n.position.z);if(dc<1.5)c.push({dist:dc+.8,type:"chat",id,label:`跟${CHARS[id].name}聊聊`});}
+  for(const id of chatTargets()){const n=npcs[id],dc=d(n.position.x,n.position.z);if(dc<1.5)c.push({dist:dc+.8,type:"chat",id,label:`聊聊・${CHARS[id].name}`});}
   if(c.length){c.sort((a,b)=>a.dist-b.dist);return c[0];}
   for(const inf of INFO){if(d(inf.pos[0],inf.pos[1])<1.6)return{type:"info",inf,label:"看說明"};}
   return null;
@@ -362,7 +362,7 @@ function tickTips(){if(!G||mode!=="walk")return;
 const _pv=new THREE.Vector3();
 function tickEdge(){const a=$("edgeArrow");if(!G||mode!=="walk"){a.hidden=true;return;}const m=targetOf(step()?.target);if(!m){a.hidden=true;return;}
   _pv.set(m.x,1,m.z).project(camera);const W=innerWidth,H=innerHeight;let sx=(_pv.x+1)/2*W,sy=(1-_pv.y)/2*H;const behind=_pv.z>1;
-  const top=document.querySelector(".hud").offsetHeight+90,l=34,r=W-34;let bot=H-40;
+  const nx=$("next"),nb=nx&&!nx.hidden?nx.getBoundingClientRect().bottom:0,top=Math.max(document.querySelector(".hud").offsetHeight+90,nb+34),l=34,r=W-34;let bot=H-40;
   for(const sel of [".dpad","#actBtn",".camreset"]){const e=document.querySelector(sel);if(e&&e.offsetParent){const b=e.getBoundingClientRect();if(b.height)bot=Math.min(bot,b.top-32);}}
   if(!behind&&sx>l&&sx<r&&sy>top&&sy<bot){a.hidden=true;return;}
   const cx=W/2,cy=(top+bot)/2;let dx=sx-cx,dy=sy-cy;if(behind){dx=-dx;dy=-dy;}

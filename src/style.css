@@ -198,11 +198,12 @@ dl.list dd{margin:0;color:var(--muted);font-size:.9rem}
 .msg{position:fixed;left:16px;z-index:6;max-width:min(320px,calc(100% - 32px));background:var(--glass);border:1px solid var(--rule);border-left:4px solid var(--blue);border-radius:4px;padding:6px 12px;backdrop-filter:blur(6px);box-shadow:0 4px 16px rgba(0,0,0,.15);animation:fade .3s ease}
 .msg small{display:block;font-size:.72rem;color:var(--muted)}
 .msg div{font-size:.92rem}
-.nexthint{pointer-events:none;font-size:.78rem;color:var(--muted);text-align:center;margin-top:4px;padding:0 8px;text-shadow:0 1px 0 var(--board)}
+.nexthint{pointer-events:none;font-size:.8rem;line-height:1.5;color:var(--ink);text-align:center;margin:6px auto 0;padding:6px 10px;max-width:30em;background:var(--glass);border:1px solid var(--rule);border-radius:6px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 @media (prefers-reduced-motion:reduce){.edge{animation:none}}
 
 .camreset{pointer-events:auto;align-self:flex-end;width:44px;height:44px;border-radius:50%;border:1px solid var(--rule);background:var(--glass);font-size:1.2rem;margin-left:auto;margin-right:8px}
 
+.act{white-space:nowrap;max-width:62vw;overflow:hidden;text-overflow:ellipsis}
 .act.chat{background:var(--surface);color:var(--ink);border:2px solid var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.18)}
 .clocksub .ot{display:inline-block;background:#7c2d12;color:#fff;border-radius:3px;padding:0 5px;margin-right:4px;font-weight:700}
 .lock{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}

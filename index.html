@@ -207,11 +207,12 @@ dl.list dd{margin:0;color:var(--muted);font-size:.9rem}
 .msg{position:fixed;left:16px;z-index:6;max-width:min(320px,calc(100% - 32px));background:var(--glass);border:1px solid var(--rule);border-left:4px solid var(--blue);border-radius:4px;padding:6px 12px;backdrop-filter:blur(6px);box-shadow:0 4px 16px rgba(0,0,0,.15);animation:fade .3s ease}
 .msg small{display:block;font-size:.72rem;color:var(--muted)}
 .msg div{font-size:.92rem}
-.nexthint{pointer-events:none;font-size:.78rem;color:var(--muted);text-align:center;margin-top:4px;padding:0 8px;text-shadow:0 1px 0 var(--board)}
+.nexthint{pointer-events:none;font-size:.8rem;line-height:1.5;color:var(--ink);text-align:center;margin:6px auto 0;padding:6px 10px;max-width:30em;background:var(--glass);border:1px solid var(--rule);border-radius:6px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 @media (prefers-reduced-motion:reduce){.edge{animation:none}}
 
 .camreset{pointer-events:auto;align-self:flex-end;width:44px;height:44px;border-radius:50%;border:1px solid var(--rule);background:var(--glass);font-size:1.2rem;margin-left:auto;margin-right:8px}
 
+.act{white-space:nowrap;max-width:62vw;overflow:hidden;text-overflow:ellipsis}
 .act.chat{background:var(--surface);color:var(--ink);border:2px solid var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.18)}
 .clocksub .ot{display:inline-block;background:#7c2d12;color:#fff;border-radius:3px;padding:0 5px;margin-right:4px;font-weight:700}
 .lock{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
@@ -1679,7 +1680,7 @@ function nearest(){
   const m=targetOf(step().target);if(m){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:"main",label:step().action||(m.kind==="npc"?`找${CHARS[m.id].name}`:`到${m.name}`)});}
   for(const sd of activeSides()){const t=targetOf(sd.target);if(t){const ds=d(t.x,t.z);if(ds<1.9)c.push({dist:ds,type:"side",sd,label:sd.action||`找${t.name}`});}}
   for(const it of ITEMS){if(itemMarks[it.id]&&!G.items.includes(it.id)){const di=d(it.pos[0],it.pos[1]);if(di<1.3)c.push({dist:di-.3,type:"item",it,label:"撿起來"});}}
-  for(const id of chatTargets()){const n=npcs[id],dc=d(n.position.x,n.position.z);if(dc<1.5)c.push({dist:dc+.8,type:"chat",id,label:`跟${CHARS[id].name}聊聊`});}
+  for(const id of chatTargets()){const n=npcs[id],dc=d(n.position.x,n.position.z);if(dc<1.5)c.push({dist:dc+.8,type:"chat",id,label:`聊聊・${CHARS[id].name}`});}
   if(c.length){c.sort((a,b)=>a.dist-b.dist);return c[0];}
   for(const inf of INFO){if(d(inf.pos[0],inf.pos[1])<1.6)return{type:"info",inf,label:"看說明"};}
   return null;
@@ -1982,7 +1983,7 @@ function tickTips(){if(!G||mode!=="walk")return;
 const _pv=new THREE.Vector3();
 function tickEdge(){const a=$("edgeArrow");if(!G||mode!=="walk"){a.hidden=true;return;}const m=targetOf(step()?.target);if(!m){a.hidden=true;return;}
   _pv.set(m.x,1,m.z).project(camera);const W=innerWidth,H=innerHeight;let sx=(_pv.x+1)/2*W,sy=(1-_pv.y)/2*H;const behind=_pv.z>1;
-  const top=document.querySelector(".hud").offsetHeight+90,l=34,r=W-34;let bot=H-40;
+  const nx=$("next"),nb=nx&&!nx.hidden?nx.getBoundingClientRect().bottom:0,top=Math.max(document.querySelector(".hud").offsetHeight+90,nb+34),l=34,r=W-34;let bot=H-40;
   for(const sel of [".dpad","#actBtn",".camreset"]){const e=document.querySelector(sel);if(e&&e.offsetParent){const b=e.getBoundingClientRect();if(b.height)bot=Math.min(bot,b.top-32);}}
   if(!behind&&sx>l&&sx<r&&sy>top&&sy<bot){a.hidden=true;return;}
   const cx=W/2,cy=(top+bot)/2;let dx=sx-cx,dy=sy-cy;if(behind){dx=-dx;dy=-dy;}
@@ -2028,6 +2029,8 @@ function tick(){
 /* ================= 啟動 ================= */
 try{buildWorld();buildNight();const L=LINES.teacher;for(const id in L.npcs)if(CHARS[id]&&CHARS[id].body!==undefined)setNPC(id,typeof L.npcs[id]==="function"?null:L.npcs[id],true);showTitle();tick();}
 catch(err){const c=$("cover");c.hidden=false;c.innerHTML=`<div class="card"><h2>3D 場景載入失敗</h2><p>你的瀏覽器可能不支援 WebGL，或 3D 函式庫沒有載入。請換一個瀏覽器，或重新整理頁面再試一次。</p></div>`;console.error(err);}
+/* HUD 高度一變，就把「下一步」卡片跟著往下推 */
+try{const h=document.querySelector(".hud"),fit=()=>{$("next").style.top=h.offsetHeight+8+"px";};if(window.ResizeObserver)new ResizeObserver(fit).observe(h);addEventListener("resize",fit);}catch(e){}
 
 })();
 </script>
