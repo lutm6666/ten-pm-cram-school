@@ -8,6 +8,7 @@ LINES.yun={
  stats:{hp:["體力",55],pat:["耐心",60],par:["家長",50],ord:["秩序",50]},hidden:{trial:50,ret:72,missed:0,cleared:0},
  late:{fx:{par:-4,ord:-3},text:"等你的人臉色不太好看。"},
  coda:"櫃台的電話明天還會響。你記得的是每個打來的人叫什麼名字。",
+ msgs:[["17:44","何主任","試聽家長到了跟我說一聲。"],["18:42","妹妹","今天幾點回家？毛線又把衛生紙抓爛了"],["19:34","阿宏","自習室冷氣好冷，遙控器在你那嗎？"],["20:48","櫃台群組","許老師：林媽媽的電話謝謝你先擋著。"],["21:36","媽","菜幫你留在電鍋裡。"]],
  start:[3.75,10.2],dead:G=>G.s.hp<=0||G.s.pat<=0,
  me:G=>({name:"你",title:`${G.pName}・櫃台班導`,abbr:"班",color:"#1f9c86"}),
  npcs:{boss:P.bossOffice,teacher:PY.teacherLounge,pinyu:P.pinyuSeat,zhe:P.zheSeat,hong:P.hongStudy,bo:PY.boStudy,parent:null,parent2:null,yun:null,chenba:null},

@@ -6,6 +6,7 @@ LINES.boss={
  stats:{calm:["冷靜",60],sales:["業績",50],rep:["口碑",50],morale:["士氣",50]},hidden:{trial:50,ret:72},
  late:{fx:{calm:-4,rep:-2},text:"大家等主任等到有點尷尬。"},
  coda:"週報上的數字是你的責任，數字後面的人也是。",
+ msgs:[["17:38","總部","各分校週報請於明天中午前上傳。"],["18:52","粉專通知","對面補習班發布了新貼文：學測衝刺 8 折最後三天！"],["19:44","小芸","主任，等一下下課可以跟你講一件事嗎？"],["20:18","老婆","女兒說要等你回家才睡。"],["21:32","總部","續班率是不是有更新？"]],
  start:[3.5,3.9],dead:G=>G.s.calm<=0,
  me:G=>({name:"你",title:`${G.pName}・補習班主任`,abbr:"主",color:"#c2457f"}),
  npcs:{yun:P.yunDesk,teacher:P.teacherLounge,pinyu:P.pinyuSeat,zhe:P.zheSeat,hong:P.hongStudy,bo:PY.boStudy,parent:null,parent2:null,boss:null,chenba:null},

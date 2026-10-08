@@ -14,6 +14,7 @@ LINES.teacher={
  stats:{hp:["體力",50],voice:["嗓子",60],stu:["學生",50],par:["家長",50]},hidden:{trial:50},
  late:{fx:{stu:-4,trial:-3},text:"台下已經開始聊天了，有人在看手錶。"},
  coda:"白板上的字明天就會被擦掉。但今天，有人聽懂了一題。",
+ msgs:[["17:32","B 班群組","小芸：講義我先印 24 份喔，剩下的等影印機。"],["18:08","媽","晚餐在電鍋裡，記得吃。"],["19:22","何主任","試聽家長剛剛在走廊說你講得很清楚👍"],["20:26","B 班群組","品妤：老師下課可以留一下問問題嗎？"],["21:28","媽","回來路上小心，下雨了。"]],
  start:[4.5,16.6],
  me:G=>({name:"你",title:`${G.tName}・高三數學`,abbr:"師",color:"#b7791f"}),
  npcs:{yun:P.yunDesk,boss:P.bossOffice,pinyu:P.pinyuHall,zhe:P.zheSeat,parent:P.parentLobby,parent2:[6,14.8,Math.PI],hong:P.hongStudy,teacher:null},
