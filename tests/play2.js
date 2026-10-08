@@ -32,6 +32,8 @@ for(const id of grab){const pos=await p.evaluate(id=>__dbg.ITEMS.find(i=>i.id===
 let guard=0;
 while(guard++<60){
   if(await vis('.report'))break;await drain();if(await vis('.report'))break;
+  if(process.env.GRAB==='all'){const ms=await p.evaluate(()=>__dbg.marks);for(const id of ms){const pos=await p.evaluate(id=>__dbg.ITEMS.find(i=>i.id===id).pos,id);
+      const ok=await walkUntil(pos[0],pos[1],`(()=>{const n=__dbg.near();return n&&n.type==='item'&&n.it.id==='${id}'})()`);console.log('  item',id,ok?'picked':'NOT REACHED');if(ok){await p.click('#actBtn');await drain();}}}
   const sides=await p.evaluate(()=>__dbg.activeSides().map(s=>[s.id,(()=>{const t=__dbg.targetOf(s.target);return[t.x,t.z]})()]));
   if(sides.length){const [id]=sides[0];let ok=false;for(let r=0;r<12&&!ok;r++){const [x,z]=await p.evaluate(id=>{const s=__dbg.activeSides().find(s=>s.id===id);const t=__dbg.targetOf(s.target);return[t.x,t.z]},id);
       await p.evaluate(([x,z])=>__dbg.go(x,z),[x,z]);for(let k=0;k<25;k++){await p.waitForTimeout(60);if(await p.evaluate(`(()=>{const n=__dbg.near();return n&&n.type==='side'&&n.sd.id==='${id}'})()`)){ok=true;break;}}}

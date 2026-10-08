@@ -5,7 +5,7 @@ const BREAK_SPOTS=[[10.4,3],[10.6,6.5],[10.3,9.5],[10.7,12.5],[7.6,15.9],[3,13.2
 const DOOR=[4.5,17.3];
 function phaseOf(){if(!G)return"pre";if(G.idx>=G.steps.length-1)return"close";const s=G.status||"";return /上課/.test(s)?"class":s==="下課"?"break":/收拾/.test(s)?"leave":"pre";}
 function setCrowd(ph,instant){
-  if(ph===crowdPhase&&!instant)return;crowdPhase=ph;
+  if(ph===crowdPhase&&!instant)return;crowdPhase=ph;if(typeof syncItems==="function")syncItems();
   const now=clockT.elapsedTime,cls=extras.filter(e=>e.kind==="class"),stu=extras.filter(e=>e.kind==="study");
   if(ph==="pre"){
     cls.forEach((e,i)=>{e.p.userData.act=null;if(!instant)return;

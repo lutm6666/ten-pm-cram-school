@@ -19,7 +19,7 @@ out=head+f'''<title>晚上十點下課 3D</title>
 <script src="{three}"></script>
 <script>
 (function(){{
-'''+"\n".join(src(f) for f in order)+("\nwindow.__dbg={resumeGame,saveGame,runMini,get G(){return G},get path(){return path},get guiding(){return guiding},get keys(){return keys},findPathFrom,get mode(){return mode},findPath,blockedAt,ITEMS,SIDES,INFO,targetOf,activeSides,go:(x,z)=>{path=findPath(x,z);return !!path},pos:()=>[player.position.x,player.position.z],near:()=>near};" if len(sys.argv)>1 else "")+'''
+'''+"\n".join(src(f) for f in order)+("\nwindow.__dbg={get marks(){return Object.keys(itemMarks)},resumeGame,saveGame,runMini,get G(){return G},get path(){return path},get guiding(){return guiding},get keys(){return keys},findPathFrom,get mode(){return mode},findPath,blockedAt,ITEMS,SIDES,INFO,targetOf,activeSides,go:(x,z)=>{path=findPath(x,z);return !!path},pos:()=>[player.position.x,player.position.z],near:()=>near};" if len(sys.argv)>1 else "")+'''
 })();
 </script>
 '''

@@ -544,7 +544,7 @@ const BREAK_SPOTS=[[10.4,3],[10.6,6.5],[10.3,9.5],[10.7,12.5],[7.6,15.9],[3,13.2
 const DOOR=[4.5,17.3];
 function phaseOf(){if(!G)return"pre";if(G.idx>=G.steps.length-1)return"close";const s=G.status||"";return /上課/.test(s)?"class":s==="下課"?"break":/收拾/.test(s)?"leave":"pre";}
 function setCrowd(ph,instant){
-  if(ph===crowdPhase&&!instant)return;crowdPhase=ph;
+  if(ph===crowdPhase&&!instant)return;crowdPhase=ph;if(typeof syncItems==="function")syncItems();
   const now=clockT.elapsedTime,cls=extras.filter(e=>e.kind==="class"),stu=extras.filter(e=>e.kind==="study");
   if(ph==="pre"){
     cls.forEach((e,i)=>{e.p.userData.act=null;if(!instant)return;
@@ -1307,30 +1307,38 @@ LINES.yun={
 
 /* ================= 撿到的東西 ================= */
 ITEMS.push(
- {id:"lozenge",icon:"🍬",name:"喉糖",rarity:"常見",pos:[6.2,7.8],where:"講師休息室・桌上",
+ {id:"lozenge",phases:["break"],lines:["teacher","yun"],icon:"🍬",name:"喉糖",rarity:"常見",pos:[6.2,7.8],where:"講師休息室・桌上",
   desc:"一整盒的喉糖，盒子上寫著「大家的」。已經被吃掉一半了。",use:"含一顆，嗓子 +10。連上兩節課的人都知道它的價值。",fx:{voice:10},hint:"休息室裡大家共用的東西"},
- {id:"bento",icon:"🍱",name:"雞腿便當",rarity:"常見",pos:[1.6,6.7],where:"講師休息室・冰箱旁",
+ {id:"bento",phases:["pre"],icon:"🍱",name:"雞腿便當",rarity:"常見",pos:[1.6,6.7],where:"講師休息室・冰箱旁",
   desc:"還是溫的雞腿便當。蓋子上貼著便利貼：「小芸的，勿動」。",use:"吃掉的話體力 +10。如果你不是小芸，她會不會發現是另一回事。",fx:{hp:10},set:{ateBento:1},hint:"冰箱旁邊，有人的晚餐"},
- {id:"battery",icon:"🔋",name:"備用電池",rarity:"少見",pos:[1.7,8.4],where:"講師休息室・置物櫃下",
+ {id:"battery",phases:["break"],lines:["teacher","yun"],icon:"🔋",name:"備用電池",rarity:"少見",pos:[1.7,8.4],where:"講師休息室・置物櫃下",
   desc:"兩顆三號電池，用橡皮筋綁在一起。不知道是誰掉的。",use:"麥克風沒電的時候，可以直接換上，不用跑回櫃台。",set:{battery:1},hint:"置物櫃附近的小東西"},
- {id:"notebook",icon:"📒",name:"家長聯絡簿",rarity:"少見",pos:[6.6,12.4],where:"大廳・櫃台旁",
+ {id:"notebook",phases:["pre","class"],lines:["teacher","yun"],icon:"📒",name:"家長聯絡簿",rarity:"少見",pos:[6.6,12.4],where:"大廳・櫃台旁",
   desc:"小芸手寫的家長通話紀錄。林媽媽那一頁寫著：「先講好消息，再講分數」。",use:"之後跟林媽媽講電話時，家長多 +5。",set:{notebook:1},hint:"櫃台旁邊的手寫紀錄"},
- {id:"form",icon:"📝",name:"填一半的報名表",rarity:"常見",pos:[1.9,13.4],where:"大廳・沙發旁",
+ {id:"form",phases:["pre"],icon:"📝",name:"填一半的報名表",rarity:"常見",pos:[1.9,13.4],where:"大廳・沙發旁",
   desc:"試聽生的報名表，家長欄填了一半就停了。筆還夾在上面。",use:"主任最想要的東西。順手收好交給櫃台，試聽印象 +5。",fx:{trial:5,ret:2},hint:"沙發旁有人填到一半"},
- {id:"glasses",lines:["teacher","yun"],icon:"👓",name:"老花眼鏡",rarity:"少見",pos:[10.5,15.4],where:"走廊・靠大廳那頭",
+ {id:"glasses",phases:["pre","class"],lines:["teacher","yun"],icon:"👓",name:"老花眼鏡",rarity:"少見",pos:[10.5,15.4],where:"走廊・靠大廳那頭",
   desc:"金色細框，鏡腳用透明膠帶纏過。整個補習班只有一個人會戴這種眼鏡。",use:"可以還給失主。",hint:"走廊上有人掉了東西"},
- {id:"earphone",icon:"🎧",name:"一隻藍牙耳機",rarity:"常見",pos:[20.2,12.3],where:"自習室・桌子底下",
+ {id:"earphone",phases:["class","break"],icon:"🎧",name:"一隻藍牙耳機",rarity:"常見",pos:[20.2,12.3],where:"自習室・桌子底下",
   desc:"只有右耳那一隻。外殼貼了一張很小的貼紙：「高一 C」。",use:"可以拿去問自習室的助教。",hint:"自習室桌子底下"},
- {id:"zhesheet",icon:"📄",name:"畫滿的計算紙",rarity:"少見",pos:[23.25,8.6],where:"B 班教室・最後一排走道",
+ {id:"zhesheet",phases:["break","leave"],lines:["teacher","boss"],icon:"📄",name:"畫滿的計算紙",rarity:"少見",pos:[23.25,8.6],where:"B 班教室・最後一排走道",
   desc:"整張紙畫滿了遊戲角色。角落寫了一題向量內積，算到一半，方向是對的。",use:"下課跟阿哲聊的時候，可以提起它。",set:{zheSheet:1},hint:"教室後排走道上的紙"},
- {id:"chalk",icon:"🖍️",name:"一截粉筆",rarity:"稀有",pos:[26.6,1.1],where:"B 班教室・角落",
+ {id:"chalk",phases:["leave","close"],icon:"🖍️",name:"一截粉筆",rarity:"稀有",pos:[26.6,1.1],where:"B 班教室・角落",
   desc:"這間教室早就換成白板了，角落卻還有一截白粉筆。",use:"沒有用處。聽說這裡以前是黑板，十年前的學生都在這裡考上大學。",hint:"不該出現在這間教室的東西"},
- {id:"oldlist",icon:"📜",name:"榜單草稿",rarity:"少見",pos:[7.6,2.3],where:"主任室・櫃子旁",
+ {id:"oldlist",phases:["pre","class"],lines:["yun","boss"],icon:"📜",name:"榜單草稿",rarity:"少見",pos:[7.6,2.3],where:"主任室・櫃子旁",
   desc:"去年榜單的手寫草稿。有一個名字被劃掉，又在旁邊寫了回去。",use:"沒有用處。看完，你會想知道那個學生後來怎麼了。",hint:"主任室裡沒丟掉的紙"},
- {id:"redpen",icon:"🖊️",name:"沒水的紅筆",rarity:"常見",pos:[21.4,3.1],where:"B 班教室・講台邊",
+ {id:"redpen",phases:["class","break"],lines:["teacher"],icon:"🖊️",name:"沒水的紅筆",rarity:"常見",pos:[21.4,3.1],where:"B 班教室・講台邊",
   desc:"筆蓋被咬得坑坑巴巴。試了三次，只畫出一條很淡的線。",use:"沒有用處。每個老師的抽屜裡都有十支。",hint:"講台邊的文具"},
- {id:"postit",icon:"🗒️",name:"自習室的便利貼",rarity:"稀有",pos:[25.6,14.8],where:"自習室・最後一張桌子",
+ {id:"postit",phases:["leave","close"],icon:"🗒️",name:"自習室的便利貼",rarity:"稀有",pos:[25.6,14.8],where:"自習室・最後一張桌子",
   desc:"貼在桌角，字很小：「如果我學測考到 12 級分，就跟她告白。」",use:"沒有用處。你把它貼回原位。",hint:"自習室角落有人留了話"}
+ ,{id:"pineapple",phases:["break"],lines:["yun"],icon:"🎁",name:"家長送的鳳梨酥",rarity:"少見",pos:[2.6,12.5],where:"大廳・櫃台前",
+  desc:"一盒六個，盒子上貼著：「謝謝小芸姐幫我們家小孩排課輔」。",use:"吃一個，耐心 +8。剩下的放在休息室給大家。",fx:{pat:8},hint:"下課時，有家長留了東西在櫃台"}
+ ,{id:"hqletter",phases:["pre"],lines:["boss"],icon:"✉️",name:"總部的信封",rarity:"常見",pos:[6.2,1.5],where:"主任室・門邊",
+  desc:"「各分校本季請控制支出。另，續班率未達 85% 之分校，下季將進行輔導。」",use:"沒有用處。但你知道「輔導」是什麼意思。",fx:{calm:-3},hint:"上課前，總部寄來的東西"}
+ ,{id:"coupon",phases:["class"],lines:["yun","boss"],icon:"🎟️",name:"對面的折價券",rarity:"少見",pos:[3.2,16.6],where:"大廳・門口地上",
+  desc:"對面補習班的折價券，學測衝刺班 8 折，期限只到月底。",use:"沒有用處。但你知道他們的折扣撐不了多久。",hint:"上課時，有人從門縫塞了東西"}
+ ,{id:"thanks",phases:["leave","close"],lines:["teacher"],icon:"💌",name:"講台上的小卡",rarity:"稀有",pos:[21.0,3.2],where:"B 班教室・講台",
+  desc:"沒有署名，字很工整：「老師，向量我懂了一點點了。謝謝。」",use:"體力 +6。下課後才會出現。",fx:{hp:6},hint:"下課後，講台上多了一樣東西"}
 );
 
 /* ================= 支線 ================= */
@@ -1403,7 +1411,7 @@ let seenSides=new Set(store.get("sides",[]));             // 各職業線的支�
 let seenItems=new Set(store.get("items",[])),seenInfo=new Set(store.get("info",[])),doneLines=new Set(store.get("done",[]));
 
 const toMin=s=>{const [h,m]=s.split(":").map(Number);return h*60+m;},fmt=m=>{m=Math.floor(m);return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");};
-const MIN_PER_SEC=1/2.4;
+const MIN_PER_SEC=1/4;
 function newGame(lineId){
   const L=LINES[lineId],name=(store.get("name","")||"").trim();
   const sur=name?(/^[一-鿿]/.test(name)?name[0]:name+" "):"許";
@@ -1415,7 +1423,7 @@ function newGame(lineId){
   Object.keys(CHARS).forEach(id=>{if(CHARS[id].body!==undefined)setNPC(id,null);});
   for(const id in L.npcs)if(CHARS[id]&&CHARS[id].body!==undefined)setNPC(id,val(L.npcs[id],G),true);
   Object.values(itemMarks).forEach(m=>scene.remove(m));for(const k in itemMarks)delete itemMarks[k];
-  ITEMS.filter(it=>!it.lines||it.lines.includes(lineId)).forEach(addItemMark);
+  syncItems();
   for(const id in sideMarks){scene.remove(sideMarks[id]);delete sideMarks[id];}
   crowdPhase=null;setCrowd("pre",true);FX.shake=FX.dark=0;
   path=null;enterStep();
@@ -1533,7 +1541,7 @@ function openStep(){
     onChoice:c=>{if(c.mini)runMini(c.mini,r=>resolveChoice(c,nextStep,r));else resolveChoice(c,nextStep);}});
 }
 function openSide(sd){
-  spend(4);
+  spend(3);
   const pages=val(sd.pages,G),choices=sd.choices?val(sd.choices,G):null;
   const done=()=>{G.sidesDone[sd.id]=1;setTimeout(checkAch,50);seenSides.add(G.line.id+":"+sd.id);store.set("sides",[...seenSides]);beep("side");mode="walk";renderAll();};
   runDialog({pages,choices,onEnd:choices?null:()=>{if(sd.fx)applyFx(val(sd.fx,G));if(sd.set)Object.assign(G.f,sd.set);if(sd.log)G.log.push([G.time,"（支線）"+sd.log]);done();},
@@ -1560,7 +1568,7 @@ function runMini(id,cb){
   $("sheet").querySelector("[data-act=miniOk]").onclick=()=>{$("sheet").hidden=true;$("sheetBg").hidden=true;spend(M.cost||5);G.minis[id]=result;checkAch();cb(result);};
 }
 function pickItem(it){
-  spend(1);beep("pick");mode="info";renderAll();const first=!seenItems.has(it.id);G.items.push(it.id);seenItems.add(it.id);store.set("items",[...seenItems]);
+  beep("pick");mode="info";renderAll();const first=!seenItems.has(it.id);G.items.push(it.id);seenItems.add(it.id);store.set("items",[...seenItems]);
   if(itemMarks[it.id]){scene.remove(itemMarks[it.id]);delete itemMarks[it.id];}
   const deltas=it.fx?applyFx(it.fx):"";if(it.set)Object.assign(G.f,it.set);G.log.push([G.time,`撿到「${it.name}」`]);renderHud();
   openSheet("撿到的東西",`<div class="itemcard" style="display:flex;gap:12px;align-items:center;border:1px solid var(--rule);border-radius:6px;padding:10px">
@@ -1579,7 +1587,7 @@ function openCodex(){
     if(codexTab==="sides"){const all=Object.entries(SIDES).flatMap(([l,arr])=>arr.map(s=>[l,s]));return `<p class="hint">完成過 ${all.filter(([l,s])=>seenSides.has(l+":"+s.id)).length} / ${all.length} 條支線。頭上有黃色「？」的人，可能有事找你。</p><dl class="list">${all.map(([l,s])=>`<dt>${seenSides.has(l+":"+s.id)?"✓ "+esc(s.title):"？？？"}</dt><dd>${esc(LINES[l]?LINES[l].role:"")}</dd>`).join("")}</dl>`;}
     if(codexTab==="terms")return `<dl class="list">${Object.entries(TERMS).map(([t,d])=>`<dt>${esc(t)}</dt><dd>${esc(d)}</dd>`).join("")}</dl>`;
     if(codexTab==="info")return `<p class="hint">看過 ${INFO.filter(i=>seenInfo.has(i.id)).length} / ${INFO.length} 個地點說明。</p><dl class="list">${INFO.map(i=>seenInfo.has(i.id)?`<dt>${esc(i.title)}</dt><dd>${esc(i.zone)}</dd>`:`<dt>？？？</dt><dd>${esc(i.zone)}</dd>`).join("")}</dl>`;
-    return ITEMS.length?`<p class="hint">撿過 ${ITEMS.filter(i=>seenItems.has(i.id)).length} / ${ITEMS.length} 樣。有些只會出現在特定職業線。</p><dl class="list">${ITEMS.map(i=>seenItems.has(i.id)?`<dt>${i.icon} ${esc(i.name)}</dt><dd>${esc(i.rarity)}・${esc(i.desc)}</dd>`:`<dt>？？？</dt><dd>${esc(i.rarity)}・${esc(i.hint||"還沒撿到")}</dd>`).join("")}</dl>`:`<p class="hint">還沒有東西。</p>`;
+    return ITEMS.length?`<p class="hint">撿過 ${ITEMS.filter(i=>seenItems.has(i.id)).length} / ${ITEMS.length} 樣。東西會依時段出現和消失，有些只有特定職業撿得到。</p><dl class="list">${ITEMS.map(i=>seenItems.has(i.id)?`<dt>${i.icon} ${esc(i.name)}</dt><dd>${esc(i.rarity)}・${esc(i.desc)}</dd>`:`<dt>？？？</dt><dd>${esc(i.rarity)}・${esc(i.hint||"還沒撿到")}${i.phases?"・"+i.phases.map(p=>PHASE_NAME[p]).join("／"):""}${i.lines?"・"+i.lines.map(l=>LINES[l]?LINES[l].short:l).join("／"):""}</dd>`).join("")}</dl>`:`<p class="hint">還沒有東西。</p>`;
   };
   const draw=()=>{openSheet("圖鑑",`<div class="tabs">${tabs.map(([k,t])=>`<button data-tab="${k}" aria-pressed="${k===codexTab}">${t}</button>`).join("")}</div>${body()}`,()=>{if(prev==="walk"){mode="walk";renderAll();}});};
   window.__codexDraw=draw;draw();
@@ -1642,7 +1650,7 @@ function resumeGame(){
   for(const id in L.npcs)if(CHARS[id]&&CHARS[id].body!==undefined)setNPC(id,val(L.npcs[id],G),true);
   for(let i=0;i<=G.idx&&i<G.steps.length;i++){const s=G.steps[i];if(s.npc)for(const id in s.npc)setNPC(id,val(s.npc[id],G),true);if(i<G.idx&&s.after)for(const id in s.after)setNPC(id,val(s.after[id],G),true);}
   Object.values(itemMarks).forEach(m=>scene.remove(m));for(const k in itemMarks)delete itemMarks[k];
-  ITEMS.filter(it=>(!it.lines||it.lines.includes(L.id))&&!G.items.includes(it.id)).forEach(addItemMark);
+  syncItems();
   for(const id in sideMarks){scene.remove(sideMarks[id]);delete sideMarks[id];}
   crowdPhase=null;setCrowd(phaseOf(),true);FX.shake=FX.dark=0;path=null;
   const st=G.steps[G.idx];G.due=null;if(!st.auto){let nx=G.idx+1;while(G.steps[nx]&&G.steps[nx].auto)nx++;const nt=G.steps[nx]?toMin(G.steps[nx].t):22*60;G.due=Math.max(nt,G.clock+8);}
@@ -1711,6 +1719,11 @@ stage.addEventListener("pointerup",e=>{if(!downAt||mode!=="walk")return;if(Math.
 
 const sideMarks={};let bannerT=null;
 function showBanner(title,text){const b=$("banner");b.innerHTML=`<b>${esc(title)}</b>${esc(text)}`;b.style.top="auto";b.style.bottom="calc(190px + env(safe-area-inset-bottom,0px))";b.hidden=false;clearTimeout(bannerT);bannerT=setTimeout(()=>b.hidden=true,2800);}
+/* ---------- 依時段與職業出現的物品 ---------- */
+const PHASE_NAME={pre:"上課前",class:"上課中",break:"下課",leave:"下課後",close:"關門前"};
+function syncItems(){if(!G)return;const ph=typeof phaseOf==="function"?phaseOf():"pre";
+  ITEMS.forEach(it=>{const ok=(!it.lines||it.lines.includes(G.line.id))&&!G.items.includes(it.id)&&(!it.phases||it.phases.includes(ph));
+    if(ok&&!itemMarks[it.id])addItemMark(it);else if(!ok&&itemMarks[it.id]){scene.remove(itemMarks[it.id]);delete itemMarks[it.id];}});}
 /* ---------- 手機訊息、教學提示、畫面外箭頭 ---------- */
 let msgT=null;
 function showMsg(from,text){const m=$("msg");m.innerHTML=`<small>${esc(from)}</small><div>${esc(text)}</div>`;const nx=$("next");m.style.top=(nx.hidden?document.querySelector(".hud").offsetHeight+10:nx.offsetTop+nx.offsetHeight+10)+"px";m.hidden=false;beep("side");clearTimeout(msgT);msgT=setTimeout(()=>m.hidden=true,5200);}

@@ -18,7 +18,7 @@ let seenSides=new Set(store.get("sides",[]));             // 各職業線的支�
 let seenItems=new Set(store.get("items",[])),seenInfo=new Set(store.get("info",[])),doneLines=new Set(store.get("done",[]));
 
 const toMin=s=>{const [h,m]=s.split(":").map(Number);return h*60+m;},fmt=m=>{m=Math.floor(m);return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");};
-const MIN_PER_SEC=1/2.4;
+const MIN_PER_SEC=1/4;
 function newGame(lineId){
   const L=LINES[lineId],name=(store.get("name","")||"").trim();
   const sur=name?(/^[一-鿿]/.test(name)?name[0]:name+" "):"許";
@@ -30,7 +30,7 @@ function newGame(lineId){
   Object.keys(CHARS).forEach(id=>{if(CHARS[id].body!==undefined)setNPC(id,null);});
   for(const id in L.npcs)if(CHARS[id]&&CHARS[id].body!==undefined)setNPC(id,val(L.npcs[id],G),true);
   Object.values(itemMarks).forEach(m=>scene.remove(m));for(const k in itemMarks)delete itemMarks[k];
-  ITEMS.filter(it=>!it.lines||it.lines.includes(lineId)).forEach(addItemMark);
+  syncItems();
   for(const id in sideMarks){scene.remove(sideMarks[id]);delete sideMarks[id];}
   crowdPhase=null;setCrowd("pre",true);FX.shake=FX.dark=0;
   path=null;enterStep();
@@ -148,7 +148,7 @@ function openStep(){
     onChoice:c=>{if(c.mini)runMini(c.mini,r=>resolveChoice(c,nextStep,r));else resolveChoice(c,nextStep);}});
 }
 function openSide(sd){
-  spend(4);
+  spend(3);
   const pages=val(sd.pages,G),choices=sd.choices?val(sd.choices,G):null;
   const done=()=>{G.sidesDone[sd.id]=1;setTimeout(checkAch,50);seenSides.add(G.line.id+":"+sd.id);store.set("sides",[...seenSides]);beep("side");mode="walk";renderAll();};
   runDialog({pages,choices,onEnd:choices?null:()=>{if(sd.fx)applyFx(val(sd.fx,G));if(sd.set)Object.assign(G.f,sd.set);if(sd.log)G.log.push([G.time,"（支線）"+sd.log]);done();},
@@ -175,7 +175,7 @@ function runMini(id,cb){
   $("sheet").querySelector("[data-act=miniOk]").onclick=()=>{$("sheet").hidden=true;$("sheetBg").hidden=true;spend(M.cost||5);G.minis[id]=result;checkAch();cb(result);};
 }
 function pickItem(it){
-  spend(1);beep("pick");mode="info";renderAll();const first=!seenItems.has(it.id);G.items.push(it.id);seenItems.add(it.id);store.set("items",[...seenItems]);
+  beep("pick");mode="info";renderAll();const first=!seenItems.has(it.id);G.items.push(it.id);seenItems.add(it.id);store.set("items",[...seenItems]);
   if(itemMarks[it.id]){scene.remove(itemMarks[it.id]);delete itemMarks[it.id];}
   const deltas=it.fx?applyFx(it.fx):"";if(it.set)Object.assign(G.f,it.set);G.log.push([G.time,`撿到「${it.name}」`]);renderHud();
   openSheet("撿到的東西",`<div class="itemcard" style="display:flex;gap:12px;align-items:center;border:1px solid var(--rule);border-radius:6px;padding:10px">
@@ -194,7 +194,7 @@ function openCodex(){
     if(codexTab==="sides"){const all=Object.entries(SIDES).flatMap(([l,arr])=>arr.map(s=>[l,s]));return `<p class="hint">完成過 ${all.filter(([l,s])=>seenSides.has(l+":"+s.id)).length} / ${all.length} 條支線。頭上有黃色「？」的人，可能有事找你。</p><dl class="list">${all.map(([l,s])=>`<dt>${seenSides.has(l+":"+s.id)?"✓ "+esc(s.title):"？？？"}</dt><dd>${esc(LINES[l]?LINES[l].role:"")}</dd>`).join("")}</dl>`;}
     if(codexTab==="terms")return `<dl class="list">${Object.entries(TERMS).map(([t,d])=>`<dt>${esc(t)}</dt><dd>${esc(d)}</dd>`).join("")}</dl>`;
     if(codexTab==="info")return `<p class="hint">看過 ${INFO.filter(i=>seenInfo.has(i.id)).length} / ${INFO.length} 個地點說明。</p><dl class="list">${INFO.map(i=>seenInfo.has(i.id)?`<dt>${esc(i.title)}</dt><dd>${esc(i.zone)}</dd>`:`<dt>？？？</dt><dd>${esc(i.zone)}</dd>`).join("")}</dl>`;
-    return ITEMS.length?`<p class="hint">撿過 ${ITEMS.filter(i=>seenItems.has(i.id)).length} / ${ITEMS.length} 樣。有些只會出現在特定職業線。</p><dl class="list">${ITEMS.map(i=>seenItems.has(i.id)?`<dt>${i.icon} ${esc(i.name)}</dt><dd>${esc(i.rarity)}・${esc(i.desc)}</dd>`:`<dt>？？？</dt><dd>${esc(i.rarity)}・${esc(i.hint||"還沒撿到")}</dd>`).join("")}</dl>`:`<p class="hint">還沒有東西。</p>`;
+    return ITEMS.length?`<p class="hint">撿過 ${ITEMS.filter(i=>seenItems.has(i.id)).length} / ${ITEMS.length} 樣。東西會依時段出現和消失，有些只有特定職業撿得到。</p><dl class="list">${ITEMS.map(i=>seenItems.has(i.id)?`<dt>${i.icon} ${esc(i.name)}</dt><dd>${esc(i.rarity)}・${esc(i.desc)}</dd>`:`<dt>？？？</dt><dd>${esc(i.rarity)}・${esc(i.hint||"還沒撿到")}${i.phases?"・"+i.phases.map(p=>PHASE_NAME[p]).join("／"):""}${i.lines?"・"+i.lines.map(l=>LINES[l]?LINES[l].short:l).join("／"):""}</dd>`).join("")}</dl>`:`<p class="hint">還沒有東西。</p>`;
   };
   const draw=()=>{openSheet("圖鑑",`<div class="tabs">${tabs.map(([k,t])=>`<button data-tab="${k}" aria-pressed="${k===codexTab}">${t}</button>`).join("")}</div>${body()}`,()=>{if(prev==="walk"){mode="walk";renderAll();}});};
   window.__codexDraw=draw;draw();
@@ -257,7 +257,7 @@ function resumeGame(){
   for(const id in L.npcs)if(CHARS[id]&&CHARS[id].body!==undefined)setNPC(id,val(L.npcs[id],G),true);
   for(let i=0;i<=G.idx&&i<G.steps.length;i++){const s=G.steps[i];if(s.npc)for(const id in s.npc)setNPC(id,val(s.npc[id],G),true);if(i<G.idx&&s.after)for(const id in s.after)setNPC(id,val(s.after[id],G),true);}
   Object.values(itemMarks).forEach(m=>scene.remove(m));for(const k in itemMarks)delete itemMarks[k];
-  ITEMS.filter(it=>(!it.lines||it.lines.includes(L.id))&&!G.items.includes(it.id)).forEach(addItemMark);
+  syncItems();
   for(const id in sideMarks){scene.remove(sideMarks[id]);delete sideMarks[id];}
   crowdPhase=null;setCrowd(phaseOf(),true);FX.shake=FX.dark=0;path=null;
   const st=G.steps[G.idx];G.due=null;if(!st.auto){let nx=G.idx+1;while(G.steps[nx]&&G.steps[nx].auto)nx++;const nt=G.steps[nx]?toMin(G.steps[nx].t):22*60;G.due=Math.max(nt,G.clock+8);}
@@ -326,6 +326,11 @@ stage.addEventListener("pointerup",e=>{if(!downAt||mode!=="walk")return;if(Math.
 
 const sideMarks={};let bannerT=null;
 function showBanner(title,text){const b=$("banner");b.innerHTML=`<b>${esc(title)}</b>${esc(text)}`;b.style.top="auto";b.style.bottom="calc(190px + env(safe-area-inset-bottom,0px))";b.hidden=false;clearTimeout(bannerT);bannerT=setTimeout(()=>b.hidden=true,2800);}
+/* ---------- 依時段與職業出現的物品 ---------- */
+const PHASE_NAME={pre:"上課前",class:"上課中",break:"下課",leave:"下課後",close:"關門前"};
+function syncItems(){if(!G)return;const ph=typeof phaseOf==="function"?phaseOf():"pre";
+  ITEMS.forEach(it=>{const ok=(!it.lines||it.lines.includes(G.line.id))&&!G.items.includes(it.id)&&(!it.phases||it.phases.includes(ph));
+    if(ok&&!itemMarks[it.id])addItemMark(it);else if(!ok&&itemMarks[it.id]){scene.remove(itemMarks[it.id]);delete itemMarks[it.id];}});}
 /* ---------- 手機訊息、教學提示、畫面外箭頭 ---------- */
 let msgT=null;
 function showMsg(from,text){const m=$("msg");m.innerHTML=`<small>${esc(from)}</small><div>${esc(text)}</div>`;const nx=$("next");m.style.top=(nx.hidden?document.querySelector(".hud").offsetHeight+10:nx.offsetTop+nx.offsetHeight+10)+"px";m.hidden=false;beep("side");clearTimeout(msgT);msgT=setTimeout(()=>m.hidden=true,5200);}
