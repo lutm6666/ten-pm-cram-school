@@ -145,7 +145,7 @@ MINIS.calm={
 /* 點名：從座位表找出沒來的人 */
 MINIS.roll={
   head:"點名表",zone:"B 班前門",title:"誰沒來？",
-  intro:"第一排到第三排應到 10 個人。看座位表，在名單上點出沒來的兩個人。點錯會被學生笑。",
+  intro:"前兩排應到 10 個人。看座位表，在名單上點出沒來的兩個人。點錯會被學生笑。",
   names:["柏翰","佳穎","子涵","品妤","小安","宇軒","思妤","冠廷","詠晴","家豪"],absent:["小安","柏翰"],
   mount(el,done){const self=this;const present=this.names.filter(n=>!this.absent.includes(n)).sort(()=>Math.random()-.5);let found=0,miss=0;
     const seats=[...present,"",""].sort(()=>Math.random()-.5);

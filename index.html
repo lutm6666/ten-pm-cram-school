@@ -312,12 +312,12 @@ const TERMS={
 
 /* 說明點：大家共用 */
 const INFO=[
- {id:"kanban",pos:[.9,12.2],h:2.2,zone:"大廳・櫃台後面",title:"招生看板",
-  body:["櫃台後面的螢幕，主任每天早上會先看這一塊。每一格有一個燈號。"],
+ {id:"kanban",pos:[2.3,3.1],h:2.0,zone:"主任室・主任的電腦",title:"招生報表",
+  body:["主任電腦上開著的內部報表，家長看不到。主任每天早上第一件事就是看這一頁。每一格有一個燈號。"],
   table:G=>[
    ["本期[[續班率]]",`${Math.round(G.h.ret??72)}%`,"目標 85%",(G.h.ret??72)>=85?"g":"r"],
    ["今日[[試聽]]","2 位",(G.f.enrolled!=null?`已報名 ${G.f.enrolled} 位`:"今晚結果"),"y"],
-   ["高三B 出席","34 / 36","2 位請假","g"],
+   ["高三B 出席","18 / 20","2 位請假","g"],
    ["未回電家長",`${Math.max(0,2+(G.h.missed||0)+(G.f.callback&&!G.f.called?1:0)-(G.h.cleared||0))} 通`,"今天要清掉",(2+(G.h.missed||0)-(G.h.cleared||0))>0?"r":"g"]
   ]},
  {id:"rank",pos:[.9,15.6],h:2.2,zone:"大廳・西側牆面",title:"榜單牆",
@@ -367,7 +367,7 @@ const SEATS={pinyu:[17,4.62],zhe:[24.5,10.02],parent:[26.9,5.6],parent2:[26.9,6.
 const SPOTS={podium:{pos:[20,2.9],name:"講台",h:1.5}, counter:{pos:[3.75,12.3],name:"櫃台",h:1.4}, bossdesk:{pos:[3.5,3.4],name:"主任的桌子",h:1.3},
   study:{pos:[17,14.8],name:"自習室",h:1.3}, lounge:{pos:[4,8.1],name:"休息室",h:1.3}, copier:{pos:[7.8,11.1],name:"影印機",h:1.4}, door:{pos:[4.5,17],name:"門口",h:1.3},
   classdoor:{pos:[13.1,2],name:"B 班前門",h:1.4}, rank:{pos:[1.2,15.6],name:"榜單牆",h:1.6}, studyfront:{pos:[13.6,12.3],name:"自習室門口",h:1.3}};
-const ZONE_RECTS=[["大廳",0,9,9,18,"進門第一眼就是櫃台和榜單。家長都在這裡等。"],["主任室",0,0,9,5,"門通常開著。主任說這樣比較有人情味。"],["講師休息室",0,5,9,9,"老師們放東西、吃便當、偷睡十分鐘的地方。"],["走廊",9,0,12,18,"兩邊都是教室。下課十分鐘這裡最擠。"],["高三 B 班教室",12,0,28,11,"36 個座位。白板上還留著上一堂的公式。"],["自習室",12,11,28,18,"晚上開到十點。安靜到聽得見翻頁聲。"]];
+const ZONE_RECTS=[["大廳",0,9,9,18,"進門第一眼就是櫃台和榜單。家長都在這裡等。"],["主任室",0,0,9,5,"門通常開著。主任說這樣比較有人情味。"],["講師休息室",0,5,9,9,"老師們放東西、吃便當、偷睡十分鐘的地方。"],["走廊",9,0,12,18,"兩邊都是教室。下課十分鐘這裡最擠。"],["高三 B 班教室",12,0,28,11,"20 個座位。白板上還留著上一堂的公式。"],["自習室",12,11,28,18,"晚上開到十點。安靜到聽得見翻頁聲。"]];
 function zoneAt(x,z){return ZONE_RECTS.find(r=>x>=r[1]&&x<r[3]&&z>=r[2]&&z<r[4]);}
 const ZONES=[["櫃台 FRONT DESK",4.5,15.6,0],["主任室 OFFICE",6.3,4.2,0],["講師休息室",6.3,8.2,0],["走廊",10.5,6.8,Math.PI/2],["高三 B 班教室",15.5,10.25,0],["自習室 STUDY",24.5,17.2,0]];
 
@@ -489,7 +489,7 @@ function buildWorld(){
   furn([7.2,9.5,8.4,10.4],1.05,C.copier,0x4a5560);
   furn([.4,14,1.3,17.4],.45,C.sofa);rbox([.3,14,.6,17.4],.85,C.sofa);
   furn([8.2,16.7,8.75,17.5],1.1,0xdfe6ea);box(.12,.12,.06,0x3b82f6,8.36,.85,16.66);box(.12,.12,.06,0xe11d48,8.6,.85,16.66);
-  wallSign("招生看板\n續班率 72% ▼",2.2,1.9,9.12,0,2.2,.9,"#ffd166","#1c2633",50);
+  wallSign("歡迎試聽\n高三學測衝刺班",2.2,1.9,9.12,0,2.2,.9,"#ffd166","#1c2633",50);
   wallSign("去年學測榜單\n頂標 3・前標 11",.22,1.6,15.6,Math.PI/2,2.2,1.1,"#c9302a","#fff6e8",46);
   wallSign("學測衝刺班 熱烈招生中",4.5,1.7,17.78,Math.PI,3,.5,"#c9302a","#ffffff",46);
   const plant=new THREE.Mesh(new THREE.SphereGeometry(.38,8,6),new THREE.MeshLambertMaterial({color:0x5f8a4f}));plant.position.set(.65,.65,9.6);scene.add(plant);solids.push([.25,9.2,1.05,10.0]);
@@ -882,7 +882,7 @@ MINIS.calm={
 /* 點名：從座位表找出沒來的人 */
 MINIS.roll={
   head:"點名表",zone:"B 班前門",title:"誰沒來？",
-  intro:"第一排到第三排應到 10 個人。看座位表，在名單上點出沒來的兩個人。點錯會被學生笑。",
+  intro:"前兩排應到 10 個人。看座位表，在名單上點出沒來的兩個人。點錯會被學生笑。",
   names:["柏翰","佳穎","子涵","品妤","小安","宇軒","思妤","冠廷","詠晴","家豪"],absent:["小安","柏翰"],
   mount(el,done){const self=this;const present=this.names.filter(n=>!this.absent.includes(n)).sort(()=>Math.random()-.5);let found=0,miss=0;
     const seats=[...present,"",""].sort(()=>Math.random()-.5);
@@ -1183,11 +1183,11 @@ const PY={teacherLounge:[3.2,8,0],teacherBoard:[20,1.2,0],teacherPodium:[18.6,2.
 LINES.teacher={
  id:"teacher",role:"數學老師",short:"數學",body:0xf0f0f0,
  pick:"顧高三 B 班的數學課。上課出事，第一個被找的人。",
- rush:["影印機卡紙，講義還差 12 份。","試聽家長今天會坐在教室裡。而且每個人都在等你。"],
+ rush:["影印機卡紙，講義還差 8 份。","試聽家長今天會坐在教室裡。而且每個人都在等你。"],
  stats:{hp:["體力",50],voice:["嗓子",60],stu:["學生",50],par:["家長",50]},hidden:{trial:50},
  late:{fx:{stu:-4,trial:-3},text:"台下已經開始聊天了，有人在看手錶。"},
  coda:"白板上的字明天就會被擦掉。但今天，有人聽懂了一題。",
- msgs:[["17:32","B 班群組","小芸：講義我先印 24 份喔，剩下的等影印機。"],["18:08","媽","晚餐在電鍋裡，記得吃。"],["19:22","何主任","試聽家長剛剛在走廊說你講得很清楚👍"],["20:26","B 班群組","品妤：老師下課可以留一下問問題嗎？"],["21:28","媽","回來路上小心，下雨了。"]],
+ msgs:[["17:32","B 班群組","小芸：講義我先印 12 份喔，剩下的等影印機。"],["18:08","媽","晚餐在電鍋裡，記得吃。"],["19:22","何主任","試聽家長剛剛在走廊說你講得很清楚👍"],["20:26","B 班群組","品妤：老師下課可以留一下問問題嗎？"],["21:28","媽","回來路上小心，下雨了。"]],
  preStatus:"備課中",
  start:[4.5,16.6],
  me:G=>({name:"你",title:`${G.tName}・高三數學`,abbr:"師",color:"#b7791f"}),
@@ -1195,17 +1195,17 @@ LINES.teacher={
  steps:[
   {id:"copy",chapter:{t:"17:20",title:"上課前",sub:"距離上課還有 70 分鐘。",status:"備課中"},
    t:"17:20",target:{npc:"yun"},goal:"到櫃台找小芸",
-   pages:G=>[["yun","老師，影印機又卡紙了。今天的[[講義]]只印了 24 份，B 班有 36 個人。"],["yun","我剛剛拉了一下，有一張卡在裡面，我不敢再拉了。"],["me","剩下 12 份？"],[null,"離上課還有 70 分鐘。每一條路，都要有人付。"]],
+   pages:G=>[["yun","老師，影印機又卡紙了。今天的[[講義]]只印了 12 份，B 班有 20 個人。"],["yun","我剛剛拉了一下，有一張卡在裡面，我不敢再拉了。"],["me","剩下 12 份？"],[null,"離上課還有 70 分鐘。每一條路，都要有人付。"]],
    choices:G=>[
     {label:"自己打開影印機處理",note:"順著送紙方向拉",mini:"jam",set:{handout:1},
      fx:r=>({hp:-6-3*Math.min(4,r.tears)}),
      log:r=>r.tears?`自己修影印機，撕破 ${r.tears} 次`:"自己修好影印機",
      res:r=>r.tears?[[null,`紙拉出來了，但撕破了 ${r.tears} 次。碎紙卡在滾輪裡，你又花了十分鐘用鑷子夾。`],["yun","老師你手上全是碳粉……我去拿濕紙巾。"]]
-                   :[[null,"四張紙都完整拉出來。你按下列印，剩下的 12 份講義嘩啦啦吐出來。"],["yun","老師你好會修喔。我上次撕破一張，等技師等了兩天。"]]},
+                   :[[null,"四張紙都完整拉出來。你按下列印，剩下的 8 份講義嘩啦啦吐出來。"],["yun","老師你好會修喔。我上次撕破一張，等技師等了兩天。"]]},
     {label:"請小芸去對面超商印",note:"櫃台會沒人顧",fx:{par:-5},set:{handout:1,yunOut:1},log:"請小芸去超商印講義",
      res:[[null,"小芸抓了零錢包衝出去，回來時講義還是熱的。"],["yun","剛剛櫃台電話好像響了兩次……我回來的時候已經掛掉了。"]]},
     {label:"改用投影片，講義下次補",fx:{stu:-5},log:"講義下次補",
-     res:[[null,"你把題目存進隨身碟。"],["yun","那我跟學生說講義下次發喔。……有 12 個人要抄題目耶。"]]}
+     res:[[null,"你把題目存進隨身碟。"],["yun","那我跟學生說講義下次發喔。……有 8 個人要抄題目耶。"]]}
    ]},
   {id:"hall",t:"17:50",target:{npc:"boss"},goal:"主任在走廊等你",npc:{boss:P.bossHall,pinyu:P.pinyuHall},
    pages:G=>[["boss",`${G.tName}，今天兩位[[試聽]]生，其中一位是附中的。`],["boss","家長很在意升學數字。上精彩一點，這一班的[[續班]]就靠你了。"],
@@ -1218,9 +1218,9 @@ LINES.teacher={
     {label:"跟兩個人都說下課再談",fx:{stu:-3},set:{promisedPinyu:1},log:"把談話都延到下課",
      res:[["boss","好，下課來我辦公室。"],["pinyu","……好。"],[null,"她點了頭，但看起來沒有比較安心。"]]}
    ]},
-  {id:"erase",chapter:{t:"18:30",title:"第一節",sub:"18:30–19:50",status:"上課中",rush:["36 個座位坐了 34 個。","表定要上空間向量，但模考成績昨天才發下去。"]},
+  {id:"erase",chapter:{t:"18:30",title:"第一節",sub:"18:30–19:50",status:"上課中",rush:["20 個座位坐了 18 個。","表定要上空間向量，但模考成績昨天才發下去。"]},
    t:"18:30",target:{spot:"podium"},goal:"走上講台，開始上課",npc:{boss:P.bossOffice,pinyu:P.pinyuSeat,parent:P.parentSeat,parent2:P.parent2Seat},
-   pages:G=>[[null,"白板上還留著上一堂高二英文的單字，寫得滿滿的。"],[null,"台下 34 個人在看你。王媽媽打開了筆記本。"]],
+   pages:G=>[[null,"白板上還留著上一堂高二英文的單字，寫得滿滿的。"],[null,"台下 18 個人在看你。王媽媽打開了筆記本。"]],
    choices:G=>[
     {label:"拿板擦，先把白板擦乾淨",note:"由上往下擦",mini:"erase",fx:r=>({hp:-2,trial:r.falls?1:5}),log:r=>r.falls?`擦白板，墨粉掉下去 ${r.falls} 次`:"俐落地擦乾淨白板",
      res:r=>r.falls?[[null,"白板擦了好一陣子，前排有人在笑你被墨粉弄髒的袖子。"]]:[[null,"三十秒，白板乾乾淨淨。王媽媽在筆記本上寫了一行字。"]]},
@@ -1399,7 +1399,7 @@ LINES.boss={
     {label:"不准，自習室不能沒人",fx:{morale:-10,calm:3},log:"不准助教的假",res:[["hong","……好。"],[null,"他轉身回去解題，背影有點垮。"]]}
    ]},
   {id:"bq",t:"20:50",target:{npc:"parent"},goal:"王媽媽走出教室講電話",npc:{parent:PY.parentLobby},
-   pages:G=>[["parent","主任，我剛剛在裡面算了一下，一班 36 個人。"],["parent","老師真的顧得過來嗎？我兒子不太會主動問問題。"]],
+   pages:G=>[["parent","主任，我剛剛在裡面算了一下，一班 20 個人。"],["parent","老師真的顧得過來嗎？我兒子不太會主動問問題。"]],
    choices:G=>[
     {label:"說老師會個別批改小考",fx:{trial:5},log:"說明個別批改",res:[["parent","每個人的都會看？那還不錯。"]]},
     {label:"答應幫他排前排、小考另外批",note:"老師會多一點工作",fx:{trial:12,morale:-5},log:"承諾試聽生特別照顧",res:[["parent","那我就放心了。"],[null,"你想到等一下要怎麼跟許老師開口。"]]},
@@ -1409,7 +1409,7 @@ LINES.boss={
    t:"21:20",target:{npc:"parent"},goal:"王媽媽要做決定了",npc:{parent:PY.parentLobby,parent2:PY.parent2Lobby,teacher:PY.teacherPodium,zhe:G=>G.f.baseClass||G.f.noteZhe?[16.2,12.6,0]:null},
    pages:G=>{const n=enrolledT(G);return [["parent",n===2?"我們決定報名了。另一位試聽的同學，聽說也要報。":n===1?"課是不錯，我們想報名。":"我們回去再討論看看。"],...(G.f.priceWar?[["parent","對了，門口那張八折的海報是今天的嗎？"]]:[])];},
    choices:G=>{const n=enrolledT(G),c=[];
-    if(n>=1)c.push({label:"親自收報名表",fx:{sales:8*n,ret:1},set:{enrolled:n},log:`試聽生報名 ${n} 位`,res:[[null,"你在報名表上蓋了章。招生看板上的數字跳了一格。"]]});
+    if(n>=1)c.push({label:"親自收報名表",fx:{sales:8*n,ret:1},set:{enrolled:n},log:`試聽生報名 ${n} 位`,res:[[null,"你在報名表上蓋了章。報表上的數字跳了一格。"]]});
     else c.push({label:"給她早鳥價，現在報名",fx:G=>G.h.trial>=40?{sales:3,rep:-3,trial:20}:{rep:-3},set:{lastDiscount:1},log:"最後用早鳥價留人",res:G=>G.h.trial>=40?[["parent","這樣的話……好吧，我們報。"]]:[["parent","不是價錢的問題。"]]});
     c.push({label:"請她回去跟孩子討論",fx:{rep:5,calm:3},log:"讓家長回去考慮",res:[["parent","謝謝主任不催我們。"]]});
     return c;}},
@@ -1451,9 +1451,9 @@ LINES.yun={
  me:G=>({name:"你",title:`${G.pName}・櫃台班導`,abbr:"班",color:"#1f9c86"}),
  npcs:{boss:P.bossOffice,teacher:PY.teacherLounge,pinyu:P.pinyuSeat,zhe:P.zheSeat,hong:P.hongStudy,bo:PY.boStudy,parent:null,parent2:null,yun:null,chenba:null},
  steps:[
-  {id:"ycopy",chapter:{t:"17:20",title:"開店",sub:"櫃台的一天，從影印機開始。",status:"營業中",rush:["影印機又卡紙了，許老師的講義還差 12 份。","櫃台電話同時響了起來。"]},
+  {id:"ycopy",chapter:{t:"17:20",title:"開店",sub:"櫃台的一天，從影印機開始。",status:"營業中",rush:["影印機又卡紙了，許老師的講義還差 8 份。","櫃台電話同時響了起來。"]},
    t:"17:20",target:{spot:"copier"},goal:"影印機在嗶嗶叫",
-   pages:G=>[[null,"影印機的螢幕閃著紅燈：「紙路 B 卡紙」。許老師的[[講義]]還差 12 份，一個小時後上課。"],[null,"櫃台電話同時響了起來。每一條路，都要有人付。"]],
+   pages:G=>[[null,"影印機的螢幕閃著紅燈：「紙路 B 卡紙」。許老師的[[講義]]還差 8 份，一個小時後上課。"],[null,"櫃台電話同時響了起來。每一條路，都要有人付。"]],
    choices:G=>[
     {label:"先把卡紙拉出來",note:"順著送紙方向",mini:"jam",fx:r=>({hp:-4-3*Math.min(4,r.tears),missed:1}),set:{handout:1},log:r=>r.tears?`修影印機，撕破 ${r.tears} 次`:"修好影印機",
      res:r=>r.tears?[[null,"撕破了幾次，最後用鑷子夾出碎紙。講義印好了，電話也停了。"],[null,"未接來電：1 通。"]]:[[null,"四張紙完整拉出來，講義嘩啦啦印好。電話停了。"],[null,"未接來電：1 通。"]]},
@@ -1478,7 +1478,7 @@ LINES.yun={
    ]},
   {id:"yroll",chapter:{t:"18:30",title:"上課",sub:"教室門關上，櫃台安靜下來。",status:"上課中"},
    t:"18:35",target:{spot:"classdoor"},goal:"拿點名表去 B 班",action:"點名",npc:{teacher:PY.teacherBoard},
-   pages:G=>[[null,"你從前門探頭進去。36 個座位坐了 34 個。"],[null,"沒來的是小安和柏翰。小安上週沒來，這週也沒來。"],...(G.f.noHandout?[[null,"許老師在用投影片上課，看了你一眼。"]]:[])],
+   pages:G=>[[null,"你從前門探頭進去。20 個座位坐了 18 個。"],[null,"沒來的是小安和柏翰。小安上週沒來，這週也沒來。"],...(G.f.noHandout?[[null,"許老師在用投影片上課，看了你一眼。"]]:[])],
    choices:G=>[
     {label:"照座位表一個一個點",note:"找出誰沒來",mini:"roll",fx:r=>({ord:r.miss?2:7,pat:-2}),log:r=>`照座位表點名，點錯 ${r.miss} 次`,set:{rollDone:1},
      res:r=>[[null,r.miss?"點錯了幾次，被學生笑了。不過小安和柏翰確實沒來。":"三十秒點完：小安、柏翰沒來。"],[null,"你在點名表上畫了兩個圈。晚點要打給他們家長。"]]},

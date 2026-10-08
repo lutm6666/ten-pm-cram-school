@@ -14,9 +14,9 @@ LINES.yun={
  me:G=>({name:"你",title:`${G.pName}・櫃台班導`,abbr:"班",color:"#1f9c86"}),
  npcs:{boss:P.bossOffice,teacher:PY.teacherLounge,pinyu:P.pinyuSeat,zhe:P.zheSeat,hong:P.hongStudy,bo:PY.boStudy,parent:null,parent2:null,yun:null,chenba:null},
  steps:[
-  {id:"ycopy",chapter:{t:"17:20",title:"開店",sub:"櫃台的一天，從影印機開始。",status:"營業中",rush:["影印機又卡紙了，許老師的講義還差 12 份。","櫃台電話同時響了起來。"]},
+  {id:"ycopy",chapter:{t:"17:20",title:"開店",sub:"櫃台的一天，從影印機開始。",status:"營業中",rush:["影印機又卡紙了，許老師的講義還差 8 份。","櫃台電話同時響了起來。"]},
    t:"17:20",target:{spot:"copier"},goal:"影印機在嗶嗶叫",
-   pages:G=>[[null,"影印機的螢幕閃著紅燈：「紙路 B 卡紙」。許老師的[[講義]]還差 12 份，一個小時後上課。"],[null,"櫃台電話同時響了起來。每一條路，都要有人付。"]],
+   pages:G=>[[null,"影印機的螢幕閃著紅燈：「紙路 B 卡紙」。許老師的[[講義]]還差 8 份，一個小時後上課。"],[null,"櫃台電話同時響了起來。每一條路，都要有人付。"]],
    choices:G=>[
     {label:"先把卡紙拉出來",note:"順著送紙方向",mini:"jam",fx:r=>({hp:-4-3*Math.min(4,r.tears),missed:1}),set:{handout:1},log:r=>r.tears?`修影印機，撕破 ${r.tears} 次`:"修好影印機",
      res:r=>r.tears?[[null,"撕破了幾次，最後用鑷子夾出碎紙。講義印好了，電話也停了。"],[null,"未接來電：1 通。"]]:[[null,"四張紙完整拉出來，講義嘩啦啦印好。電話停了。"],[null,"未接來電：1 通。"]]},
@@ -41,7 +41,7 @@ LINES.yun={
    ]},
   {id:"yroll",chapter:{t:"18:30",title:"上課",sub:"教室門關上，櫃台安靜下來。",status:"上課中"},
    t:"18:35",target:{spot:"classdoor"},goal:"拿點名表去 B 班",action:"點名",npc:{teacher:PY.teacherBoard},
-   pages:G=>[[null,"你從前門探頭進去。36 個座位坐了 34 個。"],[null,"沒來的是小安和柏翰。小安上週沒來，這週也沒來。"],...(G.f.noHandout?[[null,"許老師在用投影片上課，看了你一眼。"]]:[])],
+   pages:G=>[[null,"你從前門探頭進去。20 個座位坐了 18 個。"],[null,"沒來的是小安和柏翰。小安上週沒來，這週也沒來。"],...(G.f.noHandout?[[null,"許老師在用投影片上課，看了你一眼。"]]:[])],
    choices:G=>[
     {label:"照座位表一個一個點",note:"找出誰沒來",mini:"roll",fx:r=>({ord:r.miss?2:7,pat:-2}),log:r=>`照座位表點名，點錯 ${r.miss} 次`,set:{rollDone:1},
      res:r=>[[null,r.miss?"點錯了幾次，被學生笑了。不過小安和柏翰確實沒來。":"三十秒點完：小安、柏翰沒來。"],[null,"你在點名表上畫了兩個圈。晚點要打給他們家長。"]]},

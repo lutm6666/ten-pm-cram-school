@@ -76,7 +76,7 @@ LINES.boss={
     {label:"不准，自習室不能沒人",fx:{morale:-10,calm:3},log:"不准助教的假",res:[["hong","……好。"],[null,"他轉身回去解題，背影有點垮。"]]}
    ]},
   {id:"bq",t:"20:50",target:{npc:"parent"},goal:"王媽媽走出教室講電話",npc:{parent:PY.parentLobby},
-   pages:G=>[["parent","主任，我剛剛在裡面算了一下，一班 36 個人。"],["parent","老師真的顧得過來嗎？我兒子不太會主動問問題。"]],
+   pages:G=>[["parent","主任，我剛剛在裡面算了一下，一班 20 個人。"],["parent","老師真的顧得過來嗎？我兒子不太會主動問問題。"]],
    choices:G=>[
     {label:"說老師會個別批改小考",fx:{trial:5},log:"說明個別批改",res:[["parent","每個人的都會看？那還不錯。"]]},
     {label:"答應幫他排前排、小考另外批",note:"老師會多一點工作",fx:{trial:12,morale:-5},log:"承諾試聽生特別照顧",res:[["parent","那我就放心了。"],[null,"你想到等一下要怎麼跟許老師開口。"]]},
@@ -86,7 +86,7 @@ LINES.boss={
    t:"21:20",target:{npc:"parent"},goal:"王媽媽要做決定了",npc:{parent:PY.parentLobby,parent2:PY.parent2Lobby,teacher:PY.teacherPodium,zhe:G=>G.f.baseClass||G.f.noteZhe?[16.2,12.6,0]:null},
    pages:G=>{const n=enrolledT(G);return [["parent",n===2?"我們決定報名了。另一位試聽的同學，聽說也要報。":n===1?"課是不錯，我們想報名。":"我們回去再討論看看。"],...(G.f.priceWar?[["parent","對了，門口那張八折的海報是今天的嗎？"]]:[])];},
    choices:G=>{const n=enrolledT(G),c=[];
-    if(n>=1)c.push({label:"親自收報名表",fx:{sales:8*n,ret:1},set:{enrolled:n},log:`試聽生報名 ${n} 位`,res:[[null,"你在報名表上蓋了章。招生看板上的數字跳了一格。"]]});
+    if(n>=1)c.push({label:"親自收報名表",fx:{sales:8*n,ret:1},set:{enrolled:n},log:`試聽生報名 ${n} 位`,res:[[null,"你在報名表上蓋了章。報表上的數字跳了一格。"]]});
     else c.push({label:"給她早鳥價，現在報名",fx:G=>G.h.trial>=40?{sales:3,rep:-3,trial:20}:{rep:-3},set:{lastDiscount:1},log:"最後用早鳥價留人",res:G=>G.h.trial>=40?[["parent","這樣的話……好吧，我們報。"]]:[["parent","不是價錢的問題。"]]});
     c.push({label:"請她回去跟孩子討論",fx:{rep:5,calm:3},log:"讓家長回去考慮",res:[["parent","謝謝主任不催我們。"]]});
     return c;}},
