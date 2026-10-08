@@ -19,7 +19,7 @@
 [hidden]{display:none!important}
 html,body{height:100%;overflow:hidden}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-body{background:var(--board);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.7;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{background:var(--board);color:var(--ink);font-family:var(--body);font-size:1rem;line-height:1.7;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input,textarea{-webkit-user-select:text;user-select:text}
 button{touch-action:manipulation}
 *{box-sizing:border-box}
@@ -91,8 +91,8 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .d.up{color:var(--green)}.d.down{color:var(--red)}
 
 /* 說明／小遊戲面板 */
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:12;background:var(--surface);border-top:1px solid var(--rule);border-radius:10px 10px 0 0;max-height:82%;overflow:auto;padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.18)}
-.sheet-bg{position:fixed;inset:0;z-index:11;background:var(--scrim)}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:22;background:var(--surface);border-top:1px solid var(--rule);border-radius:10px 10px 0 0;max-height:82%;overflow:auto;padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.18)}
+.sheet-bg{position:fixed;inset:0;z-index:21;background:var(--scrim)}
 .shead{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:10px}
 .shead span{font-size:.85rem;font-weight:700}
 .close{background:var(--tray);border:1px solid var(--rule);border-radius:4px;padding:3px 10px;font-size:.82rem}
@@ -204,7 +204,7 @@ dl.list dd{margin:0;color:var(--muted);font-size:.9rem}
 .camreset{pointer-events:auto;align-self:flex-end;width:44px;height:44px;border-radius:50%;border:1px solid var(--rule);background:var(--glass);font-size:1.2rem;margin-left:auto;margin-right:8px}
 
 .act{white-space:nowrap;max-width:62vw;overflow:hidden;text-overflow:ellipsis}
-.act.chat{background:var(--surface);color:var(--ink);border:2px solid var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.act.chat{padding:12px 14px;font-size:.92rem;background:var(--surface);color:var(--ink);border:2px solid var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.18)}
 .clocksub .ot{display:inline-block;background:#7c2d12;color:#fff;border-radius:3px;padding:0 5px;margin-right:4px;font-weight:700}
 .lock{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
 .lk{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:64px;justify-content:center;border:1px solid var(--rule);border-radius:6px;font-size:.8rem;padding:6px 4px;text-align:center;background:var(--tray);color:var(--muted)}
@@ -213,3 +213,16 @@ dl.list dd{margin:0;color:var(--muted);font-size:.9rem}
 .lk.on span{filter:none;opacity:1}
 button.lk{font-family:inherit;cursor:pointer}
 @media (prefers-reduced-motion:no-preference){.lk.on span{animation:lkglow 1.6s ease-in-out infinite}@keyframes lkglow{50%{transform:scale(1.08)}}}
+
+.sgroup{margin:4px 0 14px}
+.srow{display:grid;grid-template-columns:6.5em 1fr 2.6em;align-items:center;gap:10px;min-height:44px}
+.srow b{font-family:var(--mono);font-size:.85rem;text-align:right;color:var(--muted)}
+.srow input[type=range]{width:100%;accent-color:var(--cta);height:32px}
+.srow .toggle{grid-column:2/4;justify-self:start;min-width:64px;min-height:36px;border:1px solid var(--rule);border-radius:18px;background:var(--surface);font:inherit}
+.srow .toggle[aria-pressed=true]{background:var(--cta);color:#fff;border-color:var(--cta)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{min-height:44px;border:none;background:var(--surface);font:inherit;border-left:1px solid var(--rule)}
+.seg button:first-child{border-left:none}
+.seg button[aria-checked=true]{background:var(--ink);color:var(--board);font-weight:700}
+
+.btnlink{display:inline-flex;align-items:center;text-decoration:none;color:inherit}

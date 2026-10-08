@@ -13,7 +13,7 @@ let guiding=false,G=null,mode="title",path=null,keys={},near=null,pickedLine=sto
 let soundOn=store.get("sound",true),actx=null;
 function beep(kind){if(!soundOn)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();
   const seq={blip:[[660,.05]],pick:[[880,.08],[1320,.12]],chap:[[392,.18],[523,.28]],ok:[[523,.08],[659,.08],[784,.14]],bad:[[220,.16]],side:[[740,.07],[988,.1]]}[kind]||[[600,.05]];
-  let t0=actx.currentTime;seq.forEach(([f,d])=>{const o=actx.createOscillator(),g=actx.createGain();o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.2,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(g);g.connect(actx.destination);o.start(t0);o.stop(t0+d+.02);t0+=d*.9;});}catch(e){}}
+  let t0=actx.currentTime;seq.forEach(([f,d])=>{const o=actx.createOscillator(),g=actx.createGain();o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.2,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(g);g.connect(bus("sfx"));o.start(t0);o.stop(t0+d+.02);t0+=d*.9;});}catch(e){}}
 let seenSides=new Set(store.get("sides",[]));             // 各職業線的支線：SIDES[lineId]=[...]
 let seenItems=new Set(store.get("items",[])),seenInfo=new Set(store.get("info",[])),doneLines=new Set(store.get("done",[]));
 
@@ -70,19 +70,19 @@ function interact(){if(mode!=="walk"||!near)return;
 /* ---------- HUD ---------- */
 function renderAll(){renderHud();renderNext();renderDock();}
 function renderHud(){
-  if(!G){$("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock">17:20</div><div class="clocksub">高三數學 B 班</div></div><span class="spacer"></span><button class="hbtn" data-act="codex">圖鑑</button></div>`;return;}
+  if(!G){$("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock">17:20</div><div class="clocksub">高三數學 B 班</div></div><span class="spacer"></span><button class="hbtn" data-act="settings" aria-label="設定">設定</button><button class="hbtn" data-act="codex">圖鑑</button></div>`;return;}
   const L=G.line,low=k=>G.s[k]<25?"low":"";
   const st=statusOf(),cls=/上課/.test(st)?"ok":/下課|收拾/.test(st)?"":"bad";
   $("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock" id="clk">${mode==="end"?fmt(Math.max(G.clock,22*60)):G.time}</div><div class="clocksub" id="clksub">${dueText()}</div></div>
-   <span class="spacer"></span><span class="pill ${cls}"><i></i>${esc(st)}</span><button class="hbtn" data-act="sound" aria-pressed="${soundOn}" aria-label="音效">${soundOn?"♪ 開":"♪ 關"}</button><button class="hbtn" data-act="home">主頁</button><button class="hbtn" data-act="codex">圖鑑</button></div>
+   <span class="spacer"></span><span class="pill ${cls}"><i></i>${esc(st)}</span><button class="hbtn" data-act="settings" aria-label="設定">設定</button><button class="hbtn" data-act="home">主頁</button><button class="hbtn" data-act="codex">圖鑑</button></div>
    <div class="meters">${Object.keys(L.stats).map(k=>`<div class="meter ${low(k)}"><div class="lab"><span>${L.stats[k][0]}</span><b>${G.s[k]}</b></div><div class="track"><div class="fill" style="width:${G.s[k]}%"></div></div></div>`).join("")}</div>`;
-  $("next").style.top=($(".hud")?document.querySelector(".hud").offsetHeight:80)+8+"px";
+  $("next").style.top=document.querySelector(".hud").offsetHeight+8+"px";
 }
 function otMin(){return G?Math.max(0,Math.floor(G.clock-22*60)):0;}
 function dueText(){if(!G)return"";if(otMin()&&mode!=="end"){const r=mode==="walk"&&G.due!=null?Math.floor(G.due-G.clock):null;return `<span class="ot">已加班 ${otMin()} 分</span>`+(r==null?"":r>=0?`<span class="due ${r<=3?"warn":""}">剩 ${r} 分</span>`:`<span class="due late">晚 ${-r} 分</span>`);}return dueText0();}
 function dueText0(){if(mode==="walk"&&G.due!=null){const r=Math.floor(G.due-G.clock);return r>=0?`<span class="due ${r<=3?"warn":""}">${fmt(G.due)} 前・剩 ${r} 分</span>`:`<span class="due late">已經晚了 ${-r} 分</span>`;}return `${esc(G.chapterTitle||"")}・${esc(G.line.role)}`;}
 let lastClockMin=-1;
-function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}}}
+function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}}}
 function checkBell(){if(!G)return;const ph=phaseOf();if(ph===crowdPhase)return;const prev=crowdPhase;setCrowd(ph);G.status=statusOf();renderHud();
   if(ph==="class"){chime();showBanner("上課鐘響了","學生陸續回到座位。");}else if(ph==="break"){chime();showBanner("下課了","下課 15 分鐘，20:05 上第二節。");}else if(ph==="leave"&&prev!=="close"){chime();showBanner("下課了","今天的課上完了，學生陸續離開。");}}
 function spend(min){if(G){G.clock+=min;checkBell();}}
@@ -220,7 +220,7 @@ function showTitle(){
    <button class="big-go" data-act="start">上班</button>
    ${doneLines.size>=3?`<button class="ghost" data-act="epilogue" style="width:100%;margin-top:8px;padding:12px">一個月後 ▸</button>`:`<p class="hint">三個位子都玩過，會解鎖「一個月後」。目前完成 ${doneLines.size} / 3。</p>`}
    <p class="hint">系統會告訴你下一步。跟著頭上有紅色「！」的人或地方走，或按「帶我去」。頭上有「i」的地方可以看說明，地上一閃一閃發光的地方有東西可以撿。</p>
-   <div class="links"><button data-act="codex">圖鑑</button><button data-act="about">關於</button></div>
+   <div class="links"><button data-act="codex">圖鑑</button><button data-act="settings">設定</button><button data-act="about">關於</button></div>
    <p class="hint">人物、補習班、數字與情節都是虛構的遊戲設定。</p></div>`;
   $("nameIn").addEventListener("input",e=>store.set("name",e.target.value));
 }
@@ -278,7 +278,7 @@ function finish(){
    <div class="lbl">準時</div><p style="margin:0">${G.lates?`遲到 ${G.lates} 次，一共 ${G.lateMin} 分鐘。`:"每一件事都準時到。"}${r.dead?"":otMin()?`加班 ${otMin()} 分鐘。`:"準時十點下班。"}${(G.chatWith||[]).length?`跟 ${G.chatWith.length} 個人聊了天。`:""}</p>
    ${its.length?`<div class="lbl">今晚撿到</div><p style="margin:0">${its.map(i=>`${i.icon} ${esc(i.name)}`).join("　")}</p>`:""}
    <ol class="log">${G.log.map(([a,b])=>`<li><span>${esc(a)}</span>${esc(b)}</li>`).join("")}</ol>
-   <div class="actions"><button class="primary" data-act="start">再上一天班</button><button class="ghost" data-act="copy">複製結算</button><button class="ghost" data-act="title">換個位子</button><span class="toast" id="toast" aria-live="polite"></span></div>
+   <div class="actions"><button class="primary" data-act="start">再上一天班</button><button class="ghost" data-act="shareCard">成績卡</button><button class="ghost" data-act="copy">複製結算</button><button class="ghost" data-act="title">換個位子</button><span class="toast" id="toast" aria-live="polite"></span></div>
    <textarea id="copybox" readonly hidden style="width:100%;margin-top:10px;min-height:8em;font:inherit;background:var(--tray);color:var(--ink);border:1px solid var(--rule);border-radius:4px;padding:8px"></textarea></div>`;
   G.result=r;
 }
@@ -301,7 +301,9 @@ document.addEventListener("click",e=>{
   else if(act==="camReset"){CAM.yaw=0;CAM.tilt=1;CAM.zoom=1;saveCam();}
   else if(act==="guide"){const t=targetOf(step().target);path=findPath(t.x,t.z);guiding=true;}
   else if(act==="codex")openCodex();
-  else if(act==="sound"){soundOn=!soundOn;store.set("sound",soundOn);renderHud();if(soundOn){beep("ok");startAmbient();}else stopAmbient();}
+  else if(act==="sound"){soundOn=!soundOn;store.set("sound",soundOn);renderHud();if(soundOn){beep("ok");startAmbient();}else stopAmbient();a.setAttribute("aria-pressed",soundOn);if(a.classList.contains("toggle"))a.textContent=soundOn?"開":"關";}
+  else if(act==="settings")openSettings();
+  else if(act==="shareCard")openShareCard();
   else if(act==="home"){showTitle();}
   else if(act==="title")showTitle();
   else if(act==="about")openSheet("關於",`<h3>晚上十點下課</h3><p>一個補習班晚上的小遊戲。靈感來自晶圓廠的打工遊戲 fab24hr，把場景換成台灣的補習班。</p><p>可以玩三個不同的位子：數學老師、櫃台班導、補習班主任。同一個晚上，看到的事情不一樣。</p><p class="hint">補習班、人物、數字都是虛構的，不代表任何一家補習班。</p>`);
@@ -335,7 +337,7 @@ stage.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;ptrs.s
   if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pinch0>0){CAM.zoom=Math.max(.55,Math.min(1.8,zoom0*pinch0/d));}return;}
   if(!last)return;const mx=e.clientX-last[0],my=e.clientY-last[1];
   if(!dragged&&Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])>10)dragged=true;
-  if(dragged){CAM.yaw-=mx*.009;CAM.tilt=Math.max(.45,Math.min(1.6,CAM.tilt-my*.006));}last=[e.clientX,e.clientY];});
+  if(dragged){CAM.yaw-=mx*.009*SET.rot;CAM.tilt=Math.max(.45,Math.min(1.6,CAM.tilt-my*.006*SET.rot));}last=[e.clientX,e.clientY];});
 const ptrEnd=e=>{ptrs.delete(e.pointerId);if(ptrs.size===0){last=null;saveCam();}};
 stage.addEventListener("pointercancel",ptrEnd);
 stage.addEventListener("wheel",e=>{e.preventDefault();CAM.zoom=Math.max(.55,Math.min(1.8,CAM.zoom*(1+Math.sign(e.deltaY)*.08)));saveCam();},{passive:false});

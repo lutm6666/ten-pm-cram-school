@@ -30,4 +30,9 @@ for(const id of ['lockup','reply','wait']){
   while(await vis('[data-act=dnext]'))await p.click('[data-act=dnext]');
 }
 
+// 設定
+const md0=await p.evaluate(()=>__dbg.mode);await p.click('.hud [data-act=settings]');await p.click('[data-set=speed][data-v="1.4"]');await p.click('[data-set=font][data-v="1.15"]');
+const fs=await p.evaluate(()=>getComputedStyle(document.documentElement).fontSize);const st=await p.evaluate(()=>JSON.parse(localStorage.getItem('ten-pm:set')));
+await p.click('#sheet [data-act=closeSheet]');const md=await p.evaluate(()=>__dbg.mode);console.log('settings',fs,JSON.stringify(st),md);
+if(fs!=='18.4px'||st.speed!==1.4||md!==md0)fail++;
 console.log(fail||errs.length?'FAIL':'PASS',errs);await b.close();process.exit(fail||errs.length?1:0);})();

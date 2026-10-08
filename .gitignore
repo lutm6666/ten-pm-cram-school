@@ -5,3 +5,4 @@ artifact.html
 tests/shots.html
 shots/
 out/
+!assets/*.png
