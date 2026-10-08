@@ -18,6 +18,7 @@
 
 [hidden]{display:none!important}
 html,body{height:100%;overflow:hidden}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{background:var(--board);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.7;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input,textarea{-webkit-user-select:text;user-select:text}
 button{touch-action:manipulation}
@@ -33,15 +34,15 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .bar-row{display:flex;align-items:center;gap:10px}
 .clockbox{min-width:0}
 .clock{font-family:var(--mono);font-weight:700;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.05}
-.clocksub{font-size:.72rem;color:var(--muted);white-space:nowrap}
+.clocksub{font-size:.8rem;color:var(--muted);white-space:nowrap}
 .spacer{flex:1}
-.pill{flex:none;display:inline-flex;align-items:center;gap:5px;font-size:.72rem;padding:3px 8px;border:1px solid var(--rule);border-radius:3px;white-space:nowrap}
+.pill{flex:none;display:inline-flex;align-items:center;gap:5px;font-size:.8rem;padding:3px 8px;border:1px solid var(--rule);border-radius:3px;white-space:nowrap}
 .pill i{width:7px;height:7px;border-radius:50%;background:var(--amber)}
 .pill.ok i{background:var(--green)}.pill.bad i{background:var(--red)}
 .hbtn{background:none;border:none;border-left:1px solid var(--rule);padding:4px 10px;font-size:.88rem;white-space:nowrap}
 .meters{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px}
 .meter{min-width:0}
-.meter .lab{display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted)}
+.meter .lab{display:flex;justify-content:space-between;font-size:.76rem;color:var(--muted)}
 .meter .lab b{font-family:var(--mono);font-weight:500;color:var(--ink)}
 .track{height:3px;background:var(--rule);border-radius:2px;overflow:hidden;margin-top:1px}
 .fill{height:100%;background:var(--blue);transition:width .5s}
@@ -51,8 +52,8 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .next{position:fixed;left:0;right:0;z-index:5;pointer-events:none;padding:0 16px}
 .next .in{display:flex;justify-content:center}
 .nextcard{pointer-events:auto;display:flex;align-items:center;gap:10px;max-width:100%;background:var(--glass);border:1px solid var(--rule);border-radius:6px;padding:6px 6px 6px 8px;box-shadow:0 4px 18px rgba(0,0,0,.12);backdrop-filter:blur(6px)}
-.tag{font-size:.7rem;font-weight:700;background:var(--amber);color:#1c1408;padding:2px 6px;border-radius:3px;white-space:nowrap}
-.nextcard .g{font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{font-size:.8rem;font-weight:700;background:var(--amber);color:#1c1408;padding:2px 6px;border-radius:3px;white-space:nowrap}
+.nextcard .g{font-size:.98rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nextcard button{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:4px 10px;font-size:.85rem;white-space:nowrap}
 
 /* 下方：方向鍵與動作鈕 */

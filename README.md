@@ -55,7 +55,8 @@ tests/             自動遊玩測試
 ## 建置
 
 ```bash
-python3 build.py                          # 產生 index.html
+python3 build.py                          # 產生 index.html（GitHub Pages 用，含手機 viewport 設定）
+python3 build.py --artifact https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js artifact.html  # 給 Claude 頁面用
 python3 build.py stub.js tests/test.html  # 產生測試用頁面（用替身取代 three.js）
 ```
 

@@ -36,7 +36,7 @@ function label(text,fg="#1c2633",bg="rgba(255,255,255,.92)",size=40){
   const font=`700 ${size}px "Noto Sans TC","PingFang TC",sans-serif`;
   const m=document.createElement("canvas").getContext("2d");m.font=font;const w=Math.ceil(m.measureText(text).width)+30,h=size+22;
   const t=canvasTex(w,h,(g)=>{g.fillStyle=bg;g.fillRect(0,0,w,h);g.font=font;g.fillStyle=fg;g.textBaseline="middle";g.fillText(text,15,h/2+2);});
-  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false,transparent:true}));s.scale.set(w*.0095,h*.0095,1);s.renderOrder=10;return s;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false,transparent:true}));s.scale.set(w*.0074,h*.0074,1);s.renderOrder=10;return s;
 }
 function floorText(text,x,z,rot,size=.55){
   const font=`900 64px "Noto Sans TC","PingFang TC",sans-serif`;const m=document.createElement("canvas").getContext("2d");m.font=font;const w=Math.ceil(m.measureText(text).width)+20;
