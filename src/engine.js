@@ -18,7 +18,7 @@ let seenSides=new Set(store.get("sides",[]));             // 各職業線的支�
 let seenItems=new Set(store.get("items",[])),seenInfo=new Set(store.get("info",[])),doneLines=new Set(store.get("done",[]));
 
 const toMin=s=>{const [h,m]=s.split(":").map(Number);return h*60+m;},fmt=m=>{m=Math.floor(m);return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");};
-const MIN_PER_SEC=1/1.2;
+const MIN_PER_SEC=1/2.4;
 function newGame(lineId){
   const L=LINES[lineId],name=(store.get("name","")||"").trim();
   const sur=name?(/^[一-鿿]/.test(name)?name[0]:name+" "):"許";
