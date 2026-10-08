@@ -45,8 +45,15 @@ function floorText(text,x,z,rot,size=.55){
   p.rotation.x=-Math.PI/2;p.rotation.z=rot;p.position.set(x,.012,z);scene.add(p);
 }
 function wallSign(text,x,y,z,ry,w=2.4,h=.9,fg="#1c2633",bg="#ffffff",size=56){
-  const t=canvasTex(512,Math.round(512*h/w),(g,cw,ch)=>{g.fillStyle=bg;g.fillRect(0,0,cw,ch);g.fillStyle=fg;g.font=`700 ${size}px "Noto Sans TC","PingFang TC",sans-serif`;g.textBaseline="middle";
-    text.split("\n").forEach((ln,i,a)=>g.fillText(ln,24,ch/2+(i-(a.length-1)/2)*size*1.15));});
+  const PX=200,cw=Math.round(w*PX),ch=Math.round(h*PX),pad=Math.round(Math.min(cw,ch)*.12),lines=text.split("\n");
+  const t=canvasTex(cw,ch,(g)=>{g.fillStyle=bg;g.fillRect(0,0,cw,ch);g.fillStyle=fg;g.textBaseline="middle";g.textAlign="center";
+    const fnt=s=>`700 ${s}px "Noto Sans TC","PingFang TC",sans-serif`;
+    // 第一行當標題（較大），其餘行較小；整體縮到放得下
+    const rel=lines.map((_,i)=>i===0||lines.length===1?1:.78);let fs=Math.round(size*PX/150);
+    for(;fs>8;fs-=2){g.font=fnt(fs);const ok=lines.every((ln,i)=>{g.font=fnt(fs*rel[i]);return g.measureText(ln).width<=cw-pad*2;});
+      const tot=rel.reduce((a,r)=>a+fs*r*1.2,0);if(ok&&tot<=ch-pad*1.2)break;}
+    const tot=rel.reduce((a,r)=>a+fs*r*1.2,0);let yy=(ch-tot)/2;
+    lines.forEach((ln,i)=>{const s2=fs*rel[i];g.font=fnt(s2);g.fillText(ln,cw/2,yy+s2*.6);yy+=s2*1.2;});});
   const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:t}));p.position.set(x,y,z);p.rotation.y=ry;scene.add(p);return p;
 }
 function limb(w,h,d,color,px,py,pz,parent){const pv=new THREE.Group();pv.position.set(px,py,pz);const m=new THREE.Mesh(bgeo(w,h,d),mat(color));m.position.y=-h/2;pv.add(m);parent.add(pv);return pv;}
@@ -146,7 +153,7 @@ function buildWorld(){
 
   // B 班教室
   box(10.2,1.3,.06,C.frame,20,1.55,.25);box(10,1.18,.07,C.board,20,1.55,.27);
-  wallSign("空間向量　學測倒數 101 天",20,1.75,.32,0,6,.42,"#1d4fc4","#ffffff",44);
+  wallSign("空間向量\n學測倒數 101 天",20,1.6,.32,0,4.2,.9,"#1d4fc4","#ffffff",60);
   furn([19.4,1.7,20.6,2.3],1.0,0x6b4f39);
   box(.06,.5,.6,0x222831,27.75,1.9,3);// 時鐘
   DESK_COLS.forEach((cx,ci)=>DESK_ROWS.forEach((rz,ri)=>{

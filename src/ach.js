@@ -14,6 +14,9 @@ const ACH=[
  {id:"truth",name:"說實話",desc:"照實填總部週報，還附上說明",test:G=>G.f.explained},
  {id:"thirsty",name:"整晚沒喝到水",desc:"嗓子撐到 20 以下還是上完課",test:G=>G.done&&G.line.id==="teacher"&&G.s.voice>0&&G.s.voice<=20},
  {id:"bento",name:"誰吃了我的便當",desc:"把便當的事推給助教",test:G=>G.f.blamedHong},
+ {id:"ot30",name:"責任制",desc:"加班超過半小時才下班",test:G=>G.done&&G.clock>=22*60+30},
+ {id:"ot0",name:"準時下班",desc:"加班不到五分鐘就離開補習班",test:G=>G.done&&!G.result?.dead&&G.clock<22*60+5},
+ {id:"chat5",name:"話匣子",desc:"一個晚上跟 5 個人閒聊",test:G=>(G.chatWith||[]).length>=5},
  {id:"epi",name:"一個月後",desc:"看到三條線交織出的結局",test:()=>false}
 ];
 let achSet=new Set();try{achSet=new Set(JSON.parse(localStorage.getItem("ten-pm:ach")||"[]"));}catch(e){}

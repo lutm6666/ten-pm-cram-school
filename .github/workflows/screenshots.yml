@@ -1,0 +1,30 @@
+name: 3D screenshots
+on:
+  push:
+    branches: [main]
+    paths: ['src/**', 'build.py', 'tests/shots.js', '.github/workflows/screenshots.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  shots:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: python3 build.py --dbg https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js tests/shots.html
+      - run: OUT=out node tests/shots.js
+      - name: Push screenshots to ci-screenshots branch
+        run: |
+          cd out
+          git init -q -b ci-screenshots
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          echo "Screenshots for ${GITHUB_SHA}" > README.md
+          git add -A && git commit -qm "screenshots for ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-screenshots

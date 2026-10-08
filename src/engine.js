@@ -24,7 +24,7 @@ function newGame(lineId){
   const sur=name?(/^[一-鿿]/.test(name)?name[0]:name+" "):"許";
   G={line:L,idx:0,s:{},h:{...L.hidden},f:{},log:[],items:[],sidesDone:{},tName:lineId==="teacher"?sur+"老師":"許老師",pName:name||({yun:"小芸",boss:"何主任"}[lineId]||"你"),name,tipShown:false,status:"",time:"17:20",chapterTitle:""};
   for(const k in L.stats)G.s[k]=L.stats[k][1];
-  G.steps=buildSteps(L);G.minis={};G.hard=doneLines.has(lineId);G.clock=toMin(G.steps[0].t);G.lates=0;G.lateMin=0;
+  G.steps=buildSteps(L);G.minis={};G.chatUsed=[];G.chatWith=[];G.hard=doneLines.has(lineId);G.clock=toMin(G.steps[0].t);G.lates=0;G.lateMin=0;
   Object.defineProperty(G,"time",{get(){return fmt(G.clock);},set(v){},configurable:true});
   if(player)scene.remove(player);makePlayer(L);player.position.set(L.start[0],0,L.start[1]);player.rotation.y=Math.PI;
   Object.keys(CHARS).forEach(id=>{if(CHARS[id].body!==undefined)setNPC(id,null);});
@@ -59,12 +59,13 @@ function nearest(){
   const m=targetOf(step().target);if(m){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:"main",label:step().action||(m.kind==="npc"?`找${CHARS[m.id].name}`:`到${m.name}`)});}
   for(const sd of activeSides()){const t=targetOf(sd.target);if(t){const ds=d(t.x,t.z);if(ds<1.9)c.push({dist:ds,type:"side",sd,label:sd.action||`找${t.name}`});}}
   for(const it of ITEMS){if(itemMarks[it.id]&&!G.items.includes(it.id)){const di=d(it.pos[0],it.pos[1]);if(di<1.3)c.push({dist:di-.3,type:"item",it,label:"撿起來"});}}
+  for(const id of chatTargets()){const n=npcs[id],dc=d(n.position.x,n.position.z);if(dc<1.5)c.push({dist:dc+.8,type:"chat",id,label:`跟${CHARS[id].name}聊聊`});}
   if(c.length){c.sort((a,b)=>a.dist-b.dist);return c[0];}
   for(const inf of INFO){if(d(inf.pos[0],inf.pos[1])<1.6)return{type:"info",inf,label:"看說明"};}
   return null;
 }
 function interact(){if(mode!=="walk"||!near)return;
-  if(near.type==="main")openStep();else if(near.type==="side")openSide(near.sd);else if(near.type==="item")pickItem(near.it);else if(near.type==="info")openInfo(near.inf);}
+  if(near.type==="main")openStep();else if(near.type==="side")openSide(near.sd);else if(near.type==="item")pickItem(near.it);else if(near.type==="info")openInfo(near.inf);else if(near.type==="chat")openChat(near.id);}
 
 /* ---------- HUD ---------- */
 function renderAll(){renderHud();renderNext();renderDock();}
@@ -72,12 +73,14 @@ function renderHud(){
   if(!G){$("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock">17:20</div><div class="clocksub">高三數學 B 班</div></div><span class="spacer"></span><button class="hbtn" data-act="codex">圖鑑</button></div>`;return;}
   const L=G.line,low=k=>G.s[k]<25?"low":"";
   const st=statusOf(),cls=/上課/.test(st)?"ok":/下課|收拾/.test(st)?"":"bad";
-  $("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock" id="clk">${mode==="end"?fmt(Math.max(G.clock,22*60+10)):G.time}</div><div class="clocksub" id="clksub">${dueText()}</div></div>
+  $("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock" id="clk">${mode==="end"?fmt(Math.max(G.clock,22*60)):G.time}</div><div class="clocksub" id="clksub">${dueText()}</div></div>
    <span class="spacer"></span><span class="pill ${cls}"><i></i>${esc(st)}</span><button class="hbtn" data-act="sound" aria-pressed="${soundOn}" aria-label="音效">${soundOn?"♪ 開":"♪ 關"}</button><button class="hbtn" data-act="home">主頁</button><button class="hbtn" data-act="codex">圖鑑</button></div>
    <div class="meters">${Object.keys(L.stats).map(k=>`<div class="meter ${low(k)}"><div class="lab"><span>${L.stats[k][0]}</span><b>${G.s[k]}</b></div><div class="track"><div class="fill" style="width:${G.s[k]}%"></div></div></div>`).join("")}</div>`;
   $("next").style.top=($(".hud")?document.querySelector(".hud").offsetHeight:80)+8+"px";
 }
-function dueText(){if(!G)return"";if(mode==="walk"&&G.due!=null){const r=Math.floor(G.due-G.clock);return r>=0?`<span class="due ${r<=3?"warn":""}">${fmt(G.due)} 前・剩 ${r} 分</span>`:`<span class="due late">已經晚了 ${-r} 分</span>`;}return `${esc(G.chapterTitle||"")}・${esc(G.line.role)}`;}
+function otMin(){return G?Math.max(0,Math.floor(G.clock-22*60)):0;}
+function dueText(){if(!G)return"";if(otMin()&&mode!=="end"){const r=mode==="walk"&&G.due!=null?Math.floor(G.due-G.clock):null;return `<span class="ot">已加班 ${otMin()} 分</span>`+(r==null?"":r>=0?`<span class="due ${r<=3?"warn":""}">剩 ${r} 分</span>`:`<span class="due late">晚 ${-r} 分</span>`);}return dueText0();}
+function dueText0(){if(mode==="walk"&&G.due!=null){const r=Math.floor(G.due-G.clock);return r>=0?`<span class="due ${r<=3?"warn":""}">${fmt(G.due)} 前・剩 ${r} 分</span>`:`<span class="due late">已經晚了 ${-r} 分</span>`;}return `${esc(G.chapterTitle||"")}・${esc(G.line.role)}`;}
 let lastClockMin=-1;
 function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}}}
 function checkBell(){if(!G)return;const ph=phaseOf();if(ph===crowdPhase)return;const prev=crowdPhase;setCrowd(ph);G.status=statusOf();renderHud();
@@ -93,7 +96,7 @@ function renderDock(){
   const d=$("dock");if(mode!=="walk"){d.hidden=true;return;}d.hidden=false;
   const touch=matchMedia("(pointer:coarse)").matches;
   $("dpad").hidden=!touch;$("keys").hidden=touch;
-  const a=$("actBtn");a.hidden=!near;if(near){a.textContent=near.label;a.className="act"+(near.type==="info"?" info":"");}
+  const a=$("actBtn");a.hidden=!near;if(near){a.textContent=near.label;a.className="act"+(near.type==="info"?" info":near.type==="chat"?" chat":"");}
 }
 
 /* ---------- 章節卡 ---------- */
@@ -135,7 +138,7 @@ function applyFx(fx){const out=[];for(const k in fx){if(!fx[k])continue;
 function resolveChoice(c,onDone,arg){
   const a=arg!==undefined?arg:G;
   const fx=val(c.fx,a)||{},res=val(c.res,a),log=val(c.log,a);
-  if(c.set)Object.assign(G.f,c.set);if(log)G.log.push([G.time,log]);
+  if(c.min)spend(c.min);if(c.set)Object.assign(G.f,c.set);if(log)G.log.push([G.time,log]);
   const deltas=applyFx(fx);renderHud();
   const pages=typeof res==="string"?[[null,res]]:res||[[null,"……"]];
   if(G.s.voice!==undefined&&G.s.voice>0&&G.s.voice<20&&!G.f.hoarse){G.f.hoarse=1;pages.push([null,"你的聲音開始沙啞了。"]);}
@@ -143,7 +146,7 @@ function resolveChoice(c,onDone,arg){
   runDialog({pages,deltas:deltas||`<span class="d">沒有變化</span>`,endLabel:dead?"……":"好",noskip:true,onEnd:()=>dead?finish():onDone()});
 }
 function openStep(){
-  const st=step();if(st.effect)startEffect(st.effect);if(st.id==="ev_rain")startRain(12);if(/phone|calls|ymom|bmom|ycalls/.test(st.id))ring(2);let pages=val(st.pages,G);const choices=st.choices?val(st.choices,G):null;
+  const st=step();if(st.effect)startEffect(st.effect);if(st.id==="ev_rain")startRain(12);if(/phone|calls|ymom|bmom|ycalls|ot_group/.test(st.id))ring(2);let pages=val(st.pages,G);const choices=st.choices?val(st.choices,G):null;
   if(G.due!=null&&G.clock>G.due+.5&&!st.auto){const late=Math.floor(G.clock-G.due),k=Math.min(3,Math.ceil(late/5));G.lates++;G.lateMin+=late;const lf=G.line.late||{};const fx={};for(const a in lf.fx||{})fx[a]=lf.fx[a]*k;const d=applyFx(fx);G.log.push([G.time,`遲到 ${late} 分鐘`]);pages=[[null,`你晚了 ${late} 分鐘。${lf.text||""}`],...pages];if(d)G.lateDeltas=d;renderHud();}
   spend(2);
   runDialog({pages,choices,endLabel:st.endLabel,onEnd:choices?null:()=>{if(st.fx)applyFx(val(st.fx,G));if(st.set)Object.assign(G.f,st.set);nextStep();},
@@ -246,14 +249,14 @@ function epilogue(){
    <div class="actions"><button class="primary" data-act="title">回主頁</button></div></div>`;
 }
 /* ---------- 存檔 ---------- */
-function saveGame(){if(!G)return;store.set("save",{line:G.line.id,steps:G.steps.map(s=>({id:s.id,t:s.t})),idx:G.idx,s:G.s,h:G.h,f:G.f,log:G.log,items:G.items,sidesDone:G.sidesDone,clock:G.clock,status:G.status,chapterTitle:G.chapterTitle,lates:G.lates,lateMin:G.lateMin,minis:G.minis,hard:G.hard,pName:G.pName,tName:G.tName,name:G.name,pos:[player.position.x,player.position.z],when:Date.now()});}
+function saveGame(){if(!G)return;store.set("save",{line:G.line.id,steps:G.steps.map(s=>({id:s.id,t:s.t})),idx:G.idx,s:G.s,h:G.h,f:G.f,log:G.log,items:G.items,sidesDone:G.sidesDone,clock:G.clock,status:G.status,chapterTitle:G.chapterTitle,lates:G.lates,lateMin:G.lateMin,minis:G.minis,chatUsed:G.chatUsed||[],chatWith:G.chatWith||[],hard:G.hard,pName:G.pName,tName:G.tName,name:G.name,pos:[player.position.x,player.position.z],when:Date.now()});}
 function clearSave(){store.set("save",null);}
 function resumeGame(){
   const sv=store.get("save",null);if(!sv||!LINES[sv.line])return showTitle();
   const L=LINES[sv.line];$("cover").hidden=true;startAmbient();
-  G={line:L,idx:sv.idx,s:sv.s,h:sv.h,f:sv.f,log:sv.log,items:sv.items,sidesDone:sv.sidesDone,clock:sv.clock,status:sv.status,chapterTitle:sv.chapterTitle,lates:sv.lates||0,lateMin:sv.lateMin||0,minis:sv.minis||{},hard:sv.hard,pName:sv.pName,tName:sv.tName,name:sv.name,tipShown:true};
+  G={line:L,idx:sv.idx,s:sv.s,h:sv.h,f:sv.f,log:sv.log,items:sv.items,sidesDone:sv.sidesDone,clock:sv.clock,status:sv.status,chapterTitle:sv.chapterTitle,lates:sv.lates||0,lateMin:sv.lateMin||0,minis:sv.minis||{},chatUsed:sv.chatUsed||[],chatWith:sv.chatWith||[],hard:sv.hard,pName:sv.pName,tName:sv.tName,name:sv.name,tipShown:true};
   Object.defineProperty(G,"time",{get(){return fmt(G.clock);},set(v){},configurable:true});
-  G.steps=sv.steps.map(m=>{const s=L.steps.find(x=>x.id===m.id);if(s)return s;const ev=EVENTS.find(e=>"ev_"+e.id===m.id);return ev?{...ev.make(),id:m.id,t:m.t,isEvent:true}:null;}).filter(Boolean);
+  G.steps=sv.steps.map(m=>{const s=L.steps.find(x=>x.id===m.id);if(s)return s;if(/^ot_/.test(m.id))return otRestore(m.id,m.t,L);const ev=EVENTS.find(e=>"ev_"+e.id===m.id);return ev?{...ev.make(),id:m.id,t:m.t,isEvent:true}:null;}).filter(Boolean);
   makePlayer(L);player.position.set(sv.pos[0],0,sv.pos[1]);
   Object.keys(CHARS).forEach(id=>{if(CHARS[id].body!==undefined)setNPC(id,null);});
   for(const id in L.npcs)if(CHARS[id]&&CHARS[id].body!==undefined)setNPC(id,val(L.npcs[id],G),true);
@@ -266,13 +269,13 @@ function resumeGame(){
   mode="walk";renderAll();if(st.auto)openStep();
 }
 function finish(){
-  mode="end";const r=G.line.ending(G);remember(r);G.done=true;checkAch();clearSave();doneLines.add(G.line.id);store.set("done",[...doneLines]);renderAll();
+  mode="end";const r=G.line.ending(G);G.result=r;remember(r);G.done=true;checkAch();clearSave();doneLines.add(G.line.id);store.set("done",[...doneLines]);renderAll();
   const c=$("cover");c.className="cover";c.hidden=false;
   const its=G.items.map(id=>ITEMS.find(i=>i.id===id)).filter(Boolean);
-  c.innerHTML=`<div class="card report fade"><div class="kick">${r.dead?"提早下班":"22:10 下班"}・${esc(G.line.role)}・結案報告</div><h2>${esc(r.title)}</h2><p style="margin:0">${esc(r.desc)}</p>${G.line.coda?`<p style="margin:10px 0 0;font-family:var(--display);color:var(--muted)">${esc(G.line.coda)}</p>`:""}
+  c.innerHTML=`<div class="card report fade"><div class="kick">${r.dead?"提早下班":fmt(Math.max(G.clock,22*60))+" 下班"}・${esc(G.line.role)}・結案報告</div><h2>${esc(r.title)}</h2><p style="margin:0">${esc(r.desc)}</p>${G.line.coda?`<p style="margin:10px 0 0;font-family:var(--display);color:var(--muted)">${esc(G.line.coda)}</p>`:""}
    <div class="big">${r.big.map(([v,l])=>`<div><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("")}</div>
    <div class="big" style="grid-template-columns:repeat(${Object.keys(G.s).length},1fr)">${Object.keys(G.s).map(k=>`<div><b style="font-size:1.1rem">${G.s[k]}</b><span>${G.line.stats[k][0]}</span></div>`).join("")}</div>
-   <div class="lbl">準時</div><p style="margin:0">${G.lates?`遲到 ${G.lates} 次，一共 ${G.lateMin} 分鐘。`:"每一件事都準時到。"}</p>
+   <div class="lbl">準時</div><p style="margin:0">${G.lates?`遲到 ${G.lates} 次，一共 ${G.lateMin} 分鐘。`:"每一件事都準時到。"}${r.dead?"":otMin()?`加班 ${otMin()} 分鐘。`:"準時十點下班。"}${(G.chatWith||[]).length?`跟 ${G.chatWith.length} 個人聊了天。`:""}</p>
    ${its.length?`<div class="lbl">今晚撿到</div><p style="margin:0">${its.map(i=>`${i.icon} ${esc(i.name)}`).join("　")}</p>`:""}
    <ol class="log">${G.log.map(([a,b])=>`<li><span>${esc(a)}</span>${esc(b)}</li>`).join("")}</ol>
    <div class="actions"><button class="primary" data-act="start">再上一天班</button><button class="ghost" data-act="copy">複製結算</button><button class="ghost" data-act="title">換個位子</button><span class="toast" id="toast" aria-live="polite"></span></div>
@@ -359,7 +362,8 @@ function tickTips(){if(!G||mode!=="walk")return;
 const _pv=new THREE.Vector3();
 function tickEdge(){const a=$("edgeArrow");if(!G||mode!=="walk"){a.hidden=true;return;}const m=targetOf(step()?.target);if(!m){a.hidden=true;return;}
   _pv.set(m.x,1,m.z).project(camera);const W=innerWidth,H=innerHeight;let sx=(_pv.x+1)/2*W,sy=(1-_pv.y)/2*H;const behind=_pv.z>1;
-  const top=document.querySelector(".hud").offsetHeight+90,bot=H-150,l=34,r=W-34;
+  const top=document.querySelector(".hud").offsetHeight+90,l=34,r=W-34;let bot=H-40;
+  for(const sel of [".dpad","#actBtn",".camreset"]){const e=document.querySelector(sel);if(e&&e.offsetParent){const b=e.getBoundingClientRect();if(b.height)bot=Math.min(bot,b.top-32);}}
   if(!behind&&sx>l&&sx<r&&sy>top&&sy<bot){a.hidden=true;return;}
   const cx=W/2,cy=(top+bot)/2;let dx=sx-cx,dy=sy-cy;if(behind){dx=-dx;dy=-dy;}
   const k=Math.min(Math.abs((dx>0?r-cx:l-cx)/(dx||1e-6)),Math.abs((dy>0?bot-cy:top-cy)/(dy||1e-6)));

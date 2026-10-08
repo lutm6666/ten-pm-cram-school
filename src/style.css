@@ -34,7 +34,7 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .bar-row{display:flex;align-items:center;gap:10px}
 .clockbox{min-width:0}
 .clock{font-family:var(--mono);font-weight:700;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.05}
-.clocksub{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.clocksub{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .spacer{flex:1}
 .pill{flex:none;display:inline-flex;align-items:center;gap:5px;font-size:.8rem;padding:3px 8px;border:1px solid var(--rule);border-radius:3px;white-space:nowrap}
 .pill i{width:7px;height:7px;border-radius:50%;background:var(--amber)}
@@ -202,3 +202,13 @@ dl.list dd{margin:0;color:var(--muted);font-size:.9rem}
 @media (prefers-reduced-motion:reduce){.edge{animation:none}}
 
 .camreset{pointer-events:auto;align-self:flex-end;width:44px;height:44px;border-radius:50%;border:1px solid var(--rule);background:var(--glass);font-size:1.2rem;margin-left:auto;margin-right:8px}
+
+.act.chat{background:var(--surface);color:var(--ink);border:2px solid var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.clocksub .ot{display:inline-block;background:#7c2d12;color:#fff;border-radius:3px;padding:0 5px;margin-right:4px;font-weight:700}
+.lock{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
+.lk{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:64px;justify-content:center;border:1px solid var(--rule);border-radius:6px;font-size:.8rem;padding:6px 4px;text-align:center;background:var(--tray);color:var(--muted)}
+.lk span{font-size:1.3rem;filter:grayscale(1);opacity:.5}
+.lk.on{background:#fff6d6;color:var(--ink);border-color:#e0b100;box-shadow:0 0 0 2px rgba(224,177,0,.25),0 0 14px rgba(255,200,0,.35)}
+.lk.on span{filter:none;opacity:1}
+button.lk{font-family:inherit;cursor:pointer}
+@media (prefers-reduced-motion:no-preference){.lk.on span{animation:lkglow 1.6s ease-in-out infinite}@keyframes lkglow{50%{transform:scale(1.08)}}}
