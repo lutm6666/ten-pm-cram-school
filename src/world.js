@@ -184,7 +184,20 @@ function moveAgent(n,dt,speed=2.6){const u=n.userData;if(!u.path||!n.visible){u.
 function moveNPCs(dt){for(const id in npcs)moveAgent(npcs[id],dt);extras.forEach(e=>moveAgent(e.p,dt,e.speed||2.2));}
 function addInfoMark(info){const s=label("i","#ffffff","#5f6b78",40);s.scale.multiplyScalar(.75);s.position.set(info.pos[0],info.h||1.6,info.pos[1]);scene.add(s);infoMarks[info.id]=s;}
 function addSideMark(){const s=label("？","#1c2633","#f0b45a",48);scene.add(s);return s;}
-function addItemMark(item){const s=label("✦","#1c2633","#f0b45a",40);s.scale.multiplyScalar(.7);s.position.set(item.pos[0],.5,item.pos[1]);scene.add(s);itemMarks[item.id]=s;}
+/* 收集物：地上的閃光 */
+let sparkTex=null,glowTex=null;
+function sparkTextures(){if(sparkTex)return;
+  sparkTex=canvasTex(64,64,(g,w,h)=>{const c=w/2;const gr=g.createRadialGradient(c,c,0,c,c,c);gr.addColorStop(0,"rgba(255,255,255,1)");gr.addColorStop(.25,"rgba(255,240,190,.9)");gr.addColorStop(1,"rgba(255,220,120,0)");
+    g.fillStyle=gr;g.beginPath();for(let k=0;k<8;k++){const a=k*Math.PI/4,r=k%2?c*.18:c;g.lineTo(c+Math.cos(a)*r,c+Math.sin(a)*r);}g.closePath();g.fill();g.fillStyle="rgba(255,255,255,.95)";g.beginPath();g.arc(c,c,3,0,7);g.fill();});
+  glowTex=canvasTex(64,64,(g,w,h)=>{const c=w/2,gr=g.createRadialGradient(c,c,0,c,c,c);gr.addColorStop(0,"rgba(255,226,140,.75)");gr.addColorStop(1,"rgba(255,226,140,0)");g.fillStyle=gr;g.fillRect(0,0,w,h);});}
+function addItemMark(item){sparkTextures();const g=new THREE.Group();g.position.set(item.pos[0],0,item.pos[1]);
+  const glow=new THREE.Mesh(new THREE.PlaneGeometry(.9,.9),new THREE.MeshBasicMaterial({map:glowTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));glow.rotation.x=-Math.PI/2;glow.position.y=.02;g.add(glow);
+  const sp=[];for(let k=0;k<4;k++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:sparkTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+    s.userData={ox:(Math.random()-.5)*.45,oz:(Math.random()-.5)*.45,ph:k*1.7+Math.random(),sp:1.6+Math.random()*1.2};g.add(s);sp.push(s);}
+  g.userData={glow,sp,seed:Math.random()*10};scene.add(g);itemMarks[item.id]=g;}
+function tickItemMarks(t){Object.values(itemMarks).forEach(g=>{const u=g.userData;if(!u||!u.sp)return;
+  u.glow.material.opacity=.45+.35*Math.sin(t*3+u.seed);u.glow.scale.setScalar(.85+.2*Math.sin(t*3+u.seed));
+  u.sp.forEach(s=>{const d=s.userData,c=((t*d.sp+d.ph)%3)/3,tw=Math.sin(c*Math.PI);s.position.set(d.ox,.08+c*.45,d.oz);s.scale.setScalar(.12+.3*tw);s.material.opacity=tw;});});}
 function resize(){const w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.fov=w<600?52:38;camera.updateProjectionMatrix();}
 
 /* ---------- 碰撞與尋路 ---------- */

@@ -482,7 +482,20 @@ function moveAgent(n,dt,speed=2.6){const u=n.userData;if(!u.path||!n.visible){u.
 function moveNPCs(dt){for(const id in npcs)moveAgent(npcs[id],dt);extras.forEach(e=>moveAgent(e.p,dt,e.speed||2.2));}
 function addInfoMark(info){const s=label("i","#ffffff","#5f6b78",40);s.scale.multiplyScalar(.75);s.position.set(info.pos[0],info.h||1.6,info.pos[1]);scene.add(s);infoMarks[info.id]=s;}
 function addSideMark(){const s=label("？","#1c2633","#f0b45a",48);scene.add(s);return s;}
-function addItemMark(item){const s=label("✦","#1c2633","#f0b45a",40);s.scale.multiplyScalar(.7);s.position.set(item.pos[0],.5,item.pos[1]);scene.add(s);itemMarks[item.id]=s;}
+/* 收集物：地上的閃光 */
+let sparkTex=null,glowTex=null;
+function sparkTextures(){if(sparkTex)return;
+  sparkTex=canvasTex(64,64,(g,w,h)=>{const c=w/2;const gr=g.createRadialGradient(c,c,0,c,c,c);gr.addColorStop(0,"rgba(255,255,255,1)");gr.addColorStop(.25,"rgba(255,240,190,.9)");gr.addColorStop(1,"rgba(255,220,120,0)");
+    g.fillStyle=gr;g.beginPath();for(let k=0;k<8;k++){const a=k*Math.PI/4,r=k%2?c*.18:c;g.lineTo(c+Math.cos(a)*r,c+Math.sin(a)*r);}g.closePath();g.fill();g.fillStyle="rgba(255,255,255,.95)";g.beginPath();g.arc(c,c,3,0,7);g.fill();});
+  glowTex=canvasTex(64,64,(g,w,h)=>{const c=w/2,gr=g.createRadialGradient(c,c,0,c,c,c);gr.addColorStop(0,"rgba(255,226,140,.75)");gr.addColorStop(1,"rgba(255,226,140,0)");g.fillStyle=gr;g.fillRect(0,0,w,h);});}
+function addItemMark(item){sparkTextures();const g=new THREE.Group();g.position.set(item.pos[0],0,item.pos[1]);
+  const glow=new THREE.Mesh(new THREE.PlaneGeometry(.9,.9),new THREE.MeshBasicMaterial({map:glowTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));glow.rotation.x=-Math.PI/2;glow.position.y=.02;g.add(glow);
+  const sp=[];for(let k=0;k<4;k++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:sparkTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+    s.userData={ox:(Math.random()-.5)*.45,oz:(Math.random()-.5)*.45,ph:k*1.7+Math.random(),sp:1.6+Math.random()*1.2};g.add(s);sp.push(s);}
+  g.userData={glow,sp,seed:Math.random()*10};scene.add(g);itemMarks[item.id]=g;}
+function tickItemMarks(t){Object.values(itemMarks).forEach(g=>{const u=g.userData;if(!u||!u.sp)return;
+  u.glow.material.opacity=.45+.35*Math.sin(t*3+u.seed);u.glow.scale.setScalar(.85+.2*Math.sin(t*3+u.seed));
+  u.sp.forEach(s=>{const d=s.userData,c=((t*d.sp+d.ph)%3)/3,tw=Math.sin(c*Math.PI);s.position.set(d.ox,.08+c*.45,d.oz);s.scale.setScalar(.12+.3*tw);s.material.opacity=tw;});});}
 function resize(){const w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.fov=w<600?52:38;camera.updateProjectionMatrix();}
 
 /* ---------- 碰撞與尋路 ---------- */
@@ -1565,7 +1578,7 @@ function showTitle(){
    ${(()=>{const sv=store.get("save",null);return sv&&LINES[sv.line]?`<button class="ghost" data-act="resume" style="width:100%;margin-top:16px;padding:12px;border-color:var(--ink)">繼續上次：${esc(LINES[sv.line].role)}・${fmt(sv.clock)}</button>`:"";})()}
    <button class="big-go" data-act="start">上班</button>
    ${doneLines.size>=3?`<button class="ghost" data-act="epilogue" style="width:100%;margin-top:8px;padding:12px">一個月後 ▸</button>`:`<p class="hint">三個位子都玩過，會解鎖「一個月後」。目前完成 ${doneLines.size} / 3。</p>`}
-   <p class="hint">系統會告訴你下一步。跟著頭上有紅色「！」的人或地方走，或按「帶我去」。頭上有「i」的地方可以看說明，地上閃著「✦」的東西可以撿。</p>
+   <p class="hint">系統會告訴你下一步。跟著頭上有紅色「！」的人或地方走，或按「帶我去」。頭上有「i」的地方可以看說明，地上一閃一閃發光的地方有東西可以撿。</p>
    <div class="links"><button data-act="codex">圖鑑</button><button data-act="about">關於</button></div>
    <p class="hint">人物、補習班、數字與情節都是虛構的遊戲設定。</p></div>`;
   $("nameIn").addEventListener("input",e=>store.set("name",e.target.value));
@@ -1698,7 +1711,7 @@ function tick(){
     act.forEach(sd=>{const tg=targetOf(sd.target);if(!tg)return;const mk=sideMarks[sd.id]||(sideMarks[sd.id]=addSideMark());mk.visible=true;mk.position.set(tg.x,tg.h+Math.sin(t*3+1)*.1,tg.z);});
     if(mode==="walk"){const z=zoneAt(player.position.x,player.position.z);if(z&&z[0]!==G.zone){G.zone=z[0];if(!G.zonesSeen)G.zonesSeen={};if(!G.zonesSeen[z[0]]){G.zonesSeen[z[0]]=1;showBanner(z[0],z[5]);}}}
     const m=targetOf(step()?.target);marker.visible=mode==="walk"&&!!m;if(m)marker.position.set(m.x,m.h+Math.sin(t*3)*.12,m.z);
-    Object.values(itemMarks).forEach((s,i)=>{s.position.y=.5+Math.sin(t*2.5+i)*.08;});
+    tickItemMarks(t);
     tickClock(dt);tickNight(dt);tickRain(dt);moveNPCs(dt);tickCrowd();if(mode!=="title")tickAmbient(dt);tickFX(dt);
     const spk=mode==="dialog"&&D?D.pages[D.i][0]:null,now=performance.now()/1000;
     animPerson(player,dt,t,{walk:mode==="walk"&&G.moving,talk:spk==="me"});tickEmote(player,now);
