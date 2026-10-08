@@ -34,7 +34,7 @@ function openShareCard(){
   const url=c.toDataURL("image/png"),name=`十點下課-${G.line.role}.png`;
   const prev=mode;mode="info";
   openSheet("成績卡",`<img src="${url}" alt="成績卡：${esc(G.line.role)}・${esc(G.result.title)}" style="width:100%;border-radius:6px;display:block">
-    <p class="hint">手機可以長按圖片儲存。</p><div class="actions"><button class="primary" data-act="shareImg">分享</button><a class="ghost btnlink" download="${esc(name)}" href="${url}">下載圖片</a></div>`,()=>{mode=prev;});
+    <p class="hint">長按（或右鍵）圖片可以儲存。</p><div class="actions"><button class="primary" data-act="shareImg">分享</button>${document.querySelector('link[rel="manifest"]')?`<a class="ghost btnlink" download="${esc(name)}" href="${url}">下載圖片</a>`:""}</div>`,()=>{mode=prev;});
   const btn=$("sheet").querySelector("[data-act=shareImg]");
   btn.onclick=()=>{c.toBlob(b=>{const f=new File([b],name,{type:"image/png"}),text=`我在《晚上十點下課》當${G.line.role}，結局是「${G.result.title}」。`;
     try{if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],text,url:SHARE_URL}).catch(()=>{});
