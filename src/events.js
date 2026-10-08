@@ -37,7 +37,7 @@ const EVENTS=[
 ];
 const EVENT_SLOTS={
  teacher:[{after:"hall",t:"18:10",phase:"pre"},{after:"zhe",t:"19:30",phase:"class"},{after:"ask",t:"20:55",phase:"class"}],
- yun:[{after:"yparent",t:"17:55",phase:"pre"},{after:"yseat",t:"19:20",phase:"class"},{after:"yzhe",t:"19:58",phase:"break"}],
+ yun:[{after:"yparent",t:"17:55",phase:"pre"},{after:"yseat",t:"19:20",phase:"class"},{after:"yzhe",t:"20:00",phase:"break"}],
  boss:[{after:"bpitch",t:"18:20",phase:"pre"},{after:"bflyer",t:"19:35",phase:"class"},{after:"bq",t:"21:00",phase:"class"}]
 };
 function buildSteps(L){

@@ -3,7 +3,9 @@ const FX={shake:0,dark:0};
 let crowdPhase=null,ambT=2,npcAmbT=3;
 const BREAK_SPOTS=[[10.4,3],[10.6,6.5],[10.3,9.5],[10.7,12.5],[7.6,15.9],[3,13.2],[6.8,13.6],[10.5,16],[13.6,12.2],[2.2,16.2]];
 const DOOR=[4.5,17.3];
-function phaseOf(){if(!G)return"pre";if(G.idx>=G.steps.length-1)return"close";const s=G.status||"";return /上課/.test(s)?"class":s==="下課"?"break":/收拾/.test(s)?"leave":"pre";}
+function phaseOf(){if(!G)return"pre";if(G.idx>=G.steps.length-1)return"close";let ph="pre";for(const [at,p] of SCHEDULE){const [h,m]=at.split(":").map(Number);if(G.clock>=h*60+m)ph=p;}return ph;}
+const PHASE_STATUS={class:"上課中",break:"下課",leave:"收拾中",close:"收拾中"};
+function statusOf(){const ph=phaseOf();return PHASE_STATUS[ph]||(G&&G.line.preStatus)||"備課中";}
 function setCrowd(ph,instant){
   if(ph===crowdPhase&&!instant)return;crowdPhase=ph;if(typeof syncItems==="function")syncItems();
   const now=clockT.elapsedTime,cls=extras.filter(e=>e.kind==="class"),stu=extras.filter(e=>e.kind==="study");

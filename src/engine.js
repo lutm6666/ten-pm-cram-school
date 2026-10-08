@@ -13,7 +13,7 @@ let guiding=false,G=null,mode="title",path=null,keys={},near=null,pickedLine=sto
 let soundOn=store.get("sound",true),actx=null;
 function beep(kind){if(!soundOn)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();
   const seq={blip:[[660,.05]],pick:[[880,.08],[1320,.12]],chap:[[392,.18],[523,.28]],ok:[[523,.08],[659,.08],[784,.14]],bad:[[220,.16]],side:[[740,.07],[988,.1]]}[kind]||[[600,.05]];
-  let t0=actx.currentTime;seq.forEach(([f,d])=>{const o=actx.createOscillator(),g=actx.createGain();o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.12,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(g);g.connect(actx.destination);o.start(t0);o.stop(t0+d+.02);t0+=d*.9;});}catch(e){}}
+  let t0=actx.currentTime;seq.forEach(([f,d])=>{const o=actx.createOscillator(),g=actx.createGain();o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.2,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(g);g.connect(actx.destination);o.start(t0);o.stop(t0+d+.02);t0+=d*.9;});}catch(e){}}
 let seenSides=new Set(store.get("sides",[]));             // 各職業線的支線：SIDES[lineId]=[...]
 let seenItems=new Set(store.get("items",[])),seenInfo=new Set(store.get("info",[])),doneLines=new Set(store.get("done",[]));
 
@@ -41,7 +41,7 @@ function enterStep(){
   if(st.npc)for(const id in st.npc)setNPC(id,val(st.npc[id],G));
   G.clock=Math.max(G.clock,toMin(st.t));G.due=null;
   if(!st.auto){let nx=G.idx+1;while(G.steps[nx]&&G.steps[nx].auto)nx++;const nt=G.steps[nx]?toMin(G.steps[nx].t):22*60;G.due=Math.max(nt,G.clock+8);}
-  if(st.chapter){G.status=st.chapter.status||G.status;G.chapterTitle=st.chapter.title;}
+  if(st.chapter){G.chapterTitle=st.chapter.title;}G.status=statusOf();
   setCrowd(phaseOf());saveGame();
   if(st.chapter)showChapter(st.chapter);
   else if(st.auto){mode="walk";renderAll();openStep();}
@@ -71,7 +71,7 @@ function renderAll(){renderHud();renderNext();renderDock();}
 function renderHud(){
   if(!G){$("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock">17:20</div><div class="clocksub">高三數學 B 班</div></div><span class="spacer"></span><button class="hbtn" data-act="codex">圖鑑</button></div>`;return;}
   const L=G.line,low=k=>G.s[k]<25?"low":"";
-  const st=G.status||"",cls=/上課/.test(st)?"ok":/下課|收拾/.test(st)?"":"bad";
+  const st=statusOf(),cls=/上課/.test(st)?"ok":/下課|收拾/.test(st)?"":"bad";
   $("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock" id="clk">${mode==="end"?fmt(Math.max(G.clock,22*60+10)):G.time}</div><div class="clocksub" id="clksub">${dueText()}</div></div>
    <span class="spacer"></span><span class="pill ${cls}"><i></i>${esc(st)}</span><button class="hbtn" data-act="sound" aria-pressed="${soundOn}" aria-label="音效">${soundOn?"♪ 開":"♪ 關"}</button><button class="hbtn" data-act="home">主頁</button><button class="hbtn" data-act="codex">圖鑑</button></div>
    <div class="meters">${Object.keys(L.stats).map(k=>`<div class="meter ${low(k)}"><div class="lab"><span>${L.stats[k][0]}</span><b>${G.s[k]}</b></div><div class="track"><div class="fill" style="width:${G.s[k]}%"></div></div></div>`).join("")}</div>`;
@@ -79,8 +79,10 @@ function renderHud(){
 }
 function dueText(){if(!G)return"";if(mode==="walk"&&G.due!=null){const r=Math.floor(G.due-G.clock);return r>=0?`<span class="due ${r<=3?"warn":""}">${fmt(G.due)} 前・剩 ${r} 分</span>`:`<span class="due late">已經晚了 ${-r} 分</span>`;}return `${esc(G.chapterTitle||"")}・${esc(G.line.role)}`;}
 let lastClockMin=-1;
-function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}}}
-function spend(min){if(G)G.clock+=min;}
+function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}}}
+function checkBell(){if(!G)return;const ph=phaseOf();if(ph===crowdPhase)return;const prev=crowdPhase;setCrowd(ph);G.status=statusOf();renderHud();
+  if(ph==="class"){chime();showBanner("上課鐘響了","學生陸續回到座位。");}else if(ph==="break"){chime();showBanner("下課了","下課 15 分鐘，20:05 上第二節。");}else if(ph==="leave"&&prev!=="close"){chime();showBanner("下課了","今天的課上完了，學生陸續離開。");}}
+function spend(min){if(G){G.clock+=min;checkBell();}}
 function renderNext(){
   const el=$("next");if(mode!=="walk"){el.hidden=true;return;}el.hidden=false;
   const hint=G.idx===0&&!store.get("tipWalk",false)?`<div class="in"><p class="nexthint">按「帶我去」會自己走過去。想自己走：用左下的方向鍵，或點地板。頭上有紅色「！」的就是要找的對象。</p></div>`:"";
@@ -293,6 +295,7 @@ document.addEventListener("click",e=>{
   else if(act==="resume")resumeGame();
   else if(act==="dnext")dNext();else if(act==="dskip")dSkip();
   else if(act==="closeSheet")closeSheet();else if(act==="closeTerm")$("termPop").hidden=true;
+  else if(act==="camReset"){CAM.yaw=0;CAM.tilt=1;CAM.zoom=1;saveCam();}
   else if(act==="guide"){const t=targetOf(step().target);path=findPath(t.x,t.z);guiding=true;}
   else if(act==="codex")openCodex();
   else if(act==="sound"){soundOn=!soundOn;store.set("sound",soundOn);renderHud();if(soundOn){beep("ok");startAmbient();}else stopAmbient();}
@@ -319,8 +322,22 @@ document.querySelectorAll("#dpad button").forEach(b=>{const k=b.dataset.k;
   const on=e=>{e.preventDefault();keys[k]=1;path=null;guiding=false;},off=()=>{keys[k]=0;};
   b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);b.addEventListener("pointerleave",off);b.addEventListener("pointercancel",off);});
 let downAt=null;const ray=new THREE.Raycaster();
-stage.addEventListener("pointerdown",e=>{downAt=[e.clientX,e.clientY];});
-stage.addEventListener("pointerup",e=>{if(!downAt||mode!=="walk")return;if(Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])>10)return;
+/* 視角：拖曳旋轉、上下拖改俯角、雙指或滾輪縮放 */
+const CAM={yaw:0,tilt:1,zoom:1};const ptrs=new Map();let dragged=false,pinch0=0,zoom0=1,last=null;
+try{const c=store.get("cam",null);if(c){CAM.tilt=c.tilt||1;CAM.zoom=c.zoom||1;}}catch(e){}
+function saveCam(){store.set("cam",{tilt:CAM.tilt,zoom:CAM.zoom});}
+stage.addEventListener("pointerdown",e=>{ptrs.set(e.pointerId,[e.clientX,e.clientY]);if(ptrs.size===1){downAt=[e.clientX,e.clientY];last=[e.clientX,e.clientY];dragged=false;}
+  else if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch0=Math.hypot(a[0]-b[0],a[1]-b[1]);zoom0=CAM.zoom;dragged=true;}});
+stage.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pinch0>0){CAM.zoom=Math.max(.55,Math.min(1.8,zoom0*pinch0/d));}return;}
+  if(!last)return;const mx=e.clientX-last[0],my=e.clientY-last[1];
+  if(!dragged&&Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])>10)dragged=true;
+  if(dragged){CAM.yaw-=mx*.009;CAM.tilt=Math.max(.45,Math.min(1.6,CAM.tilt-my*.006));}last=[e.clientX,e.clientY];});
+const ptrEnd=e=>{ptrs.delete(e.pointerId);if(ptrs.size===0){last=null;saveCam();}};
+stage.addEventListener("pointercancel",ptrEnd);
+stage.addEventListener("wheel",e=>{e.preventDefault();CAM.zoom=Math.max(.55,Math.min(1.8,CAM.zoom*(1+Math.sign(e.deltaY)*.08)));saveCam();},{passive:false});
+document.addEventListener("keydown",e=>{if(e.target.closest&&e.target.closest("input,textarea"))return;if(e.code==="KeyQ")CAM.yaw+=Math.PI/8;if(e.code==="KeyR")CAM.yaw-=Math.PI/8;});
+stage.addEventListener("pointerup",e=>{const wasDrag=dragged||ptrs.size>1;ptrEnd(e);if(!downAt||mode!=="walk"||wasDrag)return;if(Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])>10)return;
   const r=renderer.domElement.getBoundingClientRect();ray.setFromCamera({x:(e.clientX-r.left)/r.width*2-1,y:-(e.clientY-r.top)/r.height*2+1},camera);
   const hit=ray.intersectObject(ground)[0];if(hit){path=findPath(hit.point.x,hit.point.z);guiding=false;}});
 
@@ -353,7 +370,8 @@ function tick(){
   const dt=Math.min(.05,clockT.getDelta()),t=clockT.elapsedTime;
   if(G&&player){
     if(mode==="walk"){
-      let dx=(keys.r?1:0)-(keys.l?1:0),dz=(keys.d?1:0)-(keys.u?1:0);
+      let dx=0,dz=0;const ix=(keys.r?1:0)-(keys.l?1:0),iz=(keys.d?1:0)-(keys.u?1:0);
+      if(ix||iz){const cy=Math.cos(CAM.yaw),sy=Math.sin(CAM.yaw);dx=ix*cy+iz*sy;dz=-ix*sy+iz*cy;}
       if(!dx&&!dz&&path&&path.length){const [px,pz]=path[0],vx=px-player.position.x,vz=pz-player.position.z,dd=Math.hypot(vx,vz);if(dd<.08)path.shift();else{dx=vx/dd;dz=vz/dd;}}
       if(dx||dz){const l=Math.hypot(dx,dz);dx/=l;dz/=l;const ox=player.position.x,oz=player.position.z;stepPlayer(ox+dx*3.4*dt,oz+dz*3.4*dt);
         if(path&&Math.hypot(player.position.x-ox,player.position.z-oz)<.002){G.stuck=(G.stuck||0)+dt;if(G.stuck>.4){G.stuck=0;const end=path[path.length-1];path=findPath(end[0],end[1]);}}else G.stuck=0;player.rotation.y=Math.atan2(dx,dz);G.moving=true;}
@@ -374,7 +392,8 @@ function tick(){
     animPerson(player,dt,t,{walk:mode==="walk"&&G.moving,talk:spk==="me"});tickEmote(player,now);
     for(const id in npcs){const n=npcs[id];if(!n.visible)continue;animPerson(n,dt,t,{walk:n.userData.moving,talk:spk===id,act:npcAct(id,n,t),raise:id==="parent"&&G.line.id==="teacher"&&step()?.id==="ask"&&mode==="walk"});tickEmote(n,now);}
     extras.forEach(e=>{if(!e.p.visible)return;animPerson(e.p,dt,t,{walk:e.p.userData.moving});tickEmote(e.p,now);});
-    const want=new THREE.Vector3(player.position.x,0,player.position.z).add(camOff);if(innerWidth<600)want.add(new THREE.Vector3(0,1.4,1.2));
+    const ph=innerWidth<600,rr=(ph?8.6:7.4)*CAM.zoom/Math.sqrt(CAM.tilt),hh=(ph?10.4:9)*CAM.zoom*Math.sqrt(CAM.tilt);
+    const want=new THREE.Vector3(player.position.x+Math.sin(CAM.yaw)*rr,hh,player.position.z+Math.cos(CAM.yaw)*rr);
     const k=1-Math.pow(.002,dt);camera.position.lerp(want,k);camLook.lerp(new THREE.Vector3(player.position.x,.6,player.position.z),k);
     if(FX.shake>0){const a=.18*Math.min(1,FX.shake);camera.position.x+=(Math.random()-.5)*a;camera.position.y+=(Math.random()-.5)*a;}
   } else {camera.position.set(14+Math.sin(t*.1)*6,16,22);camLook.set(14,0,9);const now=performance.now()/1000;moveNPCs(dt);

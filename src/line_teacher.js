@@ -15,6 +15,7 @@ LINES.teacher={
  late:{fx:{stu:-4,trial:-3},text:"台下已經開始聊天了，有人在看手錶。"},
  coda:"白板上的字明天就會被擦掉。但今天，有人聽懂了一題。",
  msgs:[["17:32","B 班群組","小芸：講義我先印 24 份喔，剩下的等影印機。"],["18:08","媽","晚餐在電鍋裡，記得吃。"],["19:22","何主任","試聽家長剛剛在走廊說你講得很清楚👍"],["20:26","B 班群組","品妤：老師下課可以留一下問問題嗎？"],["21:28","媽","回來路上小心，下雨了。"]],
+ preStatus:"備課中",
  start:[4.5,16.6],
  me:G=>({name:"你",title:`${G.tName}・高三數學`,abbr:"師",color:"#b7791f"}),
  npcs:{yun:P.yunDesk,boss:P.bossOffice,pinyu:P.pinyuHall,zhe:P.zheSeat,parent:P.parentLobby,parent2:[6,14.8,Math.PI],hong:P.hongStudy,teacher:null},
@@ -84,8 +85,8 @@ LINES.teacher={
     {label:"請小芸說下課後回電",note:"先喝水",fx:{hp:5,voice:5,par:-5},set:{callback:1},log:"電話延到下課後回",res:[[null,"你灌了一大杯溫水，在講師休息室坐了五分鐘。"],["yun","（小聲）她聽起來不太高興喔。"]]},
     {label:"直接答應免費一對一",fx:{hp:-5,par:15},set:{freeTutor:1},log:"答應免費一對一",res:[["mom","謝謝老師！謝謝老師！謝謝老師！"],[null,"你掛掉電話才想起來，主任說過一對一要另外收費。"]]}
    ]},
-  {id:"mic",chapter:{t:"20:00",title:"第二節",sub:"20:00–21:10",status:"上課中"},
-   t:"20:00",target:{spot:"podium"},goal:"回講台上第二節",
+  {id:"mic",chapter:{t:"20:05",title:"第二節",sub:"20:05–21:15",status:"上課中"},
+   t:"20:05",target:{spot:"podium"},goal:"回講台上第二節",
    pages:G=>[[null,"你剛拿起麥克風，它「嗶」了一聲。沒電了。"],[null,"備用電池在櫃台抽屜。教室在走廊另一頭。"]],
    choices:G=>[
     ...(G.f.battery?[{label:"換上撿到的備用電池",note:"休息室撿到的那兩顆",fx:{trial:3},log:"換上撿到的備用電池",res:[[null,"你從口袋掏出那兩顆用橡皮筋綁著的電池。十秒鐘，麥克風又亮了。"],["parent","（點頭）準備得真周到。"]]}]:[]),
@@ -103,8 +104,8 @@ LINES.teacher={
     {label:"開玩笑說對面的老師沒有我帥",fx:G=>G.h.trial>=60?{trial:10,stu:10}:{trial:-10,stu:5},log:"用玩笑帶過",
      res:G=>G.h.trial>=60?[[null,"全班笑翻了，王媽媽也笑了。氣氛熱起來，接下來二十分鐘大家都很專心。"]]:[[null,"學生笑了，王媽媽沒有笑。她把筆記本闔起來。"]]}
    ]},
-  {id:"after",chapter:{t:"21:10",title:"下課",sub:"大部分的人很快就走光了。",status:"收拾中"},
-   t:"21:10",target:{spot:"podium"},goal:"回講台收東西",npc:{pinyu:P.pinyuPodium,parent:P.parentLobby,parent2:null,zhe:G=>G.f.shamedZhe?null:[23.2,10,Math.PI/2]},
+  {id:"after",chapter:{t:"21:15",title:"下課",sub:"大部分的人很快就走光了。",status:"收拾中"},
+   t:"21:15",target:{spot:"podium"},goal:"回講台收東西",npc:{pinyu:P.pinyuPodium,parent:P.parentLobby,parent2:null,zhe:G=>G.f.shamedZhe?null:[23.2,10,Math.PI/2]},
    pages:G=>{const l=[];
      l.push(!G.f.talkedPinyu||G.f.promisedPinyu?[null,"品妤抱著成績單站在講台邊。"]:["pinyu","老師，謝謝你剛剛用我那題……我還有一題想問。"]);
      if(G.f.nudgedZhe)l.push([null,"阿哲收書包收得很慢，好像想說什麼。"]);

@@ -7,6 +7,7 @@ LINES.boss={
  late:{fx:{calm:-4,rep:-2},text:"大家等主任等到有點尷尬。"},
  coda:"週報上的數字是你的責任，數字後面的人也是。",
  msgs:[["17:38","總部","各分校週報請於明天中午前上傳。"],["18:52","粉專通知","對面補習班發布了新貼文：學測衝刺 8 折最後三天！"],["19:44","小芸","主任，等一下下課可以跟你講一件事嗎？"],["20:18","老婆","女兒說要等你回家才睡。"],["21:32","總部","續班率是不是有更新？"]],
+ preStatus:"營業中",
  start:[3.5,3.9],dead:G=>G.s.calm<=0,
  me:G=>({name:"你",title:`${G.pName}・補習班主任`,abbr:"主",color:"#c2457f"}),
  npcs:{yun:P.yunDesk,teacher:P.teacherLounge,pinyu:P.pinyuSeat,zhe:P.zheSeat,hong:P.hongStudy,bo:PY.boStudy,parent:null,parent2:null,boss:null,chenba:null},
@@ -64,7 +65,7 @@ LINES.boss={
     {label:"把電話分一半給阿宏",fx:{morale:5},set:{hongPhones:1},log:"把櫃台電話分給助教",res:[["yun","阿宏會接電話嗎？……好啦，總比沒有好。"]]},
     {label:"說再撐一期就好",fx:{morale:-15,calm:3},set:{yunLeave:1},log:"請小芸再撐一期",res:[["yun","……好。"],[null,"她回到櫃台，把一張便利貼撕下來，揉成一團。"]]}
    ]},
-  {id:"bhong",chapter:{t:"20:00",title:"第二節",sub:"自習室的阿宏在等你。",status:"上課中"},
+  {id:"bhong",chapter:{t:"20:05",title:"第二節",sub:"自習室的阿宏在等你。",status:"上課中"},
    t:"20:30",target:{npc:"hong"},goal:"阿宏在自習室找你",npc:{teacher:PY.teacherBoard},
    pages:G=>[["hong","主任，我下個月期中考，可以少排幾天班嗎？"],...(G.f.hongPhones?[["hong","還有……小芸姐說以後電話要我接？"]]:[]),[null,"自習室有十幾個學生在等助教解題。"]],
    choices:G=>[
@@ -81,7 +82,7 @@ LINES.boss={
     {label:"答應幫他排前排、小考另外批",note:"老師會多一點工作",fx:{trial:12,morale:-5},log:"承諾試聽生特別照顧",res:[["parent","那我就放心了。"],[null,"你想到等一下要怎麼跟許老師開口。"]]},
     {label:"說人多才有競爭力",fx:{trial:-5,calm:3},log:"說大班有競爭力",res:[["parent","……是喔。"]]}
    ]},
-  {id:"benroll",chapter:{t:"21:10",title:"下課",sub:"王媽媽和兒子走到櫃台前。",status:"收拾中"},
+  {id:"benroll",chapter:{t:"21:15",title:"下課",sub:"王媽媽和兒子走到櫃台前。",status:"收拾中"},
    t:"21:20",target:{npc:"parent"},goal:"王媽媽要做決定了",npc:{parent:PY.parentLobby,parent2:PY.parent2Lobby,teacher:PY.teacherPodium,zhe:G=>G.f.baseClass||G.f.noteZhe?[16.2,12.6,0]:null},
    pages:G=>{const n=enrolledT(G);return [["parent",n===2?"我們決定報名了。另一位試聽的同學，聽說也要報。":n===1?"課是不錯，我們想報名。":"我們回去再討論看看。"],...(G.f.priceWar?[["parent","對了，門口那張八折的海報是今天的嗎？"]]:[])];},
    choices:G=>{const n=enrolledT(G),c=[];

@@ -9,6 +9,7 @@ LINES.yun={
  late:{fx:{par:-4,ord:-3},text:"等你的人臉色不太好看。"},
  coda:"櫃台的電話明天還會響。你記得的是每個打來的人叫什麼名字。",
  msgs:[["17:44","何主任","試聽家長到了跟我說一聲。"],["18:42","妹妹","今天幾點回家？毛線又把衛生紙抓爛了"],["19:34","阿宏","自習室冷氣好冷，遙控器在你那嗎？"],["20:48","櫃台群組","許老師：林媽媽的電話謝謝你先擋著。"],["21:36","媽","菜幫你留在電鍋裡。"]],
+ preStatus:"營業中",
  start:[3.75,10.2],dead:G=>G.s.hp<=0||G.s.pat<=0,
  me:G=>({name:"你",title:`${G.pName}・櫃台班導`,abbr:"班",color:"#1f9c86"}),
  npcs:{boss:P.bossOffice,teacher:PY.teacherLounge,pinyu:P.pinyuSeat,zhe:P.zheSeat,hong:P.hongStudy,bo:PY.boStudy,parent:null,parent2:null,yun:null,chenba:null},
@@ -71,8 +72,8 @@ LINES.yun={
     ...(K.has("zheBasics")?[{label:"跟他說主任可以安排基礎班",note:ECHO,fx:{pat:-3,ret:5},set:{zheTalk:1,bossKnowsZhe:1},log:"跟阿哲說有基礎班",res:[["zhe","……從高一開始？不會很丟臉嗎？"],["me","不會。很多人都是從那裡重來的。"],[null,"他把退費的事吞回去了，說要回家跟媽媽講。"]]}]:[]),
     {label:"叫他去找許老師談",fx:{},log:"請阿哲去找許老師",res:[["zhe","……喔。"],[null,"他走到休息室門口，站了一下，又走回教室了。"]]}
    ]},
-  {id:"yboss",chapter:{t:"20:00",title:"第二節",sub:"主任在辦公室叫你。",status:"上課中"},
-   t:"20:10",target:{npc:"boss"},goal:"主任在辦公室叫你",npc:{zhe:P.zheSeat,teacher:PY.teacherBoard},
+  {id:"yboss",chapter:{t:"20:05",title:"第二節",sub:"主任在辦公室叫你。",status:"上課中"},
+   t:"20:12",target:{npc:"boss"},goal:"主任在辦公室叫你",npc:{zhe:P.zheSeat,teacher:PY.teacherBoard},
    pages:G=>{const l=[["boss",`${G.pName}，試聽的資料準備好了嗎？`]];
      if(G.f.discount)l.push(["boss","還有，王媽媽剛剛說，你答應她早鳥價？"]);
      else l.push(["boss","還有五個沒續班的家長，今天能打完嗎？"]);return l;},
@@ -91,8 +92,8 @@ LINES.yun={
     {label:"請陳爸爸先坐一下",fx:{par:-10},log:"請家長在沙發等",res:[[null,"陳爸爸坐了十五分鐘，越坐臉越黑。"],[null,"小柏捧著一碗關東煮走進門時，陳爸爸已經站起來了。"]]}];
     if(G.f.knowBo||K.has("boSeven"))c.unshift({label:"直接去 7-11 找他",note:G.f.knowBo?"小柏說過他每天九點去買宵夜":ECHO+"：小柏九點會去買宵夜",fx:{hp:-3,par:10,ord:3},log:"去 7-11 找回小柏",res:[[null,"你在 7-11 門口找到小柏，他正在挑關東煮。"],["chenba","你怎麼知道他在這？謝謝你。"]]});
     return c;}},
-  {id:"yenroll",chapter:{t:"21:10",title:"下課",sub:"試聽家長走出教室了。",status:"收拾中"},
-   t:"21:15",target:{npc:"parent"},goal:"王媽媽在大廳",npc:{parent:PY.parentLobby,parent2:PY.parent2Lobby,bo:PY.boLobby,chenba:null,teacher:PY.teacherPodium},
+  {id:"yenroll",chapter:{t:"21:15",title:"下課",sub:"試聽家長走出教室了。",status:"收拾中"},
+   t:"21:18",target:{npc:"parent"},goal:"王媽媽在大廳",npc:{parent:PY.parentLobby,parent2:PY.parent2Lobby,bo:PY.boLobby,chenba:null,teacher:PY.teacherPodium},
    pages:G=>{const n=enrolledT(G);const l=[];
      l.push(["parent",n===2?"我們決定報名了。聽說另一位試聽的同學也要報。":n===1?"課是不錯。我們想報名，但……":"我們回去再討論看看。"]);
      if(G.f.lieDiscount)l.push(["parent","對了，你剛剛說的早鳥價？主任說沒有這回事耶。"]);
