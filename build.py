@@ -36,7 +36,7 @@ out=head+f'''<title>晚上十點下課 3D</title>
 <script src="{three}"></script>
 <script>
 (function(){{
-'''+"\n".join(src(f) for f in order)+("\nwindow.__dbg={get marks(){return Object.keys(itemMarks)},resumeGame,saveGame,runMini,get G(){return G},get path(){return path},get guiding(){return guiding},get keys(){return keys},findPathFrom,get mode(){return mode},findPath,blockedAt,ITEMS,SIDES,INFO,targetOf,activeSides,chatTargets,get chatUsed(){return G&&G.chatUsed},go:(x,z)=>{path=findPath(x,z);return !!path},pos:()=>[player.position.x,player.position.z],near:()=>near,card:()=>drawResultCard().toDataURL(),CAM,tp:(x,z,ry)=>{player.position.set(x,0,z);if(ry!=null)CAM.yaw=ry;path=null;}};" if DBG else "")+'''
+'''+"\n".join(src(f) for f in order)+("\nwindow.__dbg={get marks(){return Object.keys(itemMarks)},resumeGame,saveGame,runMini,get G(){return G},get path(){return path},get guiding(){return guiding},get keys(){return keys},findPathFrom,get mode(){return mode},findPath,blockedAt,ITEMS,SIDES,INFO,targetOf,activeSides,chatTargets,get chatUsed(){return G&&G.chatUsed},go:(x,z)=>{path=findPath(x,z);return !!path},pos:()=>[player.position.x,player.position.z],near:()=>near,jump:id=>{G.idx=G.steps.findIndex(s=>s.id===id);G.steps.slice(0,G.idx).forEach(s=>{if(s.npc)for(const k in s.npc)setNPC(k,val(s.npc[k],G),true);if(s.after)for(const k in s.after)setNPC(k,val(s.after[k],G),true);});enterStep();},card:()=>drawResultCard().toDataURL(),CAM,tp:(x,z,ry)=>{player.position.set(x,0,z);if(ry!=null)CAM.yaw=ry;path=null;}};" if DBG else "")+'''
 })();
 </script>
 '''

@@ -14,8 +14,18 @@ for(const id of ts.slice(0,3)){
     for(let k=0;k<120;k++){await p.waitForTimeout(50);if(await p.evaluate(id=>{const n=__dbg.near();return n&&n.type==='chat'&&n.id===id},id)){ok=true;break;}}}
   if(!ok){console.log('chat',id,'NOT REACHED');continue;}
   const label=await p.textContent('#actBtn');await p.click('#actBtn');
-  const say=await p.textContent('#dlg .say');while(await vis('[data-act=dnext]'))await p.click('[data-act=dnext]');
-  chatted++;console.log('chat',id,label,'|',say.slice(0,30));}
+  await p.waitForSelector('#cchips [data-q]');await p.click('#cchips [data-q="0"]');await p.waitForTimeout(800);
+  await p.fill('#caskIn','你最想改掉什麼');await p.click('#cask button');await p.waitForTimeout(800);
+  const bubs=await p.$$eval('#clog .bub',b=>b.map(x=>x.textContent));const say=bubs[2]||'';
+  if(bubs.length<5||/想一下/.test(bubs.join('')))fail++;
+  await p.click('[data-act=chatEnd]');if(await p.evaluate(()=>__dbg.mode)!=='walk')fail++;
+  chatted++;console.log('chat',id,label,'|',say.slice(0,30),'|',(await p.evaluate(()=>__dbg.chatUsed)).join(','));}
+// 主線對話結束時「多聊幾句」
+{await p.evaluate(()=>__dbg.jump('hall'));while(await vis('[data-act=chapterGo]'))await p.click('[data-act=chapterGo]');await p.click('[data-act=guide]');for(let k=0;k<200;k++){await p.waitForTimeout(60);if(await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'}))break;}
+ const id0=await p.evaluate(()=>__dbg.G.steps[__dbg.G.idx].id);await p.click('#actBtn');let saw=false;
+ for(let i=0;i<20;i++){if(await vis('[data-act=dchat]')){saw=true;await p.click('[data-act=dchat]');await p.waitForSelector('#cchips');await p.click('[data-act=chatEnd]');break;}if(await vis('#dlg .choice'))await p.click('#dlg .choice >> nth=0');else if(await vis('[data-act=dnext]'))await p.click('[data-act=dnext]');else break;}
+ while(await vis('[data-act=dnext]')||await vis('[data-act=chapterGo]')){if(await vis('[data-act=chapterGo]'))await p.click('[data-act=chapterGo]');else await p.click('[data-act=dnext]');}
+ const id1=await p.evaluate(()=>__dbg.G.steps[__dbg.G.idx].id);console.log('more-chat',saw,id0,'->',id1);if(!saw||id0===id1)fail++;}
 const used=await p.evaluate(()=>__dbg.chatUsed);console.log('used',used);
 if(ts.length&&!chatted)fail++;
 for(const id of ['lockup','reply','wait']){

@@ -5,7 +5,7 @@ const P={yunDesk:[3.75,10.3,0],bossOffice:[3.5,1.2,0],bossHall:[10.5,4.3,Math.PI
  hongStudy:[20,14.8,0],teacherPodium:[20,2.75,0],teacherLounge:[3.2,8,0]};
 
 const PY={teacherLounge:[3.2,8,0],teacherBoard:[20,1.2,0],teacherPodium:[18.6,2.9,Math.PI],parentLobby:[5.2,15.3,Math.PI],parent2Lobby:[6.4,15.3,Math.PI],
- zheCounter:[5.2,12.5,Math.PI],boStudy:[19.9,12.6,0],boLobby:[4.5,16.2,Math.PI],chenLobby:[6.4,14.6,Math.PI]};
+ zheCounter:[5.2,12.5,Math.PI],boStudy:[19.9,12.6,0],boLobby:[4.5,16.2,Math.PI,[4.5,17.6]],chenLobby:[6.4,14.6,Math.PI]};
 
 LINES.teacher={
  id:"teacher",role:"數學老師",short:"數學",body:0xf0f0f0,

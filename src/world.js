@@ -183,6 +183,7 @@ function setNPC(id,spec,instant){ // spec: [x,z,rotY] 或 null（不在場）
   u.anchor=[spec[0],spec[1],spec[2]??Math.PI];
   const far=Math.hypot(n.position.x-spec[0],n.position.z-spec[1]);
   if(!instant&&n.visible&&far>.3&&far<45){agentGo(n,spec[0],spec[1],spec[2]??Math.PI);return;}
+  if(!instant&&!n.visible&&spec[3]){n.visible=true;agentPlace(n,spec[3][0],spec[3][1],Math.PI);agentGo(n,spec[0],spec[1],spec[2]??Math.PI);return;} // 從別處走進來
   n.visible=true;agentPlace(n,spec[0],spec[1],spec[2]);}
 function moveAgent(n,dt,speed=2.6){const u=n.userData;if(!u.path||!n.visible){u.moving=false;return;}
   if(!u.path.length){u.path=null;u.moving=false;if(u.endRot!=null)n.rotation.y=u.endRot;setPose(n,isChair(n.position.x,n.position.z));const f=u.onArrive;u.onArrive=null;f&&f();return;}
@@ -231,4 +232,4 @@ function findPathFrom(fx,fz,tx,tz){
   const out=[];let ax=fx,az=fz,i=0;while(i<pts.length){let j=pts.length-1;while(j>i&&!los(ax,az,pts[j][0],pts[j][1]))j--;out.push(pts[j]);[ax,az]=pts[j];i=j+1;}
   return out;
 }
-function stepPlayer(x,z){const p=player.position;if(!blockedAt(x,p.z))p.x=x;if(!blockedAt(p.x,z))p.z=z;}
+function stepPlayer(x,z){const p=player.position;if(blockedAt(p.x,p.z)){p.x=x;p.z=z;return;}if(!blockedAt(x,p.z))p.x=x;if(!blockedAt(p.x,z))p.z=z;}

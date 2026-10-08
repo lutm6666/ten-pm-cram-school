@@ -50,6 +50,7 @@ function enterStep(){
 function nextStep(){if(G.idx===0)store.set("tipWalk",true);const st=step();if(st&&st.after)for(const id in st.after)setNPC(id,val(st.after[id],G));G.idx++;path=null;enterStep();}
 
 /* ---------- 目標與附近的東西 ---------- */
+function guideTarget(t){const m=targetOf(t);if(t&&t.npc){const u=npcs[t.npc].userData;if(u.moving&&u.anchor)return{...m,x:u.anchor[0],z:u.anchor[1]};}return m;}
 function targetOf(t){if(!t)return null;if(t.npc){const n=npcs[t.npc];return{x:n.position.x,z:n.position.z,h:n.userData.top+.85,name:CHARS[t.npc].name,kind:"npc",id:t.npc};}
   const s=SPOTS[t.spot];return{x:s.pos[0],z:s.pos[1],h:s.h+.5,name:s.name,kind:"spot"};}
 function activeSides(){const list=SIDES[G.line.id]||[],ids=G.steps.map(s=>s.id);
@@ -124,10 +125,12 @@ function drawDialog(){
   $("dlg").innerHTML=`<div class="box fade" role="dialog" aria-label="對話"><div class="spk"><span class="face ${sp.color?"":"sys"}" style="${sp.color?`background:${sp.color}`:""}">${esc(sp.abbr)}</span><div><b>${esc(sp.name)}</b>${sp.title?`<small>${esc(sp.title)}</small>`:""}</div></div>
    <p class="say ${p[0]?"":"narr"}">${rich(p[1])}</p>${showTip?`<div class="tip">有虛線的詞可以點，會跳出白話解釋。</div>`:""}
    ${last&&D.deltas?`<div class="deltas">${D.deltas}</div>`:""}${foot}
-   <div class="foot"><span class="pg">${D.i+1} / ${n}</span>${!last&&n>2&&!D.noskip?`<button class="skip" data-act="dskip">跳過</button>`:""}${last&&D.choices&&D.choices.length?"":`<button class="go" data-act="dnext">${last?esc(D.endLabel||"好"):"繼續"}</button>`}</div></div>`;
+   <div class="foot"><span class="pg">${D.i+1} / ${n}</span>${!last&&n>2&&!D.noskip?`<button class="skip" data-act="dskip">跳過</button>`:""}${last&&!(D.choices&&D.choices.length)&&canChat(D.chatId)?`<button class="ghost" data-act="dchat">多聊幾句</button>`:""}${last&&D.choices&&D.choices.length?"":`<button class="go" data-act="dnext">${last?esc(D.endLabel||"好"):"繼續"}</button>`}</div></div>`;
   const f=$("dlg").querySelector(".choice,.go");if(f)f.focus({preventScroll:true});
 }
 function dNext(){beep("blip");if(D.i<D.pages.length-1){D.i++;drawDialog();}else{const cb=D.onEnd;D=null;$("dlg").hidden=true;cb&&cb();}}
+function canChat(id){return !!(id&&G&&CHATS[id]&&id!==G.line.id&&npcs[id]&&npcs[id].visible);}
+function dChat(){const id=D.chatId,cb=D.onEnd;D=null;$("dlg").hidden=true;openChat(id,cb);}
 function dSkip(){D.i=D.pages.length-1;drawDialog();}
 function dChoose(i){const c=D.choices[i],cb=D.onChoice;D=null;$("dlg").hidden=true;cb(c);}
 
@@ -143,20 +146,21 @@ function resolveChoice(c,onDone,arg){
   const pages=typeof res==="string"?[[null,res]]:res||[[null,"……"]];
   if(G.s.voice!==undefined&&G.s.voice>0&&G.s.voice<20&&!G.f.hoarse){G.f.hoarse=1;pages.push([null,"你的聲音開始沙啞了。"]);}
   const dead=G.line.dead?G.line.dead(G):(G.s.voice!==undefined&&G.s.voice<=0)||(G.s.hp!==undefined&&G.s.hp<=0);
-  runDialog({pages,deltas:deltas||`<span class="d">沒有變化</span>`,endLabel:dead?"……":"好",noskip:true,onEnd:()=>dead?finish():onDone()});
+  const chatId=dead?null:G.chatNpc;G.chatNpc=null;
+  runDialog({pages,chatId,deltas:deltas||`<span class="d">沒有變化</span>`,endLabel:dead?"……":"好",noskip:true,onEnd:()=>dead?finish():onDone()});
 }
 function openStep(){
   const st=step();if(st.effect)startEffect(st.effect);if(st.id==="ev_rain")startRain(12);if(/phone|calls|ymom|bmom|ycalls|ot_group/.test(st.id))ring(2);let pages=val(st.pages,G);const choices=st.choices?val(st.choices,G):null;
   if(G.due!=null&&G.clock>G.due+.5&&!st.auto){const late=Math.floor(G.clock-G.due),k=Math.min(3,Math.ceil(late/5));G.lates++;G.lateMin+=late;const lf=G.line.late||{};const fx={};for(const a in lf.fx||{})fx[a]=lf.fx[a]*k;const d=applyFx(fx);G.log.push([G.time,`遲到 ${late} 分鐘`]);pages=[[null,`你晚了 ${late} 分鐘。${lf.text||""}`],...pages];if(d)G.lateDeltas=d;renderHud();}
-  spend(2);
-  runDialog({pages,choices,endLabel:st.endLabel,onEnd:choices?null:()=>{if(st.fx)applyFx(val(st.fx,G));if(st.set)Object.assign(G.f,st.set);nextStep();},
+  spend(2);G.chatNpc=st.target&&st.target.npc;
+  runDialog({pages,choices,chatId:choices?null:G.chatNpc,endLabel:st.endLabel,onEnd:choices?null:()=>{if(st.fx)applyFx(val(st.fx,G));if(st.set)Object.assign(G.f,st.set);nextStep();},
     onChoice:c=>{if(c.mini)runMini(c.mini,r=>resolveChoice(c,nextStep,r));else resolveChoice(c,nextStep);}});
 }
 function openSide(sd){
-  spend(3);
+  spend(3);G.chatNpc=sd.target&&sd.target.npc;
   const pages=val(sd.pages,G),choices=sd.choices?val(sd.choices,G):null;
   const done=()=>{G.sidesDone[sd.id]=1;setTimeout(checkAch,50);seenSides.add(G.line.id+":"+sd.id);store.set("sides",[...seenSides]);beep("side");mode="walk";renderAll();};
-  runDialog({pages,choices,onEnd:choices?null:()=>{if(sd.fx)applyFx(val(sd.fx,G));if(sd.set)Object.assign(G.f,sd.set);if(sd.log)G.log.push([G.time,"（支線）"+sd.log]);done();},
+  runDialog({pages,choices,chatId:choices?null:G.chatNpc,onEnd:choices?null:()=>{if(sd.fx)applyFx(val(sd.fx,G));if(sd.set)Object.assign(G.f,sd.set);if(sd.log)G.log.push([G.time,"（支線）"+sd.log]);done();},
     onChoice:c=>{const go=r=>resolveChoice({...c,log:c.log?(a=>"（支線）"+val(c.log,a)):null},done,r);if(c.mini)runMini(c.mini,go);else go();}});
 }
 
@@ -296,10 +300,10 @@ document.addEventListener("click",e=>{
   else if(act==="chapterGo")closeChapter();
   else if(act==="epilogue")epilogue();
   else if(act==="resume")resumeGame();
-  else if(act==="dnext")dNext();else if(act==="dskip")dSkip();
+  else if(act==="dnext")dNext();else if(act==="dchat")dChat();else if(act==="dskip")dSkip();
   else if(act==="closeSheet")closeSheet();else if(act==="closeTerm")$("termPop").hidden=true;
   else if(act==="camReset"){CAM.yaw=0;CAM.tilt=1;CAM.zoom=1;saveCam();}
-  else if(act==="guide"){const t=targetOf(step().target);path=findPath(t.x,t.z);guiding=true;}
+  else if(act==="guide"){const t=guideTarget(step().target);path=findPath(t.x,t.z);guiding=true;}
   else if(act==="codex")openCodex();
   else if(act==="sound"){soundOn=!soundOn;store.set("sound",soundOn);renderHud();if(soundOn){beep("ok");startAmbient();}else stopAmbient();a.setAttribute("aria-pressed",soundOn);if(a.classList.contains("toggle"))a.textContent=soundOn?"開":"關";}
   else if(act==="settings")openSettings();
@@ -384,7 +388,7 @@ function tick(){
       else G.moving=false;
       near=nearest();const key=near?near.type+near.label:"";if(key!==lastNearKey){lastNearKey=key;renderDock();}
       if(guiding&&near&&near.type==="main"&&path&&path.length<=1){path=null;}
-      if(guiding&&!(near&&near.type==="main")){G.reg=(G.reg||0)-dt;if(G.reg<=0){G.reg=.6;const tg=targetOf(step().target);const end=path&&path.length?path[path.length-1]:null;
+      if(guiding&&!(near&&near.type==="main")){G.reg=(G.reg||0)-dt;if(G.reg<=0){G.reg=.6;const tg=guideTarget(step().target);const end=path&&path.length?path[path.length-1]:null;
         if(tg&&(!end||Math.hypot(end[0]-tg.x,end[1]-tg.z)>1.2))path=findPath(tg.x,tg.z);}}
     } else if(near){near=null;lastNearKey="";}
     const act=mode==="walk"?activeSides():[];
