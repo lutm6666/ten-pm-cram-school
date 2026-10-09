@@ -5,7 +5,7 @@ LINES2.care={...LINES.care,day:2,
  pick:"第二天。昨天的名單、收據、布丁，今天都還在。",
  coda:"小朋友不會記得哪一天是第二天。但他們記得誰每天都在。",
  msgs:[["14:30","小芸","昨天的收據我對過了～"],["15:30","國小家長群","下午可能會下雨，請記得帶傘"],["17:20","安安媽媽","老師，我今天出差回來了！晚上我去接她"],["18:05","小米媽媽","今天我準時！"]],
- eventSlots:[{after:"c2trial",t:"15:10",phase:"pre"},{after:"c2fight",t:"16:55",phase:"class"},{after:"c2snack",t:"17:50",phase:"class"}],
+ eventSlots:[{after:"c2trial",t:"15:10",phase:"pre"},{after:"c2fight",t:"16:55",phase:"class"},{after:"c2anan",t:"17:15",phase:"class"}],events:["kidfall","schoolcall","pudding"],
  steps:[
   {id:"c2open",chapter:{t:"14:00",title:"第二天・週三下午",sub:"昨天的事，今天都有後續。",status:"準備中",rush:["櫃台上有一張小芸留的紙條。","下午可能會下雨。"]},
    t:"14:00",target:{spot:"counter"},goal:"看小芸留的紙條",action:"看紙條",

@@ -54,6 +54,7 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 function tickAmbient(dt){
   const now=clockT.elapsedTime;
   extras.forEach(e=>{const u=e.p.userData;if(u.actUntil&&now>u.actUntil){u.act=e.state==="out"?u.act:null;u.actUntil=0;}});
+  if(G&&G.line.daylight&&mode==="walk"&&Math.random()<dt/9)chirp();
   ambT-=dt;if(ambT<=0){ambT=1.2+Math.random()*1.6;
     const ph=crowdPhase,vis=extras.filter(e=>e.p.visible&&!e.p.userData.path&&!e.p.userData.actUntil);
     if(vis.length){const e=pick(vis),u=e.p.userData;
@@ -96,7 +97,7 @@ function npcAct(id,n,t){
 }
 function tickFX(dt){
   FX.shake=Math.max(0,FX.shake-dt);FX.dark=Math.max(0,FX.dark-dt);
-  const d=FX.dark>0?Math.min(1,FX.dark*2):0,late=crowdPhase==="leave"||crowdPhase==="close"?.18:0,fl=Math.random()<.004?.25:0;const day=G&&G.line.daylight?.2:0;hemi.intensity=.9+day-.75*d-late-fl;sun.intensity=.5+day-.45*d-late*.6;
+  const d=FX.dark>0?Math.min(1,FX.dark*2):0,late=crowdPhase==="leave"||crowdPhase==="close"?.18:0,fl=Math.random()<.004?.25:0;const day=G&&G.line.daylight?-.16:0;hemi.intensity=.9+day-.75*d-late-fl;sun.intensity=.5+day*.5-.45*d-late*.6;
 }
 function startEffect(kind){
   if(kind==="shake"){FX.shake=2.6;extras.concat(Object.values(npcs).map(p=>({p}))).forEach(e=>{if(e.p.visible&&Math.random()<.6)emote(e.p,pick(["！","地震！","哇"]),1.8);});}

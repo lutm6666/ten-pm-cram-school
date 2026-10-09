@@ -703,6 +703,7 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 function tickAmbient(dt){
   const now=clockT.elapsedTime;
   extras.forEach(e=>{const u=e.p.userData;if(u.actUntil&&now>u.actUntil){u.act=e.state==="out"?u.act:null;u.actUntil=0;}});
+  if(G&&G.line.daylight&&mode==="walk"&&Math.random()<dt/9)chirp();
   ambT-=dt;if(ambT<=0){ambT=1.2+Math.random()*1.6;
     const ph=crowdPhase,vis=extras.filter(e=>e.p.visible&&!e.p.userData.path&&!e.p.userData.actUntil);
     if(vis.length){const e=pick(vis),u=e.p.userData;
@@ -745,7 +746,7 @@ function npcAct(id,n,t){
 }
 function tickFX(dt){
   FX.shake=Math.max(0,FX.shake-dt);FX.dark=Math.max(0,FX.dark-dt);
-  const d=FX.dark>0?Math.min(1,FX.dark*2):0,late=crowdPhase==="leave"||crowdPhase==="close"?.18:0,fl=Math.random()<.004?.25:0;const day=G&&G.line.daylight?.2:0;hemi.intensity=.9+day-.75*d-late-fl;sun.intensity=.5+day-.45*d-late*.6;
+  const d=FX.dark>0?Math.min(1,FX.dark*2):0,late=crowdPhase==="leave"||crowdPhase==="close"?.18:0,fl=Math.random()<.004?.25:0;const day=G&&G.line.daylight?-.16:0;hemi.intensity=.9+day-.75*d-late-fl;sun.intensity=.5+day*.5-.45*d-late*.6;
 }
 function startEffect(kind){
   if(kind==="shake"){FX.shake=2.6;extras.concat(Object.values(npcs).map(p=>({p}))).forEach(e=>{if(e.p.visible&&Math.random()<.6)emote(e.p,pick(["！","地震！","哇"]),1.8);});}
@@ -755,7 +756,7 @@ function startEffect(kind){
 /* ================= 夜晚的氣氛：窗外、街道、環境音、鐘聲 ================= */
 const NIGHT=0x101826,DAY=0xa9cbe6;const cars=[],NIGHT_PARTS={glows:[],bmat:null,ground:[]};
 /* 下午場：天還亮著，窗外大樓不亮燈、路燈關著 */
-function setDaylight(on){scene.background=new THREE.Color(on?DAY:NIGHT);NIGHT_PARTS.glows.forEach(m=>m.visible=!on);NIGHT_PARTS.ground.forEach(([m,n,d])=>{m.material.color=new THREE.Color(on?d:n);});if(NIGHT_PARTS.bmat){NIGHT_PARTS.bmat.emissiveIntensity=on?.05:.55;NIGHT_PARTS.bmat.color=new THREE.Color(on?0xb8c4d2:0xffffff);}}
+function setDaylight(on){MUSIC_DAY=on;scene.background=new THREE.Color(on?DAY:NIGHT);NIGHT_PARTS.glows.forEach(m=>m.visible=!on);NIGHT_PARTS.ground.forEach(([m,n,d])=>{m.material.color=new THREE.Color(on?d:n);});if(NIGHT_PARTS.bmat){NIGHT_PARTS.bmat.emissiveIntensity=on?.05:.55;NIGHT_PARTS.bmat.color=new THREE.Color(on?0xb8c4d2:0xffffff);}}
 function buildNight(){
   scene.background=new THREE.Color(NIGHT);
   const out=new THREE.Mesh(new THREE.PlaneGeometry(140,140),new THREE.MeshLambertMaterial({color:0x1a2230}));NIGHT_PARTS.ground.push([out,0x1a2230,0x8d9aa6]);out.rotation.x=-Math.PI/2;out.position.set(14,-.08,9);scene.add(out);
@@ -783,7 +784,7 @@ function buildNight(){
 function tickNight(dt){cars.forEach(c=>{const u=c.userData;u.x+=u.dir*u.speed*dt;if(u.x>50)u.x=-22;if(u.x<-22)u.x=50;c.position.x=u.x;});}
 
 /* 環境音：冷氣低鳴、鐘聲、雨聲、電話鈴 */
-let amb=null;
+let amb=null,MUSIC_DAY=false;
 function ensureAudio(){if(!soundOn)return null;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();}catch(e){return null;}return actx;}
 function noiseBuf(a,sec){const b=a.createBuffer(1,a.sampleRate*sec,a.sampleRate),d=b.getChannelData(0);let last=0;for(let i=0;i<d.length;i++){const w=Math.random()*2-1;last=(last+.02*w)/1.02;d[i]=last*3.5;}return b;}
 let master=null;
@@ -794,21 +795,25 @@ function startAmbient(){const a=ensureAudio();if(!a||amb)return;const o=out();
   src.connect(f);f.connect(g);g.connect(bus("amb"));src.start();
   /* 背景音樂：溫和的和弦循環 */
   const mg=a.createGain();mg.gain.value=.0001;mg.gain.exponentialRampToValueAtTime(.11,a.currentTime+3);mg.connect(bus("music"));
-  const chords=[[261.6,329.6,392,493.9],[220,261.6,329.6,392],[174.6,220,261.6,329.6],[196,246.9,293.7,349.2]];
+  const NIGHT_CH=[[261.6,329.6,392,493.9],[220,261.6,329.6,392],[174.6,220,261.6,329.6],[196,246.9,293.7,349.2]],DAY_CH=[[293.7,370,440,587.3],[329.6,415.3,493.9,659.3],[246.9,293.7,370,493.9],[220,277.2,329.6,440]];
   let i=0,t0=a.currentTime+.2;const bar=3.2;
-  const sched=()=>{if(!amb)return;while(t0<a.currentTime+bar*2){const ch=chords[i++%chords.length];
+  const sched=()=>{if(!amb)return;while(t0<a.currentTime+bar*2){const chords=MUSIC_DAY?DAY_CH:NIGHT_CH;const ch=chords[i++%chords.length];
       ch.forEach((fq,k)=>{const os=a.createOscillator(),gg=a.createGain();os.type=k?"sine":"triangle";os.frequency.value=fq*(k?1:.5);gg.gain.setValueAtTime(.0001,t0);gg.gain.exponentialRampToValueAtTime(k?.18:.25,t0+.6);gg.gain.exponentialRampToValueAtTime(.0001,t0+bar+.4);os.connect(gg);gg.connect(mg);os.start(t0);os.stop(t0+bar+.5);});
       [0,1,2,3].forEach(n=>{const fq=ch[(n*2+i)%4]*2,tt=t0+n*bar/4+.1,os=a.createOscillator(),gg=a.createGain();os.type="sine";os.frequency.value=fq;gg.gain.setValueAtTime(.0001,tt);gg.gain.exponentialRampToValueAtTime(.07,tt+.02);gg.gain.exponentialRampToValueAtTime(.0001,tt+.7);os.connect(gg);gg.connect(mg);os.start(tt);os.stop(tt+.8);});
       t0+=bar;}};
   sched();const iv=setInterval(sched,1000);
   amb={src,g,hum,hg,mg,iv};}
 function stopAmbient(){if(!amb)return;try{amb.src.stop();amb.hum.stop();clearInterval(amb.iv);amb.mg.disconnect();}catch(e){}amb=null;}
-function chime(){const a=ensureAudio();if(!a)return;const notes=[659,523,587,392,392,587,659,523];let t0=a.currentTime+.05;
+function chime(){const a=ensureAudio();if(!a)return;const notes=MUSIC_DAY?[784,659,784,659,880,784]:[659,523,587,392,392,587,659,523];let t0=a.currentTime+.05;
   notes.forEach(fq=>{const o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.value=fq;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.2,t0+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+.9);o.connect(g);g.connect(bus("sfx"));o.start(t0);o.stop(t0+1);t0+=.42;});}
 function rainSound(sec=8){const a=ensureAudio();if(!a)return;const s=a.createBufferSource();const b=a.createBuffer(1,a.sampleRate*2,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;s.buffer=b;s.loop=true;
   const f=a.createBiquadFilter();f.type="highpass";f.frequency.value=1200;const g=a.createGain();g.gain.setValueAtTime(.0001,a.currentTime);g.gain.exponentialRampToValueAtTime(.16,a.currentTime+1);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+sec);
   s.connect(f);f.connect(g);g.connect(bus("amb"));s.start();s.stop(a.currentTime+sec+.2);}
 function ring(times=2){const a=ensureAudio();if(!a)return;let t0=a.currentTime+.05;for(let k=0;k<times;k++){for(let j=0;j<8;j++){const o=a.createOscillator(),g=a.createGain();o.frequency.value=j%2?440:480;g.gain.setValueAtTime(.12,t0);g.gain.setValueAtTime(0,t0+.05);o.connect(g);g.connect(bus("sfx"));o.start(t0);o.stop(t0+.05);t0+=.05;}t0+=.6;}}
+/* 白天：偶爾有鳥叫、遠處的機車 */
+function chirp(){const a=ensureAudio();if(!a||!amb)return;let t0=a.currentTime+.02;const n=2+Math.floor(Math.random()*3),base=2400+Math.random()*900;
+  for(let k=0;k<n;k++){const o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.setValueAtTime(base,t0);o.frequency.exponentialRampToValueAtTime(base*1.35,t0+.07);
+    g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.05,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+.09);o.connect(g);g.connect(bus("amb"));o.start(t0);o.stop(t0+.1);t0+=.13;}}
 /* 雨：畫面上的雨滴 */
 let rain=null;
 function startRain(sec=10){if(rain)return;const n=500,geo=new THREE.BufferGeometry(),pos=new Float32Array(n*3);for(let i=0;i<n;i++){pos[i*3]=Math.random()*40-6;pos[i*3+1]=Math.random()*8;pos[i*3+2]=Math.random()*30-4;}
@@ -1034,7 +1039,7 @@ const EVENT_SLOTS={
 };
 function buildSteps(L){
   const steps=[...L.steps],slots=[...(L.eventSlots||EVENT_SLOTS[L.id]||[])].sort(()=>Math.random()-.5).slice(0,2),used=new Set();
-  slots.forEach(sl=>{const pool=EVENTS.filter(e=>(!L.events||L.events.includes(e.id))&&e.phases.includes(sl.phase)&&!used.has(e.id)&&!(e.id==="nosebleed"&&L.id!=="teacher"&&sl.phase!=="class"));
+  slots.forEach(sl=>{const pool=EVENTS.filter(e=>(!L.events||L.events.includes(e.id))&&(!e.lines||e.lines.includes(L.id))&&e.phases.includes(sl.phase)&&!used.has(e.id)&&!(e.id==="nosebleed"&&L.id!=="teacher"&&sl.phase!=="class"));
     if(!pool.length)return;const ev=pool[Math.floor(Math.random()*pool.length)];used.add(ev.id);
     const st={...ev.make(),id:"ev_"+ev.id,t:sl.t,isEvent:true};const i=steps.findIndex(s=>s.id===sl.after);if(i>=0)steps.splice(i+1,0,st);});
   if(typeof otSteps==="function")steps.push(...otSteps(L));
@@ -1796,6 +1801,28 @@ MINIS.pickup={
     draw();}
 };
 
+/* ---------- 下午才會發生的事（取代晚上的地震、停電） ---------- */
+EVENTS.push(
+ {id:"kidfall",lines:["care"],phases:["class","break"],make:()=>({target:{npc:"yu"},goal:"走廊傳來哭聲",
+  pages:G=>[[null,"小宇在走廊跑，滑了一跤。膝蓋擦破一塊皮，他咬著嘴唇沒哭出聲。"],["yu","……我沒事。"]],
+  choices:G=>[
+   {label:"擦藥、貼 OK 繃，寫在聯絡簿上",fx:{pat:-3,par:6},log:"幫小宇擦藥並告知家長",res:[[null,"你在聯絡簿寫：「今天 16:50 在走廊跌倒，右膝擦傷，已消毒。」"],["yu","OK 繃上面有恐龍耶。"]]},
+   {label:"「男生不哭，起來。」",fx:{pat:3,par:-5},log:"叫小宇自己站起來",res:[[null,"他站起來了。晚上他媽媽看到膝蓋，打了一通電話來。"]]},
+   {label:"打給媽媽，問要不要來接",fx:{par:3,ord:-3},log:"打給小宇媽媽",res:[[null,"「沒事沒事，小擦傷，謝謝老師告訴我。」"]]}]})},
+ {id:"schoolcall",lines:["care"],phases:["pre","class"],make:()=>({auto:true,goal:"櫃台電話響了",
+  pages:G=>[[null,"電話是國小的班導打來的。"],[null,"「安安今天的數學作業本留在學校了。明天要交，你們那邊可以先讓她寫在白紙上嗎？」"]],
+  choices:G=>[
+   {label:"印一份空白的作業給她",fx:{ord:4,hp:-2},log:"幫安安印一份作業",res:[[null,"你把題目抄在白紙上。安安說：「老師的字跟我們老師的不一樣。」"]]},
+   {label:"請班導拍照傳過來",fx:{par:3},log:"請國小老師傳作業照片",res:[[null,"三分鐘後，手機收到四張照片。拍得有點歪。"]]}]})},
+ {id:"pudding",lines:["care"],phases:["pre"],make:()=>({auto:true,goal:"點心送來了",
+  pages:G=>[[null,"點心店送來了今天的布丁。"],[null,"你數了一下：三十個。今天的安親只有十個小朋友。"]],
+  choices:G=>[
+   {label:"退回二十個",fx:{ord:4,hp:-2},log:"把多送的布丁退回去",res:[[null,"外送員嘆了一口氣，把箱子搬回車上。"]]},
+   {label:"留下來，晚上給高三和國中部",fx:{par:4,ord:-2},set:{extraPudding:1},log:"多的布丁留給晚上的學生",res:[[null,"你在冰箱貼了一張紙：「安親多的布丁，晚上的同學請自取。」"]]}]})}
+);
+LINES.care.events=["kidfall","schoolcall","pudding"];
+LINES.care.eventSlots=[{after:"c_prep",t:"14:40",phase:"pre"},{after:"c_homework",t:"16:50",phase:"class"},{after:"c_book",t:"17:08",phase:"class"}];
+
 /* ================= 職業線：國中部英文老師（晚上 17:30–21:45） ================= */
 /* 國中部在走廊最裡面的 C 班。影印機、投影機、教室，都要跟高三搶。 */
 const PJ={copierWait:[7.2,12,0],amyPodium:[32,2.6,0],xiangLocker:[33,14.4,Math.PI],xiangSeat:[32,6.42,Math.PI],qingSeat:[34.4,4.62,Math.PI],qingHall:[30.6,12.4,Math.PI],
@@ -2401,7 +2428,8 @@ const careF=G=>((G.prevAll||{}).care||{}).f||null,jhF=G=>((G.prevAll||{}).jh||{}
 LINES.yun.carry=G=>{const c=careF(G),l=[];if(!c)return l;
   if(c.handoffGood)l.push([null,"下午蔡老師的交接很清楚：阿嬤的學費收了、張媽媽下週一要試讀、小米媽媽今天會晚到。"]);
   else l.push([null,"抽屜裡有一張沒歸檔的收據。下午好像沒有人跟你說。"]);
-  if(c.paid===0)l.push([null,"收據上的金額，跟抽屜裡的錢對不起來。"]);return l;};
+  if(c.paid===0)l.push([null,"收據上的金額，跟抽屜裡的錢對不起來。"]);
+  if(c.extraPudding)l.push([null,"冰箱上貼著一張紙：「安親多的布丁，晚上的同學請自取。」已經少了三個。"]);return l;};
 LINES.teacher.carry=G=>{const c=careF(G);if(!c)return [];
   return [[null,c.roomReady?"B 班的桌子被下午的安親班兩兩併起來了，椅子降低了一格。":"白板角落還留著下午安親班的字：「數習 p.32」。"]];};
 LINES.boss.carry=G=>{const c=careF(G),j=jhF(G),l=[];
@@ -2447,7 +2475,7 @@ LINES2.care={...LINES.care,day:2,
  pick:"第二天。昨天的名單、收據、布丁，今天都還在。",
  coda:"小朋友不會記得哪一天是第二天。但他們記得誰每天都在。",
  msgs:[["14:30","小芸","昨天的收據我對過了～"],["15:30","國小家長群","下午可能會下雨，請記得帶傘"],["17:20","安安媽媽","老師，我今天出差回來了！晚上我去接她"],["18:05","小米媽媽","今天我準時！"]],
- eventSlots:[{after:"c2trial",t:"15:10",phase:"pre"},{after:"c2fight",t:"16:55",phase:"class"},{after:"c2snack",t:"17:50",phase:"class"}],
+ eventSlots:[{after:"c2trial",t:"15:10",phase:"pre"},{after:"c2fight",t:"16:55",phase:"class"},{after:"c2anan",t:"17:15",phase:"class"}],events:["kidfall","schoolcall","pudding"],
  steps:[
   {id:"c2open",chapter:{t:"14:00",title:"第二天・週三下午",sub:"昨天的事，今天都有後續。",status:"準備中",rush:["櫃台上有一張小芸留的紙條。","下午可能會下雨。"]},
    t:"14:00",target:{spot:"counter"},goal:"看小芸留的紙條",action:"看紙條",
@@ -2776,13 +2804,22 @@ function nearest(){
   for(const sd of activeSides()){const t=targetOf(sd.target);if(t){const ds=d(t.x,t.z);if(ds<1.9)c.push({dist:ds,type:"side",sd,label:sd.action||`找${t.name}`});}}
   for(const it of ITEMS){if(itemMarks[it.id]&&!G.items.includes(it.id)){const di=d(it.pos[0],it.pos[1]);if(di<1.3)c.push({dist:di-.3,type:"item",it,label:"撿起來"});}}
   for(const id of chatTargets()){const n=npcs[id],dc=d(n.position.x,n.position.z);if(dc<1.5)c.push({dist:dc+.8,type:"chat",id,label:`聊聊・${CHARS[id].name}`});}
+  // 其他人：至少可以打個招呼
+  const chatIds=new Set(chatTargets()),mainId=m&&m.kind==="npc"?m.id:null;
+  for(const id in npcs){const n=npcs[id];if(!n.visible||id===mainId||chatIds.has(id)||id===G.line.id)continue;const dn=d(n.position.x,n.position.z);if(dn<1.4)c.push({dist:dn+1.2,type:"greet",p:n,id,label:"打招呼"});}
+  for(const e of extras){if(!e.p.visible)continue;const de=d(e.p.position.x,e.p.position.z);if(de<1.1)c.push({dist:de+1.2,type:"greet",p:e.p,kind:e.kind,label:"打招呼"});}
   if(c.length){c.sort((a,b)=>a.dist-b.dist);return c[0];}
   for(const inf of INFO){if(d(inf.pos[0],inf.pos[1])<1.6)return{type:"info",inf,label:"看說明"};}
   return null;
 }
 function interact(){if(mode!=="walk"||!near)return;
-  if(near.type==="main")openStep();else if(near.type==="side")openSide(near.sd);else if(near.type==="item")pickItem(near.it);else if(near.type==="info")openInfo(near.inf);else if(near.type==="chat")openChat(near.id);}
+  if(near.type==="main")openStep();else if(near.type==="side")openSide(near.sd);else if(near.type==="item")pickItem(near.it);else if(near.type==="info")openInfo(near.inf);else if(near.type==="chat")openChat(near.id);else if(near.type==="greet")greet(near);}
 
+/* 打招呼：不花時間，對方回一句 */
+const GREET={kid:["老師好！","你看我的恐龍！","我寫完了！（沒有）","老師你好高","可以去玩了嗎？"],class:["老師好","好累……","明天要考試","（點頭）","今天好熱"],jh:["Hi～","我手機有交喔","老師好","段考好難","（拔下耳機）蛤？"],study:["噓……","我在算題目","嗯？","（揮揮手）"]};
+const GREET_NPC={teacher:"你好～辛苦了。",yun:"嗨！等我一下喔～",boss:"嗯，辛苦了。",hong:"嗨～自習室這邊還好。",parent2:"（有點害羞地點頭）",deliv:"您好，外送～",amy:"Hi～國中部這邊比較吵，不好意思。",chenba:"你好。",zhangma:"你好～",ama:"老師好～"};
+function greet(n){const t=n.id?(GREET_NPC[n.id]||"（點點頭）"):pick(GREET[n.kind]||["（點點頭）"]);
+  emote(player,pick(["嗨！","你好～","辛苦了"]),1.6);setTimeout(()=>emote(n.p,t,2.6),350);beep("blip");}
 /* ---------- HUD ---------- */
 function renderAll(){renderHud();renderNext();renderDock();}
 function renderHud(){
@@ -2814,7 +2851,7 @@ function renderDock(){
   const d=$("dock");if(mode!=="walk"){d.hidden=true;return;}d.hidden=false;
   const touch=matchMedia("(pointer:coarse)").matches;
   $("dpad").hidden=!touch;$("keys").hidden=touch;
-  const a=$("actBtn");a.hidden=!near;if(near){a.textContent=near.label;a.className="act"+(near.type==="info"?" info":near.type==="chat"?" chat":"");}
+  const a=$("actBtn");a.hidden=!near;if(near){a.textContent=near.label;a.className="act"+(near.type==="info"?" info":near.type==="chat"||near.type==="greet"?" chat":"");}
 }
 
 /* ---------- 章節卡 ---------- */

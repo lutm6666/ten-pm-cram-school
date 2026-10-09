@@ -203,3 +203,25 @@ MINIS.pickup={
         act.querySelector("[data-next]").onclick=()=>{if(i<self.rounds.length-1){i++;draw();}else{el.innerHTML=`<p class="feed">接送完了，處理得對的有 ${ok} / ${self.rounds.length} 位。</p>`;done({ok,handedMi});}};}));}
     draw();}
 };
+
+/* ---------- 下午才會發生的事（取代晚上的地震、停電） ---------- */
+EVENTS.push(
+ {id:"kidfall",lines:["care"],phases:["class","break"],make:()=>({target:{npc:"yu"},goal:"走廊傳來哭聲",
+  pages:G=>[[null,"小宇在走廊跑，滑了一跤。膝蓋擦破一塊皮，他咬著嘴唇沒哭出聲。"],["yu","……我沒事。"]],
+  choices:G=>[
+   {label:"擦藥、貼 OK 繃，寫在聯絡簿上",fx:{pat:-3,par:6},log:"幫小宇擦藥並告知家長",res:[[null,"你在聯絡簿寫：「今天 16:50 在走廊跌倒，右膝擦傷，已消毒。」"],["yu","OK 繃上面有恐龍耶。"]]},
+   {label:"「男生不哭，起來。」",fx:{pat:3,par:-5},log:"叫小宇自己站起來",res:[[null,"他站起來了。晚上他媽媽看到膝蓋，打了一通電話來。"]]},
+   {label:"打給媽媽，問要不要來接",fx:{par:3,ord:-3},log:"打給小宇媽媽",res:[[null,"「沒事沒事，小擦傷，謝謝老師告訴我。」"]]}]})},
+ {id:"schoolcall",lines:["care"],phases:["pre","class"],make:()=>({auto:true,goal:"櫃台電話響了",
+  pages:G=>[[null,"電話是國小的班導打來的。"],[null,"「安安今天的數學作業本留在學校了。明天要交，你們那邊可以先讓她寫在白紙上嗎？」"]],
+  choices:G=>[
+   {label:"印一份空白的作業給她",fx:{ord:4,hp:-2},log:"幫安安印一份作業",res:[[null,"你把題目抄在白紙上。安安說：「老師的字跟我們老師的不一樣。」"]]},
+   {label:"請班導拍照傳過來",fx:{par:3},log:"請國小老師傳作業照片",res:[[null,"三分鐘後，手機收到四張照片。拍得有點歪。"]]}]})},
+ {id:"pudding",lines:["care"],phases:["pre"],make:()=>({auto:true,goal:"點心送來了",
+  pages:G=>[[null,"點心店送來了今天的布丁。"],[null,"你數了一下：三十個。今天的安親只有十個小朋友。"]],
+  choices:G=>[
+   {label:"退回二十個",fx:{ord:4,hp:-2},log:"把多送的布丁退回去",res:[[null,"外送員嘆了一口氣，把箱子搬回車上。"]]},
+   {label:"留下來，晚上給高三和國中部",fx:{par:4,ord:-2},set:{extraPudding:1},log:"多的布丁留給晚上的學生",res:[[null,"你在冰箱貼了一張紙：「安親多的布丁，晚上的同學請自取。」"]]}]})}
+);
+LINES.care.events=["kidfall","schoolcall","pudding"];
+LINES.care.eventSlots=[{after:"c_prep",t:"14:40",phase:"pre"},{after:"c_homework",t:"16:50",phase:"class"},{after:"c_book",t:"17:08",phase:"class"}];

@@ -4,7 +4,8 @@ const careF=G=>((G.prevAll||{}).care||{}).f||null,jhF=G=>((G.prevAll||{}).jh||{}
 LINES.yun.carry=G=>{const c=careF(G),l=[];if(!c)return l;
   if(c.handoffGood)l.push([null,"下午蔡老師的交接很清楚：阿嬤的學費收了、張媽媽下週一要試讀、小米媽媽今天會晚到。"]);
   else l.push([null,"抽屜裡有一張沒歸檔的收據。下午好像沒有人跟你說。"]);
-  if(c.paid===0)l.push([null,"收據上的金額，跟抽屜裡的錢對不起來。"]);return l;};
+  if(c.paid===0)l.push([null,"收據上的金額，跟抽屜裡的錢對不起來。"]);
+  if(c.extraPudding)l.push([null,"冰箱上貼著一張紙：「安親多的布丁，晚上的同學請自取。」已經少了三個。"]);return l;};
 LINES.teacher.carry=G=>{const c=careF(G);if(!c)return [];
   return [[null,c.roomReady?"B 班的桌子被下午的安親班兩兩併起來了，椅子降低了一格。":"白板角落還留著下午安親班的字：「數習 p.32」。"]];};
 LINES.boss.carry=G=>{const c=careF(G),j=jhF(G),l=[];

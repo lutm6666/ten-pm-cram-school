@@ -65,13 +65,22 @@ function nearest(){
   for(const sd of activeSides()){const t=targetOf(sd.target);if(t){const ds=d(t.x,t.z);if(ds<1.9)c.push({dist:ds,type:"side",sd,label:sd.action||`找${t.name}`});}}
   for(const it of ITEMS){if(itemMarks[it.id]&&!G.items.includes(it.id)){const di=d(it.pos[0],it.pos[1]);if(di<1.3)c.push({dist:di-.3,type:"item",it,label:"撿起來"});}}
   for(const id of chatTargets()){const n=npcs[id],dc=d(n.position.x,n.position.z);if(dc<1.5)c.push({dist:dc+.8,type:"chat",id,label:`聊聊・${CHARS[id].name}`});}
+  // 其他人：至少可以打個招呼
+  const chatIds=new Set(chatTargets()),mainId=m&&m.kind==="npc"?m.id:null;
+  for(const id in npcs){const n=npcs[id];if(!n.visible||id===mainId||chatIds.has(id)||id===G.line.id)continue;const dn=d(n.position.x,n.position.z);if(dn<1.4)c.push({dist:dn+1.2,type:"greet",p:n,id,label:"打招呼"});}
+  for(const e of extras){if(!e.p.visible)continue;const de=d(e.p.position.x,e.p.position.z);if(de<1.1)c.push({dist:de+1.2,type:"greet",p:e.p,kind:e.kind,label:"打招呼"});}
   if(c.length){c.sort((a,b)=>a.dist-b.dist);return c[0];}
   for(const inf of INFO){if(d(inf.pos[0],inf.pos[1])<1.6)return{type:"info",inf,label:"看說明"};}
   return null;
 }
 function interact(){if(mode!=="walk"||!near)return;
-  if(near.type==="main")openStep();else if(near.type==="side")openSide(near.sd);else if(near.type==="item")pickItem(near.it);else if(near.type==="info")openInfo(near.inf);else if(near.type==="chat")openChat(near.id);}
+  if(near.type==="main")openStep();else if(near.type==="side")openSide(near.sd);else if(near.type==="item")pickItem(near.it);else if(near.type==="info")openInfo(near.inf);else if(near.type==="chat")openChat(near.id);else if(near.type==="greet")greet(near);}
 
+/* 打招呼：不花時間，對方回一句 */
+const GREET={kid:["老師好！","你看我的恐龍！","我寫完了！（沒有）","老師你好高","可以去玩了嗎？"],class:["老師好","好累……","明天要考試","（點頭）","今天好熱"],jh:["Hi～","我手機有交喔","老師好","段考好難","（拔下耳機）蛤？"],study:["噓……","我在算題目","嗯？","（揮揮手）"]};
+const GREET_NPC={teacher:"你好～辛苦了。",yun:"嗨！等我一下喔～",boss:"嗯，辛苦了。",hong:"嗨～自習室這邊還好。",parent2:"（有點害羞地點頭）",deliv:"您好，外送～",amy:"Hi～國中部這邊比較吵，不好意思。",chenba:"你好。",zhangma:"你好～",ama:"老師好～"};
+function greet(n){const t=n.id?(GREET_NPC[n.id]||"（點點頭）"):pick(GREET[n.kind]||["（點點頭）"]);
+  emote(player,pick(["嗨！","你好～","辛苦了"]),1.6);setTimeout(()=>emote(n.p,t,2.6),350);beep("blip");}
 /* ---------- HUD ---------- */
 function renderAll(){renderHud();renderNext();renderDock();}
 function renderHud(){
@@ -103,7 +112,7 @@ function renderDock(){
   const d=$("dock");if(mode!=="walk"){d.hidden=true;return;}d.hidden=false;
   const touch=matchMedia("(pointer:coarse)").matches;
   $("dpad").hidden=!touch;$("keys").hidden=touch;
-  const a=$("actBtn");a.hidden=!near;if(near){a.textContent=near.label;a.className="act"+(near.type==="info"?" info":near.type==="chat"?" chat":"");}
+  const a=$("actBtn");a.hidden=!near;if(near){a.textContent=near.label;a.className="act"+(near.type==="info"?" info":near.type==="chat"||near.type==="greet"?" chat":"");}
 }
 
 /* ---------- 章節卡 ---------- */

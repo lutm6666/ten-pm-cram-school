@@ -42,7 +42,7 @@ const EVENT_SLOTS={
 };
 function buildSteps(L){
   const steps=[...L.steps],slots=[...(L.eventSlots||EVENT_SLOTS[L.id]||[])].sort(()=>Math.random()-.5).slice(0,2),used=new Set();
-  slots.forEach(sl=>{const pool=EVENTS.filter(e=>(!L.events||L.events.includes(e.id))&&e.phases.includes(sl.phase)&&!used.has(e.id)&&!(e.id==="nosebleed"&&L.id!=="teacher"&&sl.phase!=="class"));
+  slots.forEach(sl=>{const pool=EVENTS.filter(e=>(!L.events||L.events.includes(e.id))&&(!e.lines||e.lines.includes(L.id))&&e.phases.includes(sl.phase)&&!used.has(e.id)&&!(e.id==="nosebleed"&&L.id!=="teacher"&&sl.phase!=="class"));
     if(!pool.length)return;const ev=pool[Math.floor(Math.random()*pool.length)];used.add(ev.id);
     const st={...ev.make(),id:"ev_"+ev.id,t:sl.t,isEvent:true};const i=steps.findIndex(s=>s.id===sl.after);if(i>=0)steps.splice(i+1,0,st);});
   if(typeof otSteps==="function")steps.push(...otSteps(L));

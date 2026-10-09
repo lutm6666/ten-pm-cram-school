@@ -1,7 +1,7 @@
 /* ================= 夜晚的氣氛：窗外、街道、環境音、鐘聲 ================= */
 const NIGHT=0x101826,DAY=0xa9cbe6;const cars=[],NIGHT_PARTS={glows:[],bmat:null,ground:[]};
 /* 下午場：天還亮著，窗外大樓不亮燈、路燈關著 */
-function setDaylight(on){scene.background=new THREE.Color(on?DAY:NIGHT);NIGHT_PARTS.glows.forEach(m=>m.visible=!on);NIGHT_PARTS.ground.forEach(([m,n,d])=>{m.material.color=new THREE.Color(on?d:n);});if(NIGHT_PARTS.bmat){NIGHT_PARTS.bmat.emissiveIntensity=on?.05:.55;NIGHT_PARTS.bmat.color=new THREE.Color(on?0xb8c4d2:0xffffff);}}
+function setDaylight(on){MUSIC_DAY=on;scene.background=new THREE.Color(on?DAY:NIGHT);NIGHT_PARTS.glows.forEach(m=>m.visible=!on);NIGHT_PARTS.ground.forEach(([m,n,d])=>{m.material.color=new THREE.Color(on?d:n);});if(NIGHT_PARTS.bmat){NIGHT_PARTS.bmat.emissiveIntensity=on?.05:.55;NIGHT_PARTS.bmat.color=new THREE.Color(on?0xb8c4d2:0xffffff);}}
 function buildNight(){
   scene.background=new THREE.Color(NIGHT);
   const out=new THREE.Mesh(new THREE.PlaneGeometry(140,140),new THREE.MeshLambertMaterial({color:0x1a2230}));NIGHT_PARTS.ground.push([out,0x1a2230,0x8d9aa6]);out.rotation.x=-Math.PI/2;out.position.set(14,-.08,9);scene.add(out);
@@ -29,7 +29,7 @@ function buildNight(){
 function tickNight(dt){cars.forEach(c=>{const u=c.userData;u.x+=u.dir*u.speed*dt;if(u.x>50)u.x=-22;if(u.x<-22)u.x=50;c.position.x=u.x;});}
 
 /* 環境音：冷氣低鳴、鐘聲、雨聲、電話鈴 */
-let amb=null;
+let amb=null,MUSIC_DAY=false;
 function ensureAudio(){if(!soundOn)return null;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();}catch(e){return null;}return actx;}
 function noiseBuf(a,sec){const b=a.createBuffer(1,a.sampleRate*sec,a.sampleRate),d=b.getChannelData(0);let last=0;for(let i=0;i<d.length;i++){const w=Math.random()*2-1;last=(last+.02*w)/1.02;d[i]=last*3.5;}return b;}
 let master=null;
@@ -40,21 +40,25 @@ function startAmbient(){const a=ensureAudio();if(!a||amb)return;const o=out();
   src.connect(f);f.connect(g);g.connect(bus("amb"));src.start();
   /* 背景音樂：溫和的和弦循環 */
   const mg=a.createGain();mg.gain.value=.0001;mg.gain.exponentialRampToValueAtTime(.11,a.currentTime+3);mg.connect(bus("music"));
-  const chords=[[261.6,329.6,392,493.9],[220,261.6,329.6,392],[174.6,220,261.6,329.6],[196,246.9,293.7,349.2]];
+  const NIGHT_CH=[[261.6,329.6,392,493.9],[220,261.6,329.6,392],[174.6,220,261.6,329.6],[196,246.9,293.7,349.2]],DAY_CH=[[293.7,370,440,587.3],[329.6,415.3,493.9,659.3],[246.9,293.7,370,493.9],[220,277.2,329.6,440]];
   let i=0,t0=a.currentTime+.2;const bar=3.2;
-  const sched=()=>{if(!amb)return;while(t0<a.currentTime+bar*2){const ch=chords[i++%chords.length];
+  const sched=()=>{if(!amb)return;while(t0<a.currentTime+bar*2){const chords=MUSIC_DAY?DAY_CH:NIGHT_CH;const ch=chords[i++%chords.length];
       ch.forEach((fq,k)=>{const os=a.createOscillator(),gg=a.createGain();os.type=k?"sine":"triangle";os.frequency.value=fq*(k?1:.5);gg.gain.setValueAtTime(.0001,t0);gg.gain.exponentialRampToValueAtTime(k?.18:.25,t0+.6);gg.gain.exponentialRampToValueAtTime(.0001,t0+bar+.4);os.connect(gg);gg.connect(mg);os.start(t0);os.stop(t0+bar+.5);});
       [0,1,2,3].forEach(n=>{const fq=ch[(n*2+i)%4]*2,tt=t0+n*bar/4+.1,os=a.createOscillator(),gg=a.createGain();os.type="sine";os.frequency.value=fq;gg.gain.setValueAtTime(.0001,tt);gg.gain.exponentialRampToValueAtTime(.07,tt+.02);gg.gain.exponentialRampToValueAtTime(.0001,tt+.7);os.connect(gg);gg.connect(mg);os.start(tt);os.stop(tt+.8);});
       t0+=bar;}};
   sched();const iv=setInterval(sched,1000);
   amb={src,g,hum,hg,mg,iv};}
 function stopAmbient(){if(!amb)return;try{amb.src.stop();amb.hum.stop();clearInterval(amb.iv);amb.mg.disconnect();}catch(e){}amb=null;}
-function chime(){const a=ensureAudio();if(!a)return;const notes=[659,523,587,392,392,587,659,523];let t0=a.currentTime+.05;
+function chime(){const a=ensureAudio();if(!a)return;const notes=MUSIC_DAY?[784,659,784,659,880,784]:[659,523,587,392,392,587,659,523];let t0=a.currentTime+.05;
   notes.forEach(fq=>{const o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.value=fq;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.2,t0+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+.9);o.connect(g);g.connect(bus("sfx"));o.start(t0);o.stop(t0+1);t0+=.42;});}
 function rainSound(sec=8){const a=ensureAudio();if(!a)return;const s=a.createBufferSource();const b=a.createBuffer(1,a.sampleRate*2,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;s.buffer=b;s.loop=true;
   const f=a.createBiquadFilter();f.type="highpass";f.frequency.value=1200;const g=a.createGain();g.gain.setValueAtTime(.0001,a.currentTime);g.gain.exponentialRampToValueAtTime(.16,a.currentTime+1);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+sec);
   s.connect(f);f.connect(g);g.connect(bus("amb"));s.start();s.stop(a.currentTime+sec+.2);}
 function ring(times=2){const a=ensureAudio();if(!a)return;let t0=a.currentTime+.05;for(let k=0;k<times;k++){for(let j=0;j<8;j++){const o=a.createOscillator(),g=a.createGain();o.frequency.value=j%2?440:480;g.gain.setValueAtTime(.12,t0);g.gain.setValueAtTime(0,t0+.05);o.connect(g);g.connect(bus("sfx"));o.start(t0);o.stop(t0+.05);t0+=.05;}t0+=.6;}}
+/* 白天：偶爾有鳥叫、遠處的機車 */
+function chirp(){const a=ensureAudio();if(!a||!amb)return;let t0=a.currentTime+.02;const n=2+Math.floor(Math.random()*3),base=2400+Math.random()*900;
+  for(let k=0;k<n;k++){const o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.setValueAtTime(base,t0);o.frequency.exponentialRampToValueAtTime(base*1.35,t0+.07);
+    g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.05,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+.09);o.connect(g);g.connect(bus("amb"));o.start(t0);o.stop(t0+.1);t0+=.13;}}
 /* 雨：畫面上的雨滴 */
 let rain=null;
 function startRain(sec=10){if(rain)return;const n=500,geo=new THREE.BufferGeometry(),pos=new Float32Array(n*3);for(let i=0;i<n;i++){pos[i*3]=Math.random()*40-6;pos[i*3+1]=Math.random()*8;pos[i*3+2]=Math.random()*30-4;}
