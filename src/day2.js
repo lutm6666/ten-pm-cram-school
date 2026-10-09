@@ -322,7 +322,7 @@ MINIS.summary={
 /* 排順序：依序點，點的順序就是答案 */
 MINIS.order={
   head:"排順序",zone:"順序",title:"照順序點",cost:4,
-  get intro(){return {teacher:"五題例題，由淺到深點一次。點的順序就是上課的順序。",yun:"五通要回的電話，最急的先點。點的順序就是回電的順序。"}[G&&G.line.id]||"照順序點。";},
+  get intro(){return {teacher:"五題例題，由淺到深點一次。點的順序就是上課的順序。",yun:"五通要回的電話，最急的先點。點的順序就是回電的順序。",jh:"把字照正確的句子順序點一次。"}[G&&G.line.id]||"照順序點。";},
   sets:{teacher:["向量的長度 |a|","兩點求向量 AB","內積的定義 a·b","用內積求夾角","空間中的平面方程式"],
         yun:["王媽媽：已經在樓下等","陳爸爸：九點要接小柏","林媽媽：退費進度","高二家長：問講義","廠商：影印機保養"]},
   mount(el,done){const list=this.sets[G.line.id]||this.sets.teacher,seq=[],order=list.map((_,i)=>i).sort(()=>Math.random()-.5);

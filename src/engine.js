@@ -230,7 +230,7 @@ function showTitle(){
    <div class="lbl">今天會遇到的人</div><div class="cast">${(L.cast||["yun","boss","pinyu","zhe","parent","mom"]).map(id=>{const ch=CHARS[id];return `<div><i style="background:${ch.color}"></i><b>${esc(ch.name)}</b><span>${esc(ch.title)}</span></div>`;}).join("")}</div>
    ${(()=>{const sv=store.get("save",null);return sv&&LINES[sv.line]?`<button class="ghost" data-act="resume" style="width:100%;margin-top:16px;padding:12px;border-color:var(--ink)">繼續上次：${sv.day===2?"第二天・":""}${esc(LINES[sv.line].role)}・${fmt(sv.clock)}</button>`:"";})()}
    <button class="big-go" data-act="start">上班</button>
-   ${["teacher","yun","boss"].every(i=>doneLines.has(i))?`<button class="ghost" data-act="epilogue" style="width:100%;margin-top:8px;padding:12px">一個月後 ▸</button>`:`<p class="hint">三個位子都玩過，會解鎖「一個月後」。目前完成 ${["teacher","yun","boss"].filter(i=>doneLines.has(i)).length} / 3。</p>`}
+   ${["teacher","yun","boss"].every(i=>doneLines.has(i))?`<button class="ghost" data-act="epilogue" style="width:100%;margin-top:8px;padding:12px">一個月後 ▸</button>`:`<p class="hint">晚上三個位子都玩過，會解鎖「一個月後」；玩過下午場、國中部和第二天，一個月後會多幾段。目前完成 ${["teacher","yun","boss"].filter(i=>doneLines.has(i)).length} / 3。</p>`}
    <p class="hint">系統會告訴你下一步。跟著頭上有紅色「！」的人或地方走，或按「帶我去」。頭上有「i」的地方可以看說明，地上一閃一閃發光的地方有東西可以撿。</p>
    <div class="links"><button data-act="codex">圖鑑</button><button data-act="settings">設定</button><button data-act="about">關於</button></div>
    <p class="hint">人物、補習班、數字與情節都是虛構的遊戲設定。</p></div>`;
@@ -253,6 +253,25 @@ function epilogue(){
   P.push(["王媽媽",enr?"王媽媽的兒子坐在第二排。上週，他第一次舉手問問題。":"王媽媽最後報了對面。聽說對面也打八折。"]);
   P.push(["榜單牆",B.f.rankWords?"榜單牆換成了學生寫的小卡。最多人寫的一句是：「這裡有人記得我的名字。」":"榜單牆還是那張褪色的紅紙。主任說，今年一定要換。"]);
   P.push(["週報",B.f.lied?"總部打電話來問：為什麼上週 85%，這週 74%？主任在電話那頭沉默了很久。":B.f.explained?"總部的回信只有一行：「下季目標維持 85%，請加油。」但附件裡，多了一台新影印機的採購單。":"續班率最後停在 78%。沒有達標，也沒有很難看。"]);
+  /* 下午場、國中部、第二天：玩過才會多出這幾段 */
+  const CA=(o.care||{}).f,JH=(o.jh||{}).f,o2=store.get("out2",{}),T2=(o2.teacher||{}).f||{},Y2=(o2.yun||{}).f||{},B2=(o2.boss||{}).f||{};
+  if(CA){
+    P.push(["小米",CA.handedMi?(CA.lesson?"接送名單最上面多了一行紅字：「名單外的人，一律先打電話。」小米每天都會念一次給新來的小朋友聽。":"小米媽媽換了另一間安親班。離開那天，小米把兔子娃娃的照片貼在了布告欄上。"):CA.waitMi||CA.miCalm?"小米現在每天會把布丁的蓋子留給蔡老師。她說那是「獎牌」。":"小米已經不哭了。她現在是點心時間最大聲的那一個。"]);
+    P.push(["安親班",CA.ananNote?"安安媽媽出差回來那天，在聯絡簿上寫了一整頁的謝謝。":CA.yuChecked?"小宇的數習，進位再也沒錯過。他說是哥哥教的。（其實是安親老師。）":"下午的補習班還是很安靜。四點十分之後，就不安靜了。"]);
+    if(CA.trialKid)P.push(["張媽媽","張媽媽的兒子試讀一週後報名了。應用題，他現在會先把題目在問什麼圈起來。"]);
+  }
+  if(JH){
+    P.push(["子晴",JH.speech?"子晴的英文演講拿了第二名。題目是「我最想改變的一件事」，她講的是成績單上的排名。":JH.talkMom?"子晴媽媽來補習班找了國中部老師一次。之後，子晴的週四晚上空出來了。":"子晴還是每週四來補習。段考英文 99，排第二。"]);
+    P.push(["阿翔",JH.deal?"阿翔的手機現在每天自己放進籃子。模擬考英文，他第一次拿到 B。":"阿翔的手機還是常常沒交。不過他開始在籃子旁邊背單字卡了。"]);
+    P.push(["走廊盡頭",JH.roomPlan?"走廊上貼了一張「教室設備使用表」。影印機那一格每天都有人搶，但有一格寫著「國中部」。":JH.talkback?"B 班和 C 班之間的走廊，下課的時候還是有點尷尬。":"C 班的投影機還是常常被借走。國中部的老師已經習慣用白板了。"]);
+  }
+  if(T2.baseWinter||B2.teacherBase||B2.basePlan||B2.baseClass2)P.push(["寒假",`寒假的高一基礎班開了。第一排坐的是阿哲${T2.zheSolved?"，他的講義角落畫了一個小小的圈":""}。`]);
+  const C2=(o2.care||{}).f||{},J2=(o2.jh||{}).f||{};
+  if(C2.medal)P.push(["布丁蓋","蔡老師的名牌上，到現在還貼著那個布丁蓋。新來的小朋友都以為那是真的獎牌。"]);
+  if(J2.bridge)P.push(["單字搶答","月底，B 班和 C 班一起比了一次單字搶答。高三輸了兩分。品妤說是故意的。"]);
+  else if(J2.newClass)P.push(["國中部","下學期國中部開了 D 班。這次，教室和投影機都寫在申請的第一行。"]);
+  if(Y2.askedHelp)P.push(["櫃台","櫃台來了第二個人。小芸終於在六點吃到晚餐，便利貼「記得吃晚餐」退休了。"]);
+  if(B2.confessed)P.push(["總部","總部開始相信這間分校報上去的數字。下一季的目標，第一次沒有往上加。"]);
   const c=$("cover");c.className="cover";c.hidden=false;
   c.innerHTML=`<div class="card report fade"><div class="kick">十一月・同一間補習班</div><h2>一個月後</h2>
    <dl class="list">${P.map(([a,b])=>`<dt>${esc(a)}</dt><dd style="color:var(--ink)">${esc(b)}</dd>`).join("")}</dl>
