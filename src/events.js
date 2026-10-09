@@ -1,5 +1,5 @@
 /* ================= 隨機事件：每一輪抽兩件，插在固定的空檔 ================= */
-const byLine=(G,m)=>m[G.line.id]||(G.line.id==="care"?m.yun:null)||{};
+const byLine=(G,m)=>m[G.line.id]||(G.line.id==="care"?m.yun:G.line.id==="jh"?m.teacher:null)||{};
 const EVENTS=[
  {id:"quake",phases:["pre","class","break"],make:()=>({auto:true,effect:"shake",goal:"地震！",
   pages:G=>[[null,"桌子突然晃了起來。吊燈在晃，有人尖叫了一聲。"],[null,"是地震。大概三級，晃了十秒左右。"]],

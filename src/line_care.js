@@ -47,7 +47,7 @@ LINES.care={
    pages:G=>[["ama","老師，我來繳安安這個月的錢。"],[null,"她從布包裡拿出一個信封，裡面是一疊折得整整齊齊的千元鈔。"],["ama","收據要寫她媽媽的名字喔，公司可以報。"]],
    choices:G=>[
     {label:"算錢、找零、開收據",mini:"change",fx:r=>({par:r.right&&r.exact?8:r.right?3:-8,ord:r.right?4:-4}),log:r=>r.right?`幫李阿嬤繳費，找零 ${r.bills} 張／個`:"繳費金額算錯了",
-     res:r=>r.right?[["ama","老師你算得好快。"],[null,"收據上寫著安安媽媽的名字。阿嬤把收據折好，放進信封。"]]:[[null,"晚上小芸對帳的時候，會發現少了一筆。"],["ama","（沒發現）謝謝老師～"]]},
+     res:r=>{G.f.paid=r.right?1:0;return r.right?[["ama","老師你算得好快。"],[null,"收據上寫著安安媽媽的名字。阿嬤把收據折好，放進信封。"]]:[[null,"晚上小芸對帳的時候，會發現少了一筆。"],["ama","（沒發現）謝謝老師～"]];}},
     {label:"請阿嬤晚上再來，等小芸",fx:{par:-6,hp:2},log:"請阿嬤晚上再來繳費",res:[["ama","喔……好啦，我晚上接安安的時候再來。"],[null,"她慢慢走出門口，外面太陽很大。"]]}]},
   {id:"c_pickup",chapter:{t:"15:50",title:"放學",sub:"去國小門口接小朋友。",status:"準備中"},
    t:"15:52",target:{spot:"door"},goal:"去國小門口接小朋友",action:"出發",
@@ -61,7 +61,7 @@ LINES.care={
    pages:G=>[["yu","老師！我數學寫完了！可以去玩了嗎？"],[null,"他的數習本皺皺的，最後一題的答案被擦了三次。"]],
    choices:G=>[
     {label:"一題一題看",note:"找出第一個錯的地方",mini:"kidgrade",fx:r=>({pat:-3,par:r.hits>=2?6:0,ord:r.hits>=2?4:-2}),log:r=>`看小宇的作業，抓對 ${r.hits}/3 題`,
-     res:r=>r.hits>=2?[["yu","喔……原來要進位。"],[null,"他自己擦掉重寫，這次對了。"]]:[[null,"有一題你也沒看出來。晚上他媽媽會在聯絡簿上寫：「這題是不是錯了？」"]]},
+     res:r=>{G.f.yuChecked=r.hits>=2?1:0;return r.hits>=2?[["yu","喔……原來要進位。"],[null,"他自己擦掉重寫，這次對了。"]]:[[null,"有一題你也沒看出來。晚上他媽媽會在聯絡簿上寫：「這題是不是錯了？」"]];}},
     {label:"「寫完了？那去看書。」",fx:{pat:3,par:-4},log:"沒檢查就讓小宇去玩",res:[["yu","耶！"],[null,"他的數習本躺在桌上，第二題的答案是錯的。"]]}]},
   {id:"c_book",t:"17:00",target:{npc:"anan"},goal:"安安拿著聯絡簿過來",
    pages:G=>[["anan","老師……我的[[聯絡簿]]昨天沒有簽。"],[null,"聯絡簿上，家長簽名那一格是空的。下面有一行很小的字，是安安自己寫的：「媽媽出差。」"],["anan","阿嬤說她眼睛不好，叫我跟老師說。"]],
@@ -73,7 +73,7 @@ LINES.care={
    pages:G=>[["yun","午安～下午辛苦了！"],["yun","我等一下馬上要去修影印機。你先跟我說最重要的三件事就好。"]],
    choices:G=>[
     {label:"挑三件事交接",mini:"summary",fx:r=>({ord:r.v>=7?8:r.v>=4?3:-3}),log:r=>`跟小芸交接（${r.v>=7?"重點都講到了":r.v>=4?"還可以":"漏了重要的事"}）`,
-     res:r=>r.v>=7?[["yun","了解！阿嬤的收據、張媽媽的試讀、小米媽媽會晚到。我記下來了。"]]:[["yun","好……那還有別的嗎？"],[null,"她已經被影印機叫走了。"]]},
+     res:r=>{G.f.handoffGood=r.v>=7?1:0;return r.v>=7?[["yun","了解！阿嬤的收據、張媽媽的試讀、小米媽媽會晚到。我記下來了。"]]:[["yun","好……那還有別的嗎？"],[null,"她已經被影印機叫走了。"]];}},
     {label:"「沒什麼特別的。」",fx:{hp:2,ord:-5},log:"沒有交接",res:[["yun","好喔！"],[null,"晚上七點，小芸會在抽屜裡發現一張沒歸檔的收據。"]]}]},
   {id:"c_snack",chapter:{t:"17:30",title:"點心時間",sub:"布丁和麥茶。",status:"點心時間"},
    t:"17:32",target:{npc:"mi"},goal:"小米在走廊哭",npc:{mi:PC.miHall,teacher:[PC.teacherLounge[0],PC.teacherLounge[1],0,PC.door]},
@@ -87,7 +87,7 @@ LINES.care={
    pages:G=>[[null,"六點。門口開始有人來接小朋友。"],[null,"你手上有一張[[接送名單]]。不在名單上的人來接，要先打給家長。"]],
    choices:G=>[
     {label:"一個一個確認",mini:"pickup",fx:r=>({par:r.ok>=4?10:r.ok>=3?3:-10,ord:r.ok>=4?6:0}),set:{},log:r=>`接送，${r.ok}/4 個處理得對`,
-     res:r=>{if(r.handedMi)G.f.handedMi=1;return r.ok>=4?[[null,"每一個小朋友都交到對的人手上。"]]:r.handedMi?[[null,"小米跟著那位阿姨走了。你看著她們的背影，突然覺得哪裡不對。"]]:[[null,"有一位家長被你攔下來確認，臉色不太好。"]]; }},
+     res:r=>{if(r.handedMi)G.f.handedMi=1;G.f.pickupOk=r.ok>=4?1:0;return r.ok>=4?[[null,"每一個小朋友都交到對的人手上。"]]:r.handedMi?[[null,"小米跟著那位阿姨走了。你看著她們的背影，突然覺得哪裡不對。"]]:[[null,"有一位家長被你攔下來確認，臉色不太好。"]]; }},
     {label:"家長來了就讓小朋友出去",fx:{ord:-8,par:-4},set:{handedMi:1},log:"接送沒有核對名單",res:[[null,"十分鐘內，教室空了一半。"],[null,"小米也跟著一位你沒見過的阿姨走了。"]]}]},
   {id:"c_late",t:"18:20",target:{spot:"door"},goal:G=>G.f.handedMi?"小米媽媽衝進來了":"小米還在等媽媽",
    npc:{mi:G=>G.f.handedMi?null:[4.9,15.9,Math.PI]},

@@ -26,5 +26,10 @@ for(const [tag,vp] of [['phone',{width:390,height:844,hasTouch:true,isMobile:tru
   await p.click('[data-role=care]');await p.click('[data-act=start]');await drain();await shot('12-care-start');
   await p.evaluate(()=>__dbg.jump('c_homework'));await drain();await p.waitForTimeout(9000);await p.evaluate(()=>__dbg.tp(18,8,0));await shot('13-care-kids');
   await p.evaluate(()=>__dbg.tp(4.5,14,0));await shot('14-care-lobby');
+  // 國中部
+  await p.evaluate(()=>{localStorage.removeItem('ten-pm:save')});await p.reload();await p.waitForTimeout(1500);
+  await p.click('[data-role=jh]');await p.click('[data-act=start]');await drain();
+  await p.evaluate(()=>__dbg.jump('j_class'));await drain();await p.waitForTimeout(3000);await p.evaluate(()=>__dbg.tp(32,8.6,0));await shot('15-jh-class');
+  await p.evaluate(()=>__dbg.tp(31,14.5,0));await shot('16-jh-lockers');
   fs.writeFileSync(`${OUT}/${tag}-errors.txt`,errs.join('\n')||'none');await p.close();}
 await b.close();})();

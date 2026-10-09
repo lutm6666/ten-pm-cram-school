@@ -1,7 +1,7 @@
 /* ================= 樓層裡的生活：學生上下課、NPC 日常動作、泡泡、特效 ================= */
 const FX={shake:0,dark:0};
 let crowdPhase=null,ambT=2,npcAmbT=3;
-const BREAK_SPOTS=[[10.4,3],[10.6,6.5],[10.3,9.5],[10.7,12.5],[7.6,15.9],[3,13.2],[6.8,13.6],[10.5,16],[13.6,12.2],[2.2,16.2]];
+const BREAK_SPOTS=[[30,14],[32.5,13.6],[29.6,15.6],[10.4,3],[10.6,6.5],[10.3,9.5],[10.7,12.5],[7.6,15.9],[3,13.2],[6.8,13.6],[10.5,16],[13.6,12.2],[2.2,16.2]];
 const DOOR=[4.5,17.3];
 function phaseOf(){if(!G)return"pre";if(G.idx>=G.steps.length-1)return"close";let ph="pre";for(const [at,p] of (G.line.schedule||SCHEDULE)){const [h,m]=at.split(":").map(Number);if(G.clock>=h*60+m)ph=p;}return ph;}
 const PHASE_STATUS={class:"上課中",break:"下課",leave:"收拾中",close:"收拾中"};
@@ -11,7 +11,7 @@ function setCrowd(ph,instant){
   const now=clockT.elapsedTime,kidMode=!!(G&&G.line.crowd==="kids"),kids=extras.filter(e=>e.kind==="kid");
   if(kidMode)return setKidCrowd(ph,instant,now,kids);
   kids.forEach(e=>{e.p.visible=false;e.state="gone";e.p.userData.path=null;});
-  const cls=extras.filter(e=>e.kind==="class"),stu=extras.filter(e=>e.kind==="study");
+  const cls=extras.filter(e=>e.kind==="class"||e.kind==="jh"),stu=extras.filter(e=>e.kind==="study");
   if(ph==="pre"){
     cls.forEach((e,i)=>{e.p.userData.act=null;if(!instant)return;
       if(i%2===0){e.p.visible=true;agentPlace(e.p,...e.home);e.state="seat";}else{e.p.visible=false;e.state="toArrive";e.at=now+2+i*1.6;}});
@@ -57,7 +57,8 @@ function tickAmbient(dt){
   ambT-=dt;if(ambT<=0){ambT=1.2+Math.random()*1.6;
     const ph=crowdPhase,vis=extras.filter(e=>e.p.visible&&!e.p.userData.path&&!e.p.userData.actUntil);
     if(vis.length){const e=pick(vis),u=e.p.userData;
-      if(e.state==="seat"&&e.kind==="class"&&ph==="class"){const r=Math.random();
+      if(e.state==="seat"&&e.kind==="jh"&&ph==="class"){const r=Math.random();if(r<.35){u.act="raise";u.actUntil=now+2.5;emote(e.p,pick(["老師這單字怎麼念？","段考會考嗎？","我會！","Teacher！"]),2.4);}else if(r<.55){u.act="phone";u.actUntil=now+2.5;emote(e.p,"📱",2);}else{u.act="chat";u.actUntil=now+2.5;}}
+      else if(e.state==="seat"&&e.kind==="class"&&ph==="class"){const r=Math.random();
         if(r<.3){u.act="raise";u.actUntil=now+3;emote(e.p,pick(["？","老師！","這題不懂"]),2.6);}
         else if(r<.5){u.act="sleep";u.actUntil=now+5;emote(e.p,"zzz",3);}
         else if(r<.75){u.act="chat";u.actUntil=now+3;emote(e.p,pick(["（小聲）","欸你寫完沒","借我抄"]),2.2);}

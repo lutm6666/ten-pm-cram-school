@@ -1,7 +1,8 @@
 /* ================= 3D 樓層 ================= */
-const W=28,H=18;
+const W=36,H=18;
 const WALLS=[
- [0,0,28,.2],[0,17.8,28,18],[0,0,.2,18],[27.8,0,28,18],
+ [0,0,36,.2],[0,17.8,36,18],[0,0,.2,18],[35.8,0,36,18],
+ [27.9,0,28.1,13],[27.9,15,28.1,18],[28,10.9,29.6,11.1],[31.6,10.9,36,11.1],
  [0,4.9,9,5.1],[0,8.9,9,9.1],
  [8.9,0,9.1,1.5],[8.9,3.5,9.1,6],[8.9,8,9.1,12],[8.9,15,9.1,18],
  [11.9,0,12.1,1],[11.9,3,12.1,8],[11.9,10,12.1,13],[11.9,15,12.1,18],
@@ -11,10 +12,11 @@ const DESK_COLS=[14.5,17,19.5,22,24.5], DESK_ROWS=[4,5.8,7.6,9.4];
 const SEATS={pinyu:[17,4.62],zhe:[24.5,10.02],parent:[26.9,5.6],parent2:[26.9,6.8]};
 const SPOTS={podium:{pos:[20,2.9],name:"講台",h:1.5}, counter:{pos:[3.75,12.3],name:"櫃台",h:1.4}, bossdesk:{pos:[3.5,3.4],name:"主任的桌子",h:1.3},
   study:{pos:[17,14.8],name:"自習室",h:1.3}, lounge:{pos:[4,8.1],name:"休息室",h:1.3}, copier:{pos:[7.8,11.1],name:"影印機",h:1.4}, door:{pos:[4.5,17],name:"門口",h:1.3},
-  classdoor:{pos:[13.1,2],name:"B 班前門",h:1.4}, rank:{pos:[1.2,15.6],name:"榜單牆",h:1.6}, studyfront:{pos:[13.6,12.3],name:"自習室門口",h:1.3}};
-const ZONE_RECTS=[["大廳",0,9,9,18,"進門第一眼就是櫃台和榜單。家長都在這裡等。"],["主任室",0,0,9,5,"門通常開著。主任說這樣比較有人情味。"],["講師休息室",0,5,9,9,"老師們放東西、吃便當、偷睡十分鐘的地方。"],["走廊",9,0,12,18,"兩邊都是教室。下課十分鐘這裡最擠。"],["高三 B 班教室",12,0,28,11,"20 個座位。白板上還留著上一堂的公式。"],["自習室",12,11,28,18,"晚上開到十點。安靜到聽得見翻頁聲。"]];
+  classdoor:{pos:[13.1,2],name:"B 班前門",h:1.4}, rank:{pos:[1.2,15.6],name:"榜單牆",h:1.6}, studyfront:{pos:[13.6,12.3],name:"自習室門口",h:1.3},
+  jhpodium:{pos:[32,2.9],name:"國中 C 班講台",h:1.5}, jhdoor:{pos:[30.6,12],name:"C 班門口",h:1.4}, lockers:{pos:[33.5,15.5],name:"國中部置物區",h:1.4}};
+const ZONE_RECTS=[["大廳",0,9,9,18,"進門第一眼就是櫃台和榜單。家長都在這裡等。"],["主任室",0,0,9,5,"門通常開著。主任說這樣比較有人情味。"],["講師休息室",0,5,9,9,"老師們放東西、吃便當、偷睡十分鐘的地方。"],["走廊",9,0,12,18,"兩邊都是教室。下課十分鐘這裡最擠。"],["國中 C 班教室",28,0,36,11,"國中部的教室。後面那面牆貼滿了會考倒數的海報。"],["國中部置物區",28,11,36,18,"國中生的書包、手搖飲和收手機的籃子都在這裡。"],["高三 B 班教室",12,0,28,11,"20 個座位。白板上還留著上一堂的公式。"],["自習室",12,11,28,18,"晚上開到十點。安靜到聽得見翻頁聲。"]];
 function zoneAt(x,z){return ZONE_RECTS.find(r=>x>=r[1]&&x<r[3]&&z>=r[2]&&z<r[4]);}
-const ZONES=[["櫃台 FRONT DESK",4.5,15.6,0],["主任室 OFFICE",6.3,4.2,0],["講師休息室",6.3,8.2,0],["走廊",10.5,6.8,Math.PI/2],["高三 B 班教室",15.5,10.25,0],["自習室 STUDY",24.5,17.2,0]];
+const ZONES=[["櫃台 FRONT DESK",4.5,15.6,0],["主任室 OFFICE",6.3,4.2,0],["講師休息室",6.3,8.2,0],["走廊",10.5,6.8,Math.PI/2],["高三 B 班教室",15.5,10.25,0],["自習室 STUDY",24.5,17.2,0],["國中 C 班",32,10.25,0],["國中部",32,17.2,0]];
 
 const C={floorLobby:0xd9d2c3,floorOffice:0xc6cec4,floorLounge:0xd3cbbd,floorHall:0xcdd2d6,floorClass:0xdcd5c6,floorStudy:0xcfd6cf,wall:0xf2f0e9,wallTop:0x66717d,
  desk:0xb08355,deskTop:0xd8b688,counter:0x34506a,copier:0x98a1a9,board:0xffffff,frame:0xa8afb5,sofa:0x7b5e57,shelf:0x8a6a48,metal:0x8b949c};
@@ -125,7 +127,7 @@ function buildWorld(){
   scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(38,1,.1,200);
   hemi=new THREE.HemisphereLight(0xffffff,0x80868e,.9);scene.add(hemi);sun=new THREE.DirectionalLight(0xffffff,.5);sun.position.set(-8,16,10);scene.add(sun);
   const fl=(r,c)=>box(r[2]-r[0],.1,r[3]-r[1],c,(r[0]+r[2])/2,-.05,(r[1]+r[3])/2);
-  fl([0,9,9,18],C.floorLobby);fl([0,0,9,5],C.floorOffice);fl([0,5,9,9],C.floorLounge);fl([9,0,12,18],C.floorHall);fl([12,0,28,11],C.floorClass);fl([12,11,28,18],C.floorStudy);
+  fl([0,9,9,18],C.floorLobby);fl([0,0,9,5],C.floorOffice);fl([0,5,9,9],C.floorLounge);fl([9,0,12,18],C.floorHall);fl([12,0,28,11],C.floorClass);fl([12,11,28,18],C.floorStudy);fl([28,0,36,11],0xd6dbc8);fl([28,11,36,18],0xd8d2c8);
   ground=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshBasicMaterial({visible:false}));ground.rotation.x=-Math.PI/2;scene.add(ground);
   const grid=new THREE.GridHelper(16,16,0xc2baa8,0xc2baa8);grid.position.set(20,.006,5.5);grid.scale.z=11/16;scene.add(grid);
   // 走廊地板黃線
@@ -175,6 +177,16 @@ function buildWorld(){
   // 自習室
   [[14,13,19,13.9],[21,13,26,13.9],[14,15.7,19,16.6],[21,15.7,26,16.6]].forEach(r=>furn(r,.74,0xc9c2b2,0xe7e1d3));
   [[15,12.6],[17.8,12.6],[22.2,12.6],[24.6,16.95],[15.6,16.95],[19.9,12.6]].forEach(([x,z],i)=>{chair(x,z,z<14?0:Math.PI);solids.push([x-.25,z-.25,x+.25,z+.25]);if(i===5)return;const s=person([0x6d8fb0,0xb07a6d,0x7a9a6a,0x9a8a5a,0x7a6aa0][i]);extras.push({p:s,home:[x,z,z<14?0:Math.PI],kind:"study"});});
+  // 國中 C 班教室
+  box(6.2,1.2,.06,C.frame,32,1.55,.25);box(6,1.08,.07,C.board,32,1.55,.27);
+  wallSign("會考倒數 220 天\nEnglish Unit 5",32,1.6,.32,0,3.6,.85,"#2b8a3e","#ffffff",56);
+  furn([31.4,1.7,32.6,2.3],1.0,0x6b4f39);
+  [29.6,32,34.4].forEach((cx,ci)=>[4,5.8,7.6].forEach((rz,ri)=>{furn([cx-.6,rz-.25,cx+.6,rz+.25],.72,C.desk,C.deskTop);chair(cx,rz+.62,Math.PI);solids.push([cx-.28,rz+.35,cx+.28,rz+.85]);
+    if(ci*3+ri===4||ci*3+ri===6)return;const s=person([0x1971c2,0x2f9e44,0x5f3dc4,0xe8590c,0x0c8599,0x495057,0xc2255c,0x364fc7][(ci*3+ri)%8],{hair:[0x2a2421,0x151515,0x3b2b20][(ci+ri)%3]});s.userData.rig.scale.setScalar(.9);
+    extras.push({p:s,home:[cx,rz+.62,Math.PI],kind:"jh"});}));
+  // 國中部置物區：置物櫃、收手機的籃子
+  furn([34.4,12.2,35.7,17.4],1.5,0x7d8b99);furn([29,16.6,31.5,17.4],.8,0xc9c2b2,0xe7e1d3);box(.5,.18,.35,0xd9480f,30.2,.9,17);
+  wallSign("國中部　手機請放籃子",31.6,1.7,17.78,Math.PI,2.6,.45,"#1c2633","#ffd43b",44);
   extras.forEach(e=>{e.p.position.set(e.home[0],0,e.home[1]);e.p.rotation.y=e.home[2];setPose(e.p,true);e.state="seat";});
 
   marker=label("！","#ffffff","#c9302a",56);marker.scale.multiplyScalar(1.1);scene.add(marker);

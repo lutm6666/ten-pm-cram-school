@@ -3,7 +3,7 @@ ARTIFACT='--artifact' in sys.argv
 DBG='--dbg' in sys.argv
 sys.argv=[a for a in sys.argv if a not in('--artifact','--dbg')]
 src=lambda f:open('src/'+f,encoding='utf8').read()
-order=['common.js','world.js','life.js','atmos.js','minis.js','events.js','overtime.js','chats.js','ach.js','line_teacher.js']+[f for f in sorted(os.listdir('src')) if f.startswith('line_') and f!='line_teacher.js']+['day2.js']+[f for f in ['items.js','sides.js'] if os.path.exists('src/'+f)]+['engine.js','settings.js','share.js','boot.js']
+order=['common.js','world.js','life.js','atmos.js','minis.js','events.js','overtime.js','chats.js','ach.js','line_teacher.js']+[f for f in sorted(os.listdir('src')) if f.startswith('line_') and f!='line_teacher.js']+['day2.js','links.js']+[f for f in ['items.js','sides.js'] if os.path.exists('src/'+f)]+['engine.js','settings.js','share.js','boot.js']
 three=sys.argv[1] if len(sys.argv)>1 else 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
 DBG=DBG or not three.startswith('http')
 head='' if ARTIFACT else '''<!doctype html>

@@ -11,6 +11,9 @@ const CHARS={
  hong:{name:"阿宏",short:"助教",title:"自習室助教・大三",abbr:"助",color:"#2f7d4f",body:0x5c9d6a,hair:0x222222},
  deliv:{name:"外送員",short:"外送",title:"外送平台",abbr:"送",color:"#d9480f",body:0xe8590c,hair:0x222222},
  chenba:{name:"陳爸爸",short:"家長",title:"高一 C 家長",abbr:"家",color:"#6b7f3a",body:0x7d8f4a,hair:0x333333},
+ amy:{name:"Amy 老師",short:"國中英文",title:"國中部英文老師",abbr:"英",color:"#2b8a3e",body:0x8ce99a,hair:0x3b2b20},
+ xiang:{name:"阿翔",short:"九年級",title:"國中九年級・會考生・小宇的哥哥",abbr:"翔",color:"#1971c2",body:0x339af0,hair:0x151515},
+ qing:{name:"子晴",short:"八年級",title:"國中八年級・英文小老師",abbr:"晴",color:"#c2255c",body:0xf06595,hair:0x2a2421},
  yu:{name:"小宇",short:"二年級",title:"國小二年級・安親班",abbr:"宇",color:"#e8590c",body:0xf08c3a,hair:0x2a2421,kid:1},
  anan:{name:"安安",short:"四年級",title:"國小四年級・安親班",abbr:"安",color:"#7048e8",body:0x9775fa,hair:0x1a1a1a,kid:1},
  mi:{name:"小米",short:"一年級",title:"國小一年級・安親班",abbr:"米",color:"#d6336c",body:0xf783ac,hair:0x3a2a22,kid:1},
@@ -41,6 +44,8 @@ const TERMS={
  "空間向量":"高中數學的單元，把向量從平面推到立體。很多人在這裡第一次跟不上。",
  "安親":"安親班。國小放學後到家長下班前，幫忙接送、看功課、簽聯絡簿的地方。很多補習班下午做安親，晚上才上國高中的課。",
  "聯絡簿":"國小生每天帶回家的本子，寫著當天作業和老師的話，家長要簽名。安親班老師常常是第一個看的人。",
+ "會考":"國中教育會考。國三下學期五月考，決定高中志願。國中部的老師和家長最在意的考試。",
+ "段考":"學校的定期考試，一學期兩到三次。國中生的補習班常常在段考前加課、發複習卷。",
  "接送名單":"家長事先登記可以來接孩子的人。不在名單上的人來接，要先打給家長確認。"
 };
 
