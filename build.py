@@ -3,11 +3,12 @@ ARTIFACT='--artifact' in sys.argv
 DBG='--dbg' in sys.argv
 sys.argv=[a for a in sys.argv if a not in('--artifact','--dbg')]
 src=lambda f:open('src/'+f,encoding='utf8').read()
-order=['common.js','world.js','life.js','atmos.js','minis.js','events.js','overtime.js','chats.js','ach.js','line_teacher.js']+[f for f in sorted(os.listdir('src')) if f.startswith('line_') and f!='line_teacher.js']+[f for f in ['items.js','sides.js'] if os.path.exists('src/'+f)]+['engine.js','settings.js','share.js','boot.js']
+order=['common.js','world.js','life.js','atmos.js','minis.js','events.js','overtime.js','chats.js','ach.js','line_teacher.js']+[f for f in sorted(os.listdir('src')) if f.startswith('line_') and f!='line_teacher.js']+['day2.js']+[f for f in ['items.js','sides.js'] if os.path.exists('src/'+f)]+['engine.js','settings.js','share.js','boot.js']
 three=sys.argv[1] if len(sys.argv)>1 else 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
 DBG=DBG or not three.startswith('http')
 head='' if ARTIFACT else '''<!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" prefix="og: https://ogp.me/ns#">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101826">
@@ -16,10 +17,16 @@ head='' if ARTIFACT else '''<!doctype html>
 <meta property="og:title" content="晚上十點下課">
 <meta property="og:description" content="補習班打工人的一個晚上。三個位子、同一個晚上，直接在瀏覽器玩。">
 <meta property="og:url" content="https://lutm6666.github.io/ten-pm-cram-school/">
+<meta property="og:site_name" content="晚上十點下課">
 <meta property="og:image" content="https://lutm6666.github.io/ten-pm-cram-school/assets/og.png">
+<meta property="og:image:secure_url" content="https://lutm6666.github.io/ten-pm-cram-school/assets/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="晚上十點下課：補習班打工人的一個晚上">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta property="og:locale" content="zh_TW">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="晚上十點下課">
+<meta name="twitter:image" content="https://lutm6666.github.io/ten-pm-cram-school/assets/og.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -32,6 +39,7 @@ out=head+f'''<title>晚上十點下課 3D</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 {src('style.css')}</style>
+{'' if ARTIFACT else '</head><body>'}
 {src('shell.html')}
 <script src="{three}"></script>
 <script>

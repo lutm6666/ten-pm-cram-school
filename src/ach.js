@@ -17,6 +17,8 @@ const ACH=[
  {id:"ot30",name:"責任制",desc:"加班超過半小時才下班",test:G=>G.done&&G.clock>=22*60+30},
  {id:"ot0",name:"準時下班",desc:"加班不到五分鐘就離開補習班",test:G=>G.done&&!G.result?.dead&&G.clock<22*60+5},
  {id:"chat5",name:"話匣子",desc:"一個晚上跟 5 個人閒聊",test:G=>(G.chatWith||[]).length>=5},
+ {id:"day2",name:"又是一天",desc:"玩完任一個位子的第二天",test:G=>G.done&&G.day===2},
+ {id:"day2all",name:"這週還沒過完",desc:"三個位子的第二天都玩過",test:G=>G.done&&["teacher","yun","boss"].every(i=>doneLines.has(i+"@2"))},
  {id:"epi",name:"一個月後",desc:"看到三條線交織出的結局",test:()=>false}
 ];
 let achSet=new Set();try{achSet=new Set(JSON.parse(localStorage.getItem("ten-pm:ach")||"[]"));}catch(e){}

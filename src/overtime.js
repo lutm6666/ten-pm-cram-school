@@ -7,13 +7,13 @@ const OT_EVENTS=[
    {label:"一間一間巡",mini:"lockup",min:4,fx:r=>{const b=byLine(G,{teacher:{hp:-3},boss:{calm:-2,rep:2}});if(r&&r.trap){b.par=(b.par||0)-3;b.rep=(b.rep||0)-2;}return b;},log:r=>r&&r.left?`巡樓漏了 ${r.left} 個開關`:r&&r.trap?"巡樓時關了自習室的燈":"巡樓關燈關冷氣",
     res:r=>r&&r.trap?[[null,"自習室傳來一聲：「欸——我還在！」"],[null,"你趕快把燈打開，跟角落那個學生道歉。"]]:r&&r.left?[[null,"走到樓下才想起來，好像有東西沒關。算了，明天第一個到的人會看到。"]]:[[null,"整層樓暗下來，只剩緊急出口的綠燈。"]]},
    {label:"留給明天早上的人",fx:G=>byLine(G,{teacher:{hp:3},boss:{calm:3,rep:-3}}),log:"沒巡樓就走",res:[[null,"你按下電梯。走廊的燈還亮著，在玻璃門上反光。"]]}]})},
- {id:"pickup",lines:["teacher","yun","boss"],make:L=>({target:{npc:"bo"},goal:"門口還有學生沒人接",npc:{bo:[4.6,16.3,Math.PI]},after:{bo:null},
-  pages:G=>[[null,"鐵門拉下一半了。小柏還坐在門口的台階上，書包抱在胸前。"],["bo","我媽說她加班，會晚一點……她十點半才下班。"],[null,"外面的機車一台一台騎走。"]],
+ {id:"pickup",lines:["teacher","yun","boss"],make:L=>({target:{npc:"pinyu"},goal:"門口還有學生沒人接",npc:{pinyu:[4.6,16.3,Math.PI]},after:{pinyu:null},
+  pages:G=>[[null,"鐵門拉下一半了。品妤還坐在門口的台階上，書包抱在胸前。"],["pinyu","我媽說她會議還沒開完，會晚一點……她說十點半。"],[null,"外面的機車一台一台騎走。"]],
   choices:G=>[
-   {label:"陪他等",note:"多待一陣子",mini:"wait",min:20,fx:r=>{const b=byLine(G,{teacher:{hp:-5,stu:6},yun:{hp:-6,par:8},boss:{calm:-4,rep:6}});return b;},set:{waitedBo:1},log:"陪小柏等家長",
-    res:r=>r&&r.mood>=3?[["bo","……謝謝。其實我不太想回家，家裡沒人。"],[null,"他媽媽的機車停在門口時，是 22:32。她一直鞠躬。"]]:[[null,"他媽媽終於來了。小柏上車前回頭揮了一下手。"]]},
-   {label:"打給家長確認",min:6,fx:G=>byLine(G,{teacher:{par:3},yun:{par:4,pat:-2},boss:{rep:3}}),log:"打電話確認接送",res:[[null,"電話那頭很吵：「我十五分鐘到！真的很不好意思！」"],[null,"你讓小柏在櫃台旁邊等，燈先不關。"]]},
-   {label:"讓他自己去搭公車",fx:G=>byLine(G,{teacher:{hp:3,par:-4},yun:{hp:4,par:-6},boss:{calm:4,rep:-5}}),set:{boBus:1},log:"讓小柏自己搭公車",res:[[null,"小柏點點頭，往公車站走。你看著他的背影在路口轉彎。"],[null,"一直到睡前，你都在想他有沒有到家。"]]}]})},
+   {label:"陪她等",note:"多待一陣子",mini:"wait",min:20,fx:r=>{const b=byLine(G,{teacher:{hp:-5,stu:6},yun:{hp:-6,par:8},boss:{calm:-4,rep:6}});return b;},set:{waitedPinyu:1},log:"陪品妤等家長",
+    res:r=>r&&r.mood>=3?[["pinyu","……謝謝。其實我有點不想回家，回家又要被問模考。"],[null,"她媽媽的車停在門口時，是 22:32。她媽媽搖下車窗，跟你點了點頭。"]]:[[null,"她媽媽終於來了。品妤上車前回頭揮了一下手。"]]},
+   {label:"打給家長確認",min:6,fx:G=>byLine(G,{teacher:{par:3},yun:{par:4,pat:-2},boss:{rep:3}}),log:"打電話確認接送",res:[[null,"電話那頭很吵：「我十五分鐘到！真的很不好意思！」"],[null,"你讓品妤在櫃台旁邊等，燈先不關。"]]},
+   {label:"讓她自己去搭公車",fx:G=>byLine(G,{teacher:{hp:3,par:-4},yun:{hp:4,par:-6},boss:{calm:4,rep:-5}}),set:{pinyuBus:1},log:"讓品妤自己搭公車",res:[[null,"品妤點點頭，往公車站走。你看著她的背影在路口轉彎。"],[null,"一直到睡前，你都在想她有沒有到家。"]]}]})},
  {id:"group",lines:["teacher","yun","boss"],auto:true,make:L=>({auto:true,goal:"群組又跳出訊息",
   pages:G=>[[null,"手機震個不停。是家長群組。"],[null,"十點多了。最上面一則是：「老師請問明天小考範圍是？」底下還有三則。"]],
   choices:G=>[
@@ -41,7 +41,7 @@ const OT_EVENTS=[
 ];
 const OT_TIMES=["21:56","22:00"];
 function otSteps(L){
-  const pool=OT_EVENTS.filter(e=>e.lines.includes(L.id)).sort(()=>Math.random()-.5);
+  const pool=OT_EVENTS.filter(e=>e.lines.includes(L.id)&&!(L.day===2&&e.id==="meeting")).sort(()=>Math.random()-.5);
   const n=Math.random()<.5?1:2;
   return pool.slice(0,n).map((e,i)=>({...e.make(L.id),id:"ot_"+e.id,t:OT_TIMES[i],isEvent:true,ot:true}));
 }
@@ -86,19 +86,19 @@ MINIS.reply={
         act.querySelector("[data-next]").onclick=()=>{if(i<self.msgs.length-1){i++;draw();}else{el.innerHTML=`<p class="feed">四則回完了，回得得體的有 ${ok} 則。</p>`;done({ok});}};}));}
     draw();}
 };
-/* 陪小柏等家長：聊天，讓他放鬆一點 */
+/* 陪品妤等家長：聊天，讓她放鬆一點 */
 MINIS.wait={
-  head:"門口・等家長",zone:"大門口",title:"陪小柏等",cost:6,
-  intro:"小柏不太說話。挑一句話跟他聊，讓等待不那麼難熬。",
+  head:"門口・等家長",zone:"大門口",title:"陪品妤等",cost:6,
+  intro:"品妤不太說話。挑一句話跟她聊，讓等待不那麼難熬。",
   rounds:[
-   {say:"小柏一直看手機，又把手機收起來。",opts:[["「你媽媽常常加班嗎？」",1],["「你作業寫完了沒？」",-1],["（安靜地坐在他旁邊）",1]]},
-   {say:"「……老師，你們也會這麼晚下班喔？」",opts:[["「常常啊。你看，我們都是夜貓子。」",1],["「對啊，所以你快點長大不要補習。」",0],["「大人的事你不用管。」",-1]]},
-   {say:"一台機車慢下來，又騎走了。不是他媽媽。",opts:[["「要不要吃餅乾？櫃台還有。」",1],["「她應該快到了吧。」",0],["「下次要不要讓媽媽早點講？」",-1]]}
+   {say:"品妤一直看手機，又把手機收起來。",opts:[["「你媽媽常常開會開到這麼晚嗎？」",1],["「今天的錯題訂正了沒？」",-1],["（安靜地坐在她旁邊）",1]]},
+   {say:"「……你們也會這麼晚下班喔？」",opts:[["「常常啊。你看，我們都是夜貓子。」",1],["「對啊，所以你考完學測就自由了。」",0],["「大人的事你不用管。」",-1]]},
+   {say:"一台車慢下來，又開走了。不是她媽媽。",opts:[["「要不要吃餅乾？櫃台還有。」",1],["「她應該快到了吧。」",0],["「回家記得早點睡，不要又念到兩點。」",-1]]}
   ],
   mount(el,done){let r=0,mood=0;const self=this;
     function draw(){const R=self.rounds[r];
       el.innerHTML=`<div class="paper"><div class="q">${fmt(22*60+8+r*7)}</div>${esc(R.say)}</div><div class="choices">${R.opts.map((o,k)=>`<button class="choice" data-k="${k}">${esc(o[0])}</button>`).join("")}</div><p class="feed" aria-live="polite"></p>`;
       el.querySelectorAll("[data-k]").forEach(b=>b.addEventListener("click",()=>{mood+=R.opts[+b.dataset.k][1];r++;
-        if(r<self.rounds.length)draw();else{el.innerHTML=`<p class="feed">${mood>=2?"小柏笑了一下，把餅乾分你一半。":mood>=0?"小柏點點頭，繼續看著路口。":"小柏把耳機戴上了。"}</p>`;done({mood:mood+1});}}));}
+        if(r<self.rounds.length)draw();else{el.innerHTML=`<p class="feed">${mood>=2?"品妤笑了一下，說：「其實我想念心理系。」":mood>=0?"品妤點點頭，繼續看著路口。":"品妤把耳機戴上了。"}</p>`;done({mood:mood+1});}}));}
     draw();}
 };

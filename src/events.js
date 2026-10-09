@@ -41,7 +41,7 @@ const EVENT_SLOTS={
  boss:[{after:"bpitch",t:"18:20",phase:"pre"},{after:"bflyer",t:"19:35",phase:"class"},{after:"bq",t:"21:00",phase:"class"}]
 };
 function buildSteps(L){
-  const steps=[...L.steps],slots=[...(EVENT_SLOTS[L.id]||[])].sort(()=>Math.random()-.5).slice(0,2),used=new Set();
+  const steps=[...L.steps],slots=[...(L.eventSlots||EVENT_SLOTS[L.id]||[])].sort(()=>Math.random()-.5).slice(0,2),used=new Set();
   slots.forEach(sl=>{const pool=EVENTS.filter(e=>e.phases.includes(sl.phase)&&!used.has(e.id)&&!(e.id==="nosebleed"&&L.id!=="teacher"&&sl.phase!=="class"));
     if(!pool.length)return;const ev=pool[Math.floor(Math.random()*pool.length)];used.add(ev.id);
     const st={...ev.make(),id:"ev_"+ev.id,t:sl.t,isEvent:true};const i=steps.findIndex(s=>s.id===sl.after);if(i>=0)steps.splice(i+1,0,st);});

@@ -3,7 +3,9 @@ const line=process.argv[2]||'teacher', pick=+(process.argv[3]||0), grab=(process
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error'&&!/ERR_TUNNEL|Failed to load/.test(m.text()))errs.push(m.text())});
 await p.goto('file://'+__dirname+'/test.html');
+if(process.env.DAY==='2'){await p.evaluate(([line,prev])=>{localStorage.setItem('ten-pm:done',JSON.stringify(['teacher','yun','boss']));const o={};['teacher','yun','boss'].forEach(id=>o[id]={f:id===line?prev:{},h:{missed:3,cleared:1}});localStorage.setItem('ten-pm:out',JSON.stringify(o));localStorage.setItem('ten-pm:day','2');},[line,JSON.parse(process.env.PREV||'{}')]);await p.reload();}
 if(line!=='teacher') await p.click(`[data-role=${line}]`);
+if(process.env.DAY==='2') await p.click('[data-day="2"]');
 await p.click('[data-act=start]');
 const vis=s=>p.isVisible(s).catch(()=>false);
 async function walkUntil(x,z,check){await p.evaluate(([x,z])=>__dbg.go(x,z),[x,z]);for(let k=0;k<300;k++){await p.waitForTimeout(60);if(await p.evaluate(check))return true;}return false;}
