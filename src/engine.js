@@ -240,7 +240,10 @@ function showTitle(){
    <div class="lbl">今天會遇到的人</div><div class="cast">${(L.cast||["yun","boss","pinyu","zhe","parent","mom"]).map(id=>{const ch=CHARS[id];return `<div><i style="background:${ch.color}"></i><b>${esc(ch.name)}</b><span>${esc(ch.title)}</span></div>`;}).join("")}</div>
    ${(()=>{const sv=store.get("save",null);return sv&&LINES[sv.line]?`<button class="ghost" data-act="resume" style="width:100%;margin-top:16px;padding:12px;border-color:var(--ink)">繼續上次：${sv.day===2?"第二天・":""}${esc(LINES[sv.line].role)}・${fmt(sv.clock)}</button>`:"";})()}
    <button class="big-go" data-act="start">上班</button>
-   ${["teacher","yun","boss"].every(i=>doneLines.has(i))?`<button class="ghost" data-act="epilogue" style="width:100%;margin-top:8px;padding:12px">一個月後 ▸</button>`:`<p class="hint">晚上三個位子都玩過，會解鎖「一個月後」；玩過下午場、國中部和第二天，一個月後會多幾段。目前完成 ${["teacher","yun","boss"].filter(i=>doneLines.has(i)).length} / 3。</p>`}
+   ${(()=>{const ALL=["teacher","yun","boss","care","jh"],n=ALL.filter(i=>doneLines.has(i)).length,eve=["teacher","yun","boss"].every(i=>doneLines.has(i));
+     const prog=`<div class="prog5" aria-label="完成 ${n} / 5">${ALL.map(i=>`<span class="${doneLines.has(i)?"on":""}">${esc(LINES[i].short)}</span>`).join("")}</div>`;
+     return (eve?`<button class="ghost" data-act="epilogue" style="width:100%;margin-top:8px;padding:12px">一個月後 ▸${n===5?"　（五個位子都玩過了）":""}</button>`:"")+prog+
+      `<p class="hint">${!eve?`晚上三個位子（數學、班導、主任）都玩過，會解鎖「一個月後」。`:n<5?`再玩過${ALL.filter(i=>!doneLines.has(i)).map(i=>LINES[i].role).join("、")}，「一個月後」會多一段只有五個位子都玩過才看得到的結尾。`:`五個位子都玩過了。「一個月後」的最後，多了一段。`}目前完成 ${n} / 5。</p>`;})()}
    <p class="hint">系統會告訴你下一步。跟著頭上有紅色「！」的人或地方走，或按「帶我去」。頭上有「i」的地方可以看說明，地上一閃一閃發光的地方有東西可以撿。</p>
    <div class="links"><button data-act="codex">圖鑑</button><button data-act="settings">設定</button><button data-act="about">關於</button></div>
    <p class="hint">人物、補習班、數字與情節都是虛構的遊戲設定。</p></div>`;
@@ -252,6 +255,11 @@ function remember(r){
   store.set("know",[...knowSet]);
   const key=G.day===2?"out2":"out",out=store.get(key,{});out[G.line.id]={f:{...f},title:r.title,s:{...G.s},h:{...G.h},enrolled:f.enrolled??0};store.set(key,out);
 }
+function allFive(CA,JH){CA=CA||{};JH=JH||{};
+  return "晚上十點。蔡老師六點半就下班了，安親班併起來的桌子，被高三坐過一輪，又被小芸一張一張推回原位。"
+   +(JH.roomPlan?"國中部的燈先熄。Amy 老師經過 B 班門口，跟許老師說：「明天影印機你先。」":"國中部的燈先熄。C 班的白板上，還留著今天的五個單字。")
+   +"主任鎖上主任室的門，回頭看了走廊一眼。小芸拉下鐵門，門口的機車一台一台騎走。"
+   +(CA.extraPudding?"冰箱裡最後一個布丁，是主任吃掉的。":"");}
 function epilogue(){
   unlockAch("epi");
   const o=store.get("out",{}),T=o.teacher||{f:{}},Y=o.yun||{f:{}},B=o.boss||{f:{}},any=k=>T.f[k]||Y.f[k]||B.f[k];
@@ -285,6 +293,8 @@ function epilogue(){
   const c=$("cover");c.className="cover";c.hidden=false;
   c.innerHTML=`<div class="card report fade"><div class="kick">十一月・同一間補習班</div><h2>一個月後</h2>
    <dl class="list">${P.map(([a,b])=>`<dt>${esc(a)}</dt><dd style="color:var(--ink)">${esc(b)}</dd>`).join("")}</dl>
+   ${["teacher","yun","boss","care","jh"].every(i=>doneLines.has(i))?`<div class="lbl" style="margin-top:20px">回到那天晚上十點</div>
+   <p style="margin:0 0 8px">${esc(allFive(CA,JH))}</p><p style="margin:0;font-family:var(--display);color:var(--muted)">五個人，同一間補習班，同一天。每個人只看見其中一段。現在，你看過全部了。</p>`:""}
    <p class="hint" style="font-size:.95rem;margin-top:16px">數字會回來，也可能不會。但這一個月裡，有一些人被記得了名字。</p>
    <p class="hint">換個選擇再玩一次，一個月後的樣子也會跟著改變。</p>
    <div class="actions"><button class="primary" data-act="title">回主頁</button></div></div>`;

@@ -242,3 +242,7 @@ button.lk{font-family:inherit;cursor:pointer}
 .cask{display:flex;gap:8px}
 .cask input{flex:1;min-width:0;min-height:44px;padding:8px 12px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px}
 .cask .go{flex:none;background:var(--cta);color:#fff;border:none;border-radius:6px;padding:0 18px;font-weight:700}
+
+.prog5{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:12px}
+.prog5 span{text-align:center;font-size:.78rem;padding:4px 0;border:1px solid var(--rule);border-radius:4px;color:var(--muted)}
+.prog5 span.on{background:var(--ink);color:var(--board);border-color:var(--ink);font-weight:700}

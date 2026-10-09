@@ -23,6 +23,7 @@ const ACH=[
  {id:"pickup",name:"名單上的人",desc:"接送時四位都處理得對",test:G=>G.minis.pickup&&G.minis.pickup.ok===4},
  {id:"vocab5",name:"Environment！",desc:"國中單字搶答五題全對",test:G=>G.minis.vocab&&G.minis.vocab.right===5},
  {id:"roomplan",name:"每一間教室都有份",desc:"國中部老師提出教室設備使用表",test:G=>G.f.roomPlan&&G.line.id==="jh"},
+ {id:"all5",name:"整棟補習班",desc:"五個位子都玩過",test:G=>G.done&&["teacher","yun","boss","care","jh"].every(i=>doneLines.has(i))},
  {id:"epi",name:"一個月後",desc:"看到三條線交織出的結局",test:()=>false}
 ];
 let achSet=new Set();try{achSet=new Set(JSON.parse(localStorage.getItem("ten-pm:ach")||"[]"));}catch(e){}
