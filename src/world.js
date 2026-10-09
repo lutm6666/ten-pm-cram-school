@@ -56,6 +56,9 @@ function wallSign(text,x,y,z,ry,w=2.4,h=.9,fg="#1c2633",bg="#ffffff",size=56){
     lines.forEach((ln,i)=>{const s2=fs*rel[i];g.font=fnt(s2);g.fillText(ln,cw/2,yy+s2*.6);yy+=s2*1.2;});});
   const p=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:t}));p.position.set(x,y,z);p.rotation.y=ry;scene.add(p);return p;
 }
+/* 白板上的字：晚上是高三的課，下午是安親的作業 */
+const BOARD_DEFAULT="空間向量\n學測倒數 101 天";let boardSign=null,boardText=BOARD_DEFAULT;
+function setBoard(text){text=text||BOARD_DEFAULT;if(text===boardText||!boardSign)return;boardText=text;scene.remove(boardSign);boardSign=wallSign(text,20,1.6,.32,0,4.2,.9,"#1d4fc4","#ffffff",60);}
 function limb(w,h,d,color,px,py,pz,parent){const pv=new THREE.Group();pv.position.set(px,py,pz);const m=new THREE.Mesh(bgeo(w,h,d),mat(color));m.position.y=-h/2;pv.add(m);parent.add(pv);return pv;}
 function person(color,opts={}){
   const g=new THREE.Group(),hip=.45,torsoH=.5;
@@ -73,10 +76,11 @@ function person(color,opts={}){
   const armL=limb(.11,.42,.12,color,-.29,torsoH-.04,0,torso),armR=limb(.11,.42,.12,color,.29,torsoH-.04,0,torso);
   [armL,armR].forEach(a=>{const hand=new THREE.Mesh(bgeo(.1,.08,.1),mat(0xf0d2b6));hand.position.y=-.45;a.add(hand);});
   g.userData={eyes,mouth,blinkAt:Math.random()*4,top:hip+torsoH+.37,rig,torso,head,legL,legR,armL,armR,seated:false,phase:Math.random()*6,seed:Math.random()*10,walk:0,act:null};
+  if(opts.kid){rig.scale.setScalar(.72);g.userData.top*=.72;g.userData.kid=true;} // 小朋友
   if(opts.name){const l=label(opts.name,"#ffffff",opts.tagBg||"#1c2633",34);l.position.y=g.userData.top+.32;g.add(l);g.userData.label=l;}
   scene.add(g);return g;
 }
-function setPose(p,sit){const u=p.userData;u.seated=sit;u.legL.rotation.x=u.legR.rotation.x=sit?-Math.PI/2:0;u.rig.position.y=0;u.torso.rotation.x=0;}
+function setPose(p,sit){const u=p.userData;u.seated=sit;u.legL.rotation.x=u.legR.rotation.x=sit?-Math.PI/2:0;u.rig.position.y=sit&&u.kid?.13:0;u.torso.rotation.x=0;}
 /* 對話泡泡 */
 const emoteCache={};
 function emote(p,text,dur=2.4){const u=p.userData;if(u.emoteSpr){p.remove(u.emoteSpr);}
@@ -153,7 +157,7 @@ function buildWorld(){
 
   // B 班教室
   box(10.2,1.3,.06,C.frame,20,1.55,.25);box(10,1.18,.07,C.board,20,1.55,.27);
-  wallSign("空間向量\n學測倒數 101 天",20,1.6,.32,0,4.2,.9,"#1d4fc4","#ffffff",60);
+  boardSign=wallSign(BOARD_DEFAULT,20,1.6,.32,0,4.2,.9,"#1d4fc4","#ffffff",60);
   furn([19.4,1.7,20.6,2.3],1.0,0x6b4f39);
   box(.06,.5,.6,0x222831,27.75,1.9,3);// 時鐘
   DESK_COLS.forEach((cx,ci)=>DESK_ROWS.forEach((rz,ri)=>{
@@ -161,6 +165,11 @@ function buildWorld(){
     chair(cx,rz+.62,Math.PI);const key=cx+","+rz;if(key==="17,4"||key==="24.5,9.4"||key==="22,7.6"||key==="14.5,9.4") return;
     const s=person([0x4b6a8f,0x8f4b55,0x5c7d5a,0x8a7a4a,0x6a5c8f,0xb0643c,0x3f8a8a][(ci*2+ri)%7],{hair:[0x2a2421,0x3b2b20,0x151515,0x5a3a22][(ci*3+ri)%4]});extras.push({p:s,home:[cx,rz+.62,Math.PI],kind:"class"});
   }));
+  // 下午安親班的小朋友（晚上不在）
+  const KID_TAKEN=["17,4","22,4","14.5,5.8"];
+  DESK_COLS.forEach((cx,ci)=>[4,5.8].forEach((rz,ri)=>{if(KID_TAKEN.includes(cx+","+rz))return;
+    const k=person([0xf59f00,0x4dabf7,0x69db7c,0xff8787,0xb197fc,0x63e6be,0xffa94d][(ci*2+ri)%7],{hair:[0x2a2421,0x3b2b20,0x151515][(ci+ri)%3],kid:true});k.visible=false;
+    extras.push({p:k,home:[cx,rz+.62,Math.PI],kind:"kid",state:"gone"});}));
   [SEATS.parent,SEATS.parent2].forEach(([x,z])=>{solids.push([x-.28,z-.28,x+.28,z+.28]);chair(x,z,-Math.PI/2);});
 
   // 自習室
@@ -171,7 +180,7 @@ function buildWorld(){
   marker=label("！","#ffffff","#c9302a",56);marker.scale.multiplyScalar(1.1);scene.add(marker);
   resize();window.addEventListener("resize",resize);buildGrid();
 }
-function makeNPC(id){const c=CHARS[id];const p=person(c.body,{name:`${c.name}｜${c.short}`,tagBg:c.color,hair:c.hair});npcs[id]=p;p.visible=false;return p;}
+function makeNPC(id){const c=CHARS[id];const p=person(c.body,{name:`${c.name}｜${c.short}`,tagBg:c.color,hair:c.hair,kid:c.kid});npcs[id]=p;p.visible=false;return p;}
 function makePlayer(line){if(player)scene.remove(player);player=person(line.body,{name:`你｜${line.short}`,tagBg:"#d9a21b",hair:0x2a2421});return player;}
 /* 走到某處：坐著的人先站起來；到了如果是椅子就坐下 */
 function agentGo(p,x,z,rot,onArrive){const u=p.userData;

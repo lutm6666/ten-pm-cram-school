@@ -4,7 +4,7 @@
   "scripts": {
     "build": "python3 build.py",
     "build:test": "python3 build.py stub.js tests/test.html",
-    "test": "npm run build:test && node tests/play2.js teacher 0 && node tests/play2.js yun 1 && node tests/play2.js boss 2 && node tests/play3.js teacher+yun+boss 1 && node tests/resume.js && node tests/extras.js && DAY=2 node tests/play2.js teacher 1 && DAY=2 node tests/play2.js yun 2 && DAY=2 node tests/play2.js boss 0"
+    "test": "npm run build:test && node tests/play2.js teacher 0 && node tests/play2.js yun 1 && node tests/play2.js boss 2 && node tests/play3.js teacher+yun+boss 1 && node tests/resume.js && node tests/extras.js && DAY=2 node tests/play2.js teacher 1 && DAY=2 node tests/play2.js yun 2 && DAY=2 node tests/play2.js boss 0 && node tests/play2.js care 0 && node tests/play2.js care 2"
   },
   "devDependencies": { "playwright": "1.47.2" }
 }

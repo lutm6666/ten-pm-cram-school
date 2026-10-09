@@ -3,12 +3,15 @@ const FX={shake:0,dark:0};
 let crowdPhase=null,ambT=2,npcAmbT=3;
 const BREAK_SPOTS=[[10.4,3],[10.6,6.5],[10.3,9.5],[10.7,12.5],[7.6,15.9],[3,13.2],[6.8,13.6],[10.5,16],[13.6,12.2],[2.2,16.2]];
 const DOOR=[4.5,17.3];
-function phaseOf(){if(!G)return"pre";if(G.idx>=G.steps.length-1)return"close";let ph="pre";for(const [at,p] of SCHEDULE){const [h,m]=at.split(":").map(Number);if(G.clock>=h*60+m)ph=p;}return ph;}
+function phaseOf(){if(!G)return"pre";if(G.idx>=G.steps.length-1)return"close";let ph="pre";for(const [at,p] of (G.line.schedule||SCHEDULE)){const [h,m]=at.split(":").map(Number);if(G.clock>=h*60+m)ph=p;}return ph;}
 const PHASE_STATUS={class:"上課中",break:"下課",leave:"收拾中",close:"收拾中"};
-function statusOf(){const ph=phaseOf();return PHASE_STATUS[ph]||(G&&G.line.preStatus)||"備課中";}
+function statusOf(){const ph=phaseOf();return (G&&G.line.phaseStatus&&G.line.phaseStatus[ph])||PHASE_STATUS[ph]||(G&&G.line.preStatus)||"備課中";}
 function setCrowd(ph,instant){
   if(ph===crowdPhase&&!instant)return;crowdPhase=ph;if(typeof syncItems==="function")syncItems();
-  const now=clockT.elapsedTime,cls=extras.filter(e=>e.kind==="class"),stu=extras.filter(e=>e.kind==="study");
+  const now=clockT.elapsedTime,kidMode=!!(G&&G.line.crowd==="kids"),kids=extras.filter(e=>e.kind==="kid");
+  if(kidMode)return setKidCrowd(ph,instant,now,kids);
+  kids.forEach(e=>{e.p.visible=false;e.state="gone";e.p.userData.path=null;});
+  const cls=extras.filter(e=>e.kind==="class"),stu=extras.filter(e=>e.kind==="study");
   if(ph==="pre"){
     cls.forEach((e,i)=>{e.p.userData.act=null;if(!instant)return;
       if(i%2===0){e.p.visible=true;agentPlace(e.p,...e.home);e.state="seat";}else{e.p.visible=false;e.state="toArrive";e.at=now+2+i*1.6;}});
@@ -25,11 +28,23 @@ function setCrowd(ph,instant){
       if(!e.p.visible){e.state="gone";return;}e.state="leaving";e.p.userData.act=null;e.leaveAt=now+.3+i*.55;});
   }
 }
+/* 下午：只有安親班的小朋友。四點十分陸續進來，六點開始一個一個被接走 */
+function setKidCrowd(ph,instant,now,kids){
+  extras.forEach(e=>{if(e.kind!=="kid"){e.p.visible=false;e.state="gone";e.p.userData.path=null;}});
+  if(ph==="pre"){kids.forEach(e=>{e.p.visible=false;e.state="gone";e.p.userData.path=null;});return;}
+  if(ph==="class"){kids.forEach((e,i)=>{e.p.userData.act=null;
+    if(e.p.visible||instant){e.p.visible=true;agentPlace(e.p,...e.home);e.state="seat";}else{e.state="toArrive";e.at=now+.5+i*1.2;}});return;}
+  if(ph==="break"){let k=0;kids.forEach((e,i)=>{const u=e.p.userData;if(!e.p.visible)return;
+    if(i%2===0){const sp=[[13.6,8.5],[15,9.6],[11,7.2],[10.6,4],[16.5,9.8]][k++%5];e.state="out";u.act=null;agentGo(e.p,sp[0],sp[1],Math.random()*6,()=>{u.act=pick(["cheer","wave","cup"]);});}
+    else u.act="cup";});return;}
+  if(ph==="leave"||ph==="close"){kids.forEach((e,i)=>{if(e.state==="gone"||e.state==="exiting"||e.state==="leaving")return;
+    if(!e.p.visible){e.state="gone";return;}e.state="leaving";e.p.userData.act=null;e.leaveAt=now+(ph==="close"?.3+i*.4:2+i*4);});}
+}
 function tickCrowd(){
   const now=clockT.elapsedTime;
   extras.forEach(e=>{const p=e.p;
     if(e.state==="toArrive"&&now>e.at){e.state="arriving";p.visible=true;agentPlace(p,DOOR[0],DOOR[1],Math.PI);setPose(p,false);
-      if(Math.random()<.5)emote(p,["老師好","好熱","今天考什麼？","呼～趕上了"][Math.floor(Math.random()*4)],2);
+      if(Math.random()<.5)emote(p,e.kind==="kid"?pick(["老師好！","我要喝水","今天作業好多","我第一名！"]):pick(["老師好","好熱","今天考什麼？","呼～趕上了"]),2);
       agentGo(p,e.home[0],e.home[1],e.home[2],()=>{e.state="seat";});}
     if(e.state==="leaving"&&now>e.leaveAt){e.state="exiting";if(Math.random()<.35)emote(p,["掰掰","回家了～","好餓","明天見"][Math.floor(Math.random()*4)],2);
       agentGo(p,DOOR[0],DOOR[1],0,()=>{p.visible=false;e.state="gone";});}
@@ -47,6 +62,8 @@ function tickAmbient(dt){
         else if(r<.5){u.act="sleep";u.actUntil=now+5;emote(e.p,"zzz",3);}
         else if(r<.75){u.act="chat";u.actUntil=now+3;emote(e.p,pick(["（小聲）","欸你寫完沒","借我抄"]),2.2);}
         else{u.act="stretch";u.actUntil=now+1.6;}}
+      else if(e.kind==="kid"&&e.state==="seat"){const r=Math.random();if(r<.35){u.act="raise";u.actUntil=now+2.5;emote(e.p,pick(["老師這題怎麼寫？","我寫完了！","橡皮擦借我","他踢我！"]),2.4);}else if(r<.6){u.act="type";u.actUntil=now+3;}else{u.act="stretch";u.actUntil=now+1.4;}}
+      else if(e.kind==="kid"&&e.state==="out"){emote(e.p,pick(["哈哈哈","鬼抓人！","我要布丁","你當鬼！","好好吃"]),2.2);}
       else if(e.state==="seat"&&e.kind==="study"){const r=Math.random();if(r<.4){u.act="stretch";u.actUntil=now+1.6;}else if(r<.7){emote(e.p,pick(["…","這題好難","嗯？"]),2);}else{u.act="game";u.actUntil=now+3;}}
       else if(e.state==="out"){emote(e.p,pick(["哈哈哈","好餓","明天考什麼？","♪","累死了","手搖要不要？","我昨天打到牌位了"]),2.4);}
       else if(e.state==="seat"&&ph==="break"){emote(e.p,pick(["欸欸","你看這個","……"]),2);}
@@ -71,13 +88,14 @@ function npcAct(id,n,t){
   if(id==="boss"&&x<9&&z<5)return (t%16)<5?"phone":null;
   if(id==="zhe"){if(u.seated&&ph==="class")return "sleep";if(ph==="break"||ph==="pre")return "game";}
   if(id==="bo"&&u.seated)return "game";
+  if(CHARS[id]&&CHARS[id].kid&&u.seated)return ph==="class"?"type":null;
   if(id==="deliv")return "wave";
   if(id==="hong"&&!u.moving&&(t%9)<3)return "board";
   return null;
 }
 function tickFX(dt){
   FX.shake=Math.max(0,FX.shake-dt);FX.dark=Math.max(0,FX.dark-dt);
-  const d=FX.dark>0?Math.min(1,FX.dark*2):0,late=crowdPhase==="leave"||crowdPhase==="close"?.18:0,fl=Math.random()<.004?.25:0;hemi.intensity=.9-.75*d-late-fl;sun.intensity=.5-.45*d-late*.6;
+  const d=FX.dark>0?Math.min(1,FX.dark*2):0,late=crowdPhase==="leave"||crowdPhase==="close"?.18:0,fl=Math.random()<.004?.25:0;const day=G&&G.line.daylight?.2:0;hemi.intensity=.9+day-.75*d-late-fl;sun.intensity=.5+day-.45*d-late*.6;
 }
 function startEffect(kind){
   if(kind==="shake"){FX.shake=2.6;extras.concat(Object.values(npcs).map(p=>({p}))).forEach(e=>{if(e.p.visible&&Math.random()<.6)emote(e.p,pick(["！","地震！","哇"]),1.8);});}

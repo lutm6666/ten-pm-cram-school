@@ -23,7 +23,7 @@ const lineOf=(id,day)=>day===2&&LINES2[id]?LINES2[id]:LINES[id];
 function newGame(lineId,day=1){
   const L=lineOf(lineId,day),name=(store.get("name","")||"").trim();
   const sur=name?(/^[一-鿿]/.test(name)?name[0]:name+" "):"許";
-  G={line:L,idx:0,s:{},h:{...L.hidden},f:{},log:[],items:[],sidesDone:{},tName:lineId==="teacher"?sur+"老師":"許老師",pName:name||({yun:"小芸",boss:"何主任"}[lineId]||"你"),name,tipShown:false,status:"",time:"17:20",chapterTitle:""};
+  G={line:L,idx:0,s:{},h:{...L.hidden},f:{},log:[],items:[],sidesDone:{},tName:lineId==="teacher"?sur+"老師":"許老師",pName:name||({yun:"小芸",boss:"何主任",care:"蔡老師"}[lineId]||"你"),name,tipShown:false,status:"",time:"17:20",chapterTitle:""};
   for(const k in L.stats)G.s[k]=L.stats[k][1];
   G.day=day;const outAll=store.get("out",{});G.prevAll=outAll;G.prev=day===2?((outAll[lineId]||{}).f||{}):{};
   G.steps=buildSteps(L);G.minis={};G.chatUsed=[];G.chatWith=[];G.hard=doneLines.has(lineId);G.clock=toMin(G.steps[0].t);G.lates=0;G.lateMin=0;
@@ -34,7 +34,8 @@ function newGame(lineId,day=1){
   Object.values(itemMarks).forEach(m=>scene.remove(m));for(const k in itemMarks)delete itemMarks[k];
   syncItems();
   for(const id in sideMarks){scene.remove(sideMarks[id]);delete sideMarks[id];}
-  crowdPhase=null;setCrowd("pre",true);FX.shake=FX.dark=0;
+  setBoard(L.board);setDaylight(!!L.daylight);
+  crowdPhase=null;setCrowd(phaseOf(),true);FX.shake=FX.dark=0;
   path=null;enterStep();
 }
 const step=()=>G.steps[G.idx];
@@ -42,7 +43,7 @@ function enterStep(){
   const st=step();if(!st)return finish();
   if(st.npc)for(const id in st.npc)setNPC(id,val(st.npc[id],G));
   G.clock=Math.max(G.clock,toMin(st.t));G.due=null;
-  if(!st.auto){let nx=G.idx+1;while(G.steps[nx]&&G.steps[nx].auto)nx++;const nt=G.steps[nx]?toMin(G.steps[nx].t):22*60;G.due=Math.max(nt,G.clock+8);}
+  if(!st.auto){let nx=G.idx+1;while(G.steps[nx]&&G.steps[nx].auto)nx++;const nt=G.steps[nx]?toMin(G.steps[nx].t):endMin();G.due=Math.max(nt,G.clock+8);}
   if(st.chapter){G.chapterTitle=st.chapter.title;}G.status=statusOf();
   setCrowd(phaseOf());saveGame();
   if(st.chapter)showChapter(st.chapter);
@@ -76,23 +77,25 @@ function renderHud(){
   if(!G){$("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock">17:20</div><div class="clocksub">高三數學 B 班</div></div><span class="spacer"></span><button class="hbtn" data-act="settings" aria-label="設定">設定</button><button class="hbtn" data-act="codex">圖鑑</button></div>`;return;}
   const L=G.line,low=k=>G.s[k]<25?"low":"";
   const st=statusOf(),cls=/上課/.test(st)?"ok":/下課|收拾/.test(st)?"":"bad";
-  $("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock" id="clk">${mode==="end"?fmt(Math.max(G.clock,22*60)):G.time}</div><div class="clocksub" id="clksub">${dueText()}</div></div>
+  $("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock" id="clk">${mode==="end"?fmt(Math.max(G.clock,endMin())):G.time}</div><div class="clocksub" id="clksub">${dueText()}</div></div>
    <span class="spacer"></span><span class="pill ${cls}"><i></i>${esc(st)}</span><button class="hbtn" data-act="settings" aria-label="設定">設定</button><button class="hbtn" data-act="home">主頁</button><button class="hbtn" data-act="codex">圖鑑</button></div>
    <div class="meters">${Object.keys(L.stats).map(k=>`<div class="meter ${low(k)}"><div class="lab"><span>${L.stats[k][0]}</span><b>${G.s[k]}</b></div><div class="track"><div class="fill" style="width:${G.s[k]}%"></div></div></div>`).join("")}</div>`;
   $("next").style.top=document.querySelector(".hud").offsetHeight+8+"px";
 }
-function otMin(){return G?Math.max(0,Math.floor(G.clock-22*60)):0;}
+function endMin(){return toMin((G&&G.line.endAt)||"22:00");}
+function otMin(){return G?Math.max(0,Math.floor(G.clock-endMin())):0;}
 function dueText(){if(!G)return"";if(otMin()&&mode!=="end"){const r=mode==="walk"&&G.due!=null?Math.floor(G.due-G.clock):null;return `<span class="ot">已加班 ${otMin()} 分</span>`+(r==null?"":r>=0?`<span class="due ${r<=3?"warn":""}">剩 ${r} 分</span>`:`<span class="due late">晚 ${-r} 分</span>`);}return dueText0();}
 function dueText0(){if(mode==="walk"&&G.due!=null){const r=Math.floor(G.due-G.clock);return r>=0?`<span class="due ${r<=3?"warn":""}">${fmt(G.due)} 前・剩 ${r} 分</span>`:`<span class="due late">已經晚了 ${-r} 分</span>`;}return `${esc(G.chapterTitle||"")}・${esc(G.line.role)}`;}
 let lastClockMin=-1;
 function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}}}
 function checkBell(){if(!G)return;const ph=phaseOf();if(ph===crowdPhase)return;const prev=crowdPhase;setCrowd(ph);G.status=statusOf();renderHud();
-  if(ph==="class"){chime();showBanner("上課鐘響了","學生陸續回到座位。");}else if(ph==="break"){chime();showBanner("下課了","下課 15 分鐘，20:05 上第二節。");}else if(ph==="leave"&&prev!=="close"){chime();showBanner("下課了","今天的課上完了，學生陸續離開。");}}
+  const B=G.line.bells||{class:["上課鐘響了","學生陸續回到座位。"],break:["下課了","下課 15 分鐘，20:05 上第二節。"],leave:["下課了","今天的課上完了，學生陸續離開。"]};
+  if(ph==="class"){chime();showBanner(...B.class);}else if(ph==="break"){chime();showBanner(...B.break);}else if(ph==="leave"&&prev!=="close"){chime();showBanner(...B.leave);}}
 function spend(min){if(G){G.clock+=min;checkBell();}}
 function renderNext(){
   const el=$("next");if(mode!=="walk"){el.hidden=true;return;}el.hidden=false;
   const hint=G.idx===0&&!store.get("tipWalk",false)?`<div class="in"><p class="nexthint">按「帶我去」會自己走過去。想自己走：用左下的方向鍵，或點地板。頭上有紅色「！」的就是要找的對象。</p></div>`:"";
-  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${esc(step().goal)}</span><button data-act="guide">帶我去</button></div></div>${hint}`;
+  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${esc(val(step().goal,G))}</span><button data-act="guide">帶我去</button></div></div>${hint}`;
   $("next").style.top=document.querySelector(".hud").offsetHeight+8+"px";
 }
 function renderDock(){
@@ -220,9 +223,9 @@ function showTitle(){
   c.innerHTML=`<div class="card fade"><div class="ticker"><span class="r">●</span><span>17:20</span><span>高三B 試聽 2 位</span><span>ON-DUTY ▸ 你</span></div>
    <h1>晚上<em>十點</em>下課</h1><p class="lede">補習班打工人的一個晚上</p>
    <div class="lbl">你的名字</div><input id="nameIn" maxlength="8" placeholder="許（可以不填）" value="${esc(store.get("name",""))}" style="width:100%;font:inherit;padding:10px 12px;border:1px solid var(--rule);border-radius:4px;background:var(--tray);color:var(--ink)">
-   <div class="lbl">今天你是</div><div class="roles">${["teacher","yun","boss"].map(id=>{const l=LINES[id];return l?`<button class="role" data-role="${id}" aria-pressed="${id===pickedLine}"><b>${esc(l.role)}${doneLines.has(id)?" ✓":""}</b><small>${esc(l.pick)}</small></button>`:`<button class="role" disabled><b>${{yun:"櫃台班導",boss:"補習班主任"}[id]}</b><small>製作中</small></button>`;}).join("")}</div>
-   <div class="lbl">哪一天</div><div class="seg" role="radiogroup" aria-label="哪一天" style="grid-template-columns:1fr 1fr">${[1,2].map(d=>{const ok=d===1||doneLines.has(pickedLine);return `<button role="radio" data-day="${d}" aria-checked="${pickedDay===d&&ok}" ${ok?"":"disabled"}>${d===1?"第一天・週二":"第二天・週三"}${d===2&&doneLines.has(pickedLine+"@2")?" ✓":""}${ok?"":`<small style="display:block;font-size:.75rem;opacity:.8">先玩完第一天</small>`}</button>`;}).join("")}</div>
-   ${pickedDay===2&&doneLines.has(pickedLine)?`<p class="hint" style="margin-top:6px">${esc(LINES2[pickedLine].pick)}</p>`:""}
+   <div class="lbl">今天你是</div><div class="roles">${["teacher","yun","boss","care"].map(id=>{const l=LINES[id];return l?`<button class="role" data-role="${id}" aria-pressed="${id===pickedLine}"><b>${esc(l.role)}${doneLines.has(id)?" ✓":""}</b><small style="display:block;font-family:var(--mono);color:var(--muted)">${l.shift||"晚上 17:20–22:00"}</small><small>${esc(l.pick)}</small></button>`:`<button class="role" disabled><b>${{yun:"櫃台班導",boss:"補習班主任"}[id]}</b><small>製作中</small></button>`;}).join("")}</div>
+   <div class="lbl">哪一天</div><div class="seg" role="radiogroup" aria-label="哪一天" style="grid-template-columns:1fr 1fr">${[1,2].map(d=>{const ok=d===1||(doneLines.has(pickedLine)&&!!LINES2[pickedLine]);return `<button role="radio" data-day="${d}" aria-checked="${(pickedDay===d||(d===1&&!(doneLines.has(pickedLine)&&LINES2[pickedLine])))&&ok}" ${ok?"":"disabled"}>${d===1?"第一天・週二":"第二天・週三"}${d===2&&doneLines.has(pickedLine+"@2")?" ✓":""}${ok?"":`<small style="display:block;font-size:.75rem;opacity:.8">${LINES2[pickedLine]?"先玩完第一天":"之後推出"}</small>`}</button>`;}).join("")}</div>
+   ${pickedDay===2&&doneLines.has(pickedLine)&&LINES2[pickedLine]?`<p class="hint" style="margin-top:6px">${esc(LINES2[pickedLine].pick)}</p>`:""}
    <div class="lbl">今天會遇到的人</div><div class="cast">${(L.cast||["yun","boss","pinyu","zhe","parent","mom"]).map(id=>{const ch=CHARS[id];return `<div><i style="background:${ch.color}"></i><b>${esc(ch.name)}</b><span>${esc(ch.title)}</span></div>`;}).join("")}</div>
    ${(()=>{const sv=store.get("save",null);return sv&&LINES[sv.line]?`<button class="ghost" data-act="resume" style="width:100%;margin-top:16px;padding:12px;border-color:var(--ink)">繼續上次：${sv.day===2?"第二天・":""}${esc(LINES[sv.line].role)}・${fmt(sv.clock)}</button>`:"";})()}
    <button class="big-go" data-act="start">上班</button>
@@ -273,15 +276,16 @@ function resumeGame(){
   Object.values(itemMarks).forEach(m=>scene.remove(m));for(const k in itemMarks)delete itemMarks[k];
   syncItems();
   for(const id in sideMarks){scene.remove(sideMarks[id]);delete sideMarks[id];}
+  setBoard(L.board);setDaylight(!!L.daylight);
   crowdPhase=null;setCrowd(phaseOf(),true);FX.shake=FX.dark=0;path=null;
-  const st=G.steps[G.idx];G.due=null;if(!st.auto){let nx=G.idx+1;while(G.steps[nx]&&G.steps[nx].auto)nx++;const nt=G.steps[nx]?toMin(G.steps[nx].t):22*60;G.due=Math.max(nt,G.clock+8);}
+  const st=G.steps[G.idx];G.due=null;if(!st.auto){let nx=G.idx+1;while(G.steps[nx]&&G.steps[nx].auto)nx++;const nt=G.steps[nx]?toMin(G.steps[nx].t):endMin();G.due=Math.max(nt,G.clock+8);}
   mode="walk";renderAll();if(st.auto)openStep();
 }
 function finish(){
   mode="end";const r=G.line.ending(G);G.result=r;remember(r);G.done=true;clearSave();doneLines.add(G.day===2?G.line.id+"@2":G.line.id);store.set("done",[...doneLines]);checkAch();renderAll();
   const c=$("cover");c.className="cover";c.hidden=false;
   const its=G.items.map(id=>ITEMS.find(i=>i.id===id)).filter(Boolean);
-  c.innerHTML=`<div class="card report fade"><div class="kick">${G.day===2?"第二天・":""}${r.dead?"提早下班":fmt(Math.max(G.clock,22*60))+" 下班"}・${esc(G.line.role)}・結案報告</div><h2>${esc(r.title)}</h2><p style="margin:0">${esc(r.desc)}</p>${G.line.coda?`<p style="margin:10px 0 0;font-family:var(--display);color:var(--muted)">${esc(G.line.coda)}</p>`:""}
+  c.innerHTML=`<div class="card report fade"><div class="kick">${G.day===2?"第二天・":""}${r.dead?"提早下班":fmt(Math.max(G.clock,endMin()))+" 下班"}・${esc(G.line.role)}・結案報告</div><h2>${esc(r.title)}</h2><p style="margin:0">${esc(r.desc)}</p>${G.line.coda?`<p style="margin:10px 0 0;font-family:var(--display);color:var(--muted)">${esc(G.line.coda)}</p>`:""}
    <div class="big">${r.big.map(([v,l])=>`<div><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("")}</div>
    <div class="big" style="grid-template-columns:repeat(${Object.keys(G.s).length},1fr)">${Object.keys(G.s).map(k=>`<div><b style="font-size:1.1rem">${G.s[k]}</b><span>${G.line.stats[k][0]}</span></div>`).join("")}</div>
    <div class="lbl">準時</div><p style="margin:0">${G.lates?`遲到 ${G.lates} 次，一共 ${G.lateMin} 分鐘。`:"每一件事都準時到。"}${r.dead?"":otMin()?`加班 ${otMin()} 分鐘。`:"準時十點下班。"}${(G.chatWith||[]).length?`跟 ${G.chatWith.length} 個人聊了天。`:""}</p>
@@ -302,7 +306,7 @@ document.addEventListener("click",e=>{
   const role=e.target.closest("[data-role]");if(role){pickedLine=role.dataset.role;store.set("line",pickedLine);showTitle();return;}
   const ch=e.target.closest("[data-choice]");if(ch&&D){dChoose(+ch.dataset.choice);return;}
   const a=e.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;
-  if(act==="start"){$("cover").hidden=true;startAmbient();newGame(pickedLine,pickedDay===2&&doneLines.has(pickedLine)?2:1);}
+  if(act==="start"){$("cover").hidden=true;startAmbient();newGame(pickedLine,pickedDay===2&&doneLines.has(pickedLine)&&LINES2[pickedLine]?2:1);}
   else if(act==="chapterGo")closeChapter();
   else if(act==="epilogue")epilogue();
   else if(act==="resume")resumeGame();
@@ -361,7 +365,7 @@ function showBanner(title,text){const b=$("banner");b.innerHTML=`<b>${esc(title)
 /* ---------- 依時段與職業出現的物品 ---------- */
 const PHASE_NAME={pre:"上課前",class:"上課中",break:"下課",leave:"下課後",close:"關門前"};
 function syncItems(){if(!G)return;const ph=typeof phaseOf==="function"?phaseOf():"pre";
-  ITEMS.forEach(it=>{const ok=G.day!==2&&(!it.lines||it.lines.includes(G.line.id))&&!G.items.includes(it.id)&&(!it.phases||it.phases.includes(ph));
+  ITEMS.forEach(it=>{const ok=G.day!==2&&!G.line.noItems&&(!it.lines||it.lines.includes(G.line.id))&&!G.items.includes(it.id)&&(!it.phases||it.phases.includes(ph));
     if(ok&&!itemMarks[it.id])addItemMark(it);else if(!ok&&itemMarks[it.id]){scene.remove(itemMarks[it.id]);delete itemMarks[it.id];}});}
 /* ---------- 手機訊息、教學提示、畫面外箭頭 ---------- */
 let msgT=null;

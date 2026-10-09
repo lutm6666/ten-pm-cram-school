@@ -21,5 +21,10 @@ for(const [tag,vp] of [['phone',{width:390,height:844,hasTouch:true,isMobile:tru
   await p.evaluate(()=>__dbg.tp(15,4,Math.PI));await shot('09-edge-arrow2');
   await p.evaluate(()=>{__dbg.G.clock=22*60+9;__dbg.tp(4.5,15.6,0);});await shot('10-overtime-hud');
   await p.evaluate(()=>{__dbg.CAM.tilt=.5;__dbg.CAM.zoom=1.6;__dbg.tp(4.5,15.6,Math.PI);});await shot('11-night-out');
+  // 下午場：安親班
+  await p.evaluate(()=>{localStorage.removeItem('ten-pm:save')});await p.reload();await p.waitForTimeout(1500);
+  await p.click('[data-role=care]');await p.click('[data-act=start]');await drain();await shot('12-care-start');
+  await p.evaluate(()=>__dbg.jump('c_homework'));await drain();await p.waitForTimeout(9000);await p.evaluate(()=>__dbg.tp(18,8,0));await shot('13-care-kids');
+  await p.evaluate(()=>__dbg.tp(4.5,14,0));await shot('14-care-lobby');
   fs.writeFileSync(`${OUT}/${tag}-errors.txt`,errs.join('\n')||'none');await p.close();}
 await b.close();})();

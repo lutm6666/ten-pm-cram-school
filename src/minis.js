@@ -39,7 +39,7 @@ MINIS.grade={
         if(i===p.bad){hits++;feed.textContent="抓到了。"+p.why;}else{b.classList.add("miss");feed.textContent="不是這一行。"+p.why;}
         act.hidden=false;const nb=act.querySelector("[data-next]");
         if(idx===self.papers.length-1){nb.textContent="批完了";}
-        nb.onclick=()=>{if(idx<self.papers.length-1){idx++;draw();}else{el.querySelector(".feed").textContent=`三張批完，抓對 ${hits} 張。`;act.hidden=true;done({hits});}};
+        nb.onclick=()=>{if(idx<self.papers.length-1){idx++;draw();}else{el.querySelector(".feed").textContent=`${self.papers.length} 張批完，抓對 ${hits} 張。`;act.hidden=true;done({hits});}};
       }));
     }
     draw();
@@ -154,7 +154,7 @@ MINIS.roll={
     const feed=el.querySelector(".feed");
     el.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;const n=b.dataset.n;b.disabled=true;
       if(self.absent.includes(n)){found++;b.style.borderColor="var(--green)";feed.textContent=`${n}：沒來。`;}else{miss++;b.style.borderColor="var(--red)";feed.textContent=`${n}：「我在這裡啦！」`;}
-      if(found===2){feed.textContent=`找到了：小安、柏翰沒來。點錯 ${miss} 次。`;el.querySelectorAll("[data-n]").forEach(x=>x.disabled=true);done({miss});}}));}
+      if(found===2){feed.textContent=`找到了：${self.absent.join("、")}沒來。點錯 ${miss} 次。`;el.querySelectorAll("[data-n]").forEach(x=>x.disabled=true);done({miss});}}));}
 };
 
 /* 排班表：主任 */

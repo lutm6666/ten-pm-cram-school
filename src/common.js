@@ -11,6 +11,11 @@ const CHARS={
  hong:{name:"阿宏",short:"助教",title:"自習室助教・大三",abbr:"助",color:"#2f7d4f",body:0x5c9d6a,hair:0x222222},
  deliv:{name:"外送員",short:"外送",title:"外送平台",abbr:"送",color:"#d9480f",body:0xe8590c,hair:0x222222},
  chenba:{name:"陳爸爸",short:"家長",title:"高一 C 家長",abbr:"家",color:"#6b7f3a",body:0x7d8f4a,hair:0x333333},
+ yu:{name:"小宇",short:"二年級",title:"國小二年級・安親班",abbr:"宇",color:"#e8590c",body:0xf08c3a,hair:0x2a2421,kid:1},
+ anan:{name:"安安",short:"四年級",title:"國小四年級・安親班",abbr:"安",color:"#7048e8",body:0x9775fa,hair:0x1a1a1a,kid:1},
+ mi:{name:"小米",short:"一年級",title:"國小一年級・安親班",abbr:"米",color:"#d6336c",body:0xf783ac,hair:0x3a2a22,kid:1},
+ zhangma:{name:"張媽媽",short:"詢問",title:"來詢問課程的家長",abbr:"家",color:"#1c7ed6",body:0x4dabf7,hair:0x3a2a22},
+ ama:{name:"李阿嬤",short:"家長",title:"安安的阿嬤",abbr:"嬤",color:"#868e96",body:0xadb5bd,hair:0xdddddd},
  bo:{name:"小柏",short:"高一C",title:"高一 C・自習室常客",abbr:"生",color:"#2e86ab",body:0x4aa3c7,hair:0x1a1a1a}
 };
 
@@ -33,7 +38,10 @@ const TERMS={
  "退費":"學生中途不上了，依規定退還部分學費。每一筆都會讓主任皺眉。",
  "早鳥優惠":"提早報名打折。主任說只能在說明會用，但櫃台常常被拜託。",
  "總部":"連鎖補習班的總公司。每週要回報續班率和報名數。",
- "空間向量":"高中數學的單元，把向量從平面推到立體。很多人在這裡第一次跟不上。"
+ "空間向量":"高中數學的單元，把向量從平面推到立體。很多人在這裡第一次跟不上。",
+ "安親":"安親班。國小放學後到家長下班前，幫忙接送、看功課、簽聯絡簿的地方。很多補習班下午做安親，晚上才上國高中的課。",
+ "聯絡簿":"國小生每天帶回家的本子，寫著當天作業和老師的話，家長要簽名。安親班老師常常是第一個看的人。",
+ "接送名單":"家長事先登記可以來接孩子的人。不在名單上的人來接，要先打給家長確認。"
 };
 
 /* 說明點：大家共用 */

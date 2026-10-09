@@ -1,5 +1,7 @@
 /* ================= 夜晚的氣氛：窗外、街道、環境音、鐘聲 ================= */
-const NIGHT=0x101826;const cars=[];
+const NIGHT=0x101826,DAY=0xa9cbe6;const cars=[],NIGHT_PARTS={glows:[],bmat:null};
+/* 下午場：天還亮著，窗外大樓不亮燈、路燈關著 */
+function setDaylight(on){scene.background=new THREE.Color(on?DAY:NIGHT);NIGHT_PARTS.glows.forEach(m=>m.visible=!on);if(NIGHT_PARTS.bmat){NIGHT_PARTS.bmat.emissiveIntensity=on?.05:.55;NIGHT_PARTS.bmat.color=new THREE.Color(on?0xb8c4d2:0xffffff);}}
 function buildNight(){
   scene.background=new THREE.Color(NIGHT);
   const out=new THREE.Mesh(new THREE.PlaneGeometry(140,140),new THREE.MeshLambertMaterial({color:0x1a2230}));out.rotation.x=-Math.PI/2;out.position.set(14,-.08,9);scene.add(out);
@@ -10,10 +12,10 @@ function buildNight(){
   // 路燈
   for(let x=-6;x<36;x+=9){const pole=new THREE.Mesh(new THREE.BoxGeometry(.1,2.6,.1),new THREE.MeshLambertMaterial({color:0x555c66}));pole.position.set(x,1.3,19.2);scene.add(pole);
     const lamp=new THREE.Mesh(new THREE.BoxGeometry(.5,.12,.3),new THREE.MeshBasicMaterial({color:0xffd27a}));lamp.position.set(x,2.6,19.5);scene.add(lamp);
-    const glow=new THREE.Mesh(new THREE.CircleGeometry(1.4,20),new THREE.MeshBasicMaterial({color:0xffd27a,transparent:true,opacity:.12}));glow.rotation.x=-Math.PI/2;glow.position.set(x,-.04,19.8);scene.add(glow);}
+    const glow=new THREE.Mesh(new THREE.CircleGeometry(1.4,20),new THREE.MeshBasicMaterial({color:0xffd27a,transparent:true,opacity:.12}));NIGHT_PARTS.glows.push(glow,lamp);glow.rotation.x=-Math.PI/2;glow.position.set(x,-.04,19.8);scene.add(glow);}
   // 周圍大樓：亮著窗戶
   const winTex=canvasTex(128,256,(g,w,h)=>{g.fillStyle="#1b2433";g.fillRect(0,0,w,h);for(let y=8;y<h;y+=22)for(let x=8;x<w;x+=20){const on=Math.random()<.45;g.fillStyle=on?(Math.random()<.3?"#ffe7a8":"#cfe3ff"):"#253044";g.fillRect(x,y,12,14);}});
-  const bmat=new THREE.MeshLambertMaterial({map:winTex,emissive:0xffffff,emissiveMap:winTex,emissiveIntensity:.55});
+  const bmat=new THREE.MeshLambertMaterial({map:winTex,emissive:0xffffff,emissiveMap:winTex,emissiveIntensity:.55});NIGHT_PARTS.bmat=bmat;
   [[-6,3,4,10,8],[-6,13,4,8,5],[34,2,5,9,10],[34,12,4,7,6],[3,-6,9,4,7],[18,-6,12,4,9],[32,-6,6,4,5],[-2,27,10,5,6],[16,27,8,5,9],[30,27,9,5,7]].forEach(([x,z,w,d,h])=>{
     const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),bmat);b.position.set(x,h/2-.1,z);scene.add(b);});
   // 對面補習班的招牌

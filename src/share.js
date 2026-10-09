@@ -11,7 +11,7 @@ function drawResultCard(){
   g.fillStyle="#f6f3ec";g.fillRect(60,250,W-120,H-330);
   g.fillStyle=role;g.fillRect(60,250,W-120,14);
   g.fillStyle="#ffd166";g.font=F(900,64);g.fillText("晚上十點下課",64,130);
-  g.fillStyle="#9fb0c4";g.font=F(500,30);g.fillText(`${G.line.role}・${r.dead?"提早下班":fmt(Math.max(G.clock,22*60))+" 下班"}`,68,190);
+  g.fillStyle="#9fb0c4";g.font=F(500,30);g.fillText(`${G.line.role}・${r.dead?"提早下班":fmt(Math.max(G.clock,endMin()))+" 下班"}`,68,190);
   let y=330;g.fillStyle="#6b7480";g.font=F(500,28);g.fillText("結案報告",110,y);
   y+=74;g.fillStyle="#1c2633";g.font=F(900,64);wrapText(g,r.title,W-220).forEach(l=>{g.fillText(l,110,y);y+=78;});
   g.font=F(400,30);g.fillStyle="#3a4452";wrapText(g,r.desc||"",W-220).slice(0,4).forEach(l=>{y+=4;g.fillText(l,110,y);y+=42;});
