@@ -12,7 +12,7 @@ LINES.jh={
  late:{fx:{stu:-4,par:-2},text:"國中生已經開始滑手機了。"},
  coda:"國中生不會記得你今天搶到了投影機。但有人會記得，那個單字你教了三遍。",
  msgs:[["17:42","國中部群組","子晴媽媽：老師，子晴這次段考英文幾分？"],["18:20","許老師","不好意思，影印機我們先用一下喔🙏"],["19:36","何主任","C 班今天可以小聲一點嗎？B 班有試聽。"],["20:58","國中部群組","阿翔媽媽：他今天有沒有把手機交出來？"]],
- preStatus:"備課中",endAt:"21:45",noItems:true,
+ preStatus:"備課中",endAt:"21:45",ownItems:true,
  events:["quake","blackout","rain","roach"],
  eventSlots:[{after:"j_room",t:"18:00",phase:"pre"},{after:"j_noise",t:"19:30",phase:"class"},{after:"j_line",t:"20:35",phase:"class"}],
  start:[4.5,16.6],

@@ -57,7 +57,8 @@ function guideTarget(t){const m=targetOf(t);if(t&&t.npc){const u=npcs[t.npc].use
 function targetOf(t){if(!t)return null;if(t.npc){const n=npcs[t.npc];return{x:n.position.x,z:n.position.z,h:n.userData.top+.85,name:CHARS[t.npc].name,kind:"npc",id:t.npc};}
   const s=SPOTS[t.spot];return{x:s.pos[0],z:s.pos[1],h:s.h+.5,name:s.name,kind:"spot"};}
 function activeSides(){const list=SIDES[G.line.id]||[],ids=G.steps.map(s=>s.id);
-  return list.filter(sd=>!G.sidesDone[sd.id]&&G.idx>=ids.indexOf(sd.from)&&G.idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G)));}
+  const mainNpc=G.steps[G.idx]&&G.steps[G.idx].target&&G.steps[G.idx].target.npc;
+  return list.filter(sd=>!G.sidesDone[sd.id]&&!(mainNpc&&sd.target.npc===mainNpc)&&G.idx>=ids.indexOf(sd.from)&&G.idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G)));}
 function nearest(){
   const px=player.position.x,pz=player.position.z,d=(x,z)=>Math.hypot(x-px,z-pz),c=[];
   const m=targetOf(step().target);if(m){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:"main",label:step().action||(m.kind==="npc"?`找${CHARS[m.id].name}`:`到${m.name}`)});}
@@ -385,7 +386,7 @@ function showBanner(title,text){const b=$("banner");b.innerHTML=`<b>${esc(title)
 /* ---------- 依時段與職業出現的物品 ---------- */
 const PHASE_NAME={pre:"上課前",class:"上課中",break:"下課",leave:"下課後",close:"關門前"};
 function syncItems(){if(!G)return;const ph=typeof phaseOf==="function"?phaseOf():"pre";
-  ITEMS.forEach(it=>{const ok=G.day!==2&&!G.line.noItems&&(!it.lines||it.lines.includes(G.line.id))&&!G.items.includes(it.id)&&(!it.phases||it.phases.includes(ph));
+  ITEMS.forEach(it=>{const ok=G.day!==2&&!G.line.noItems&&(it.lines?it.lines.includes(G.line.id):!G.line.ownItems)&&!G.items.includes(it.id)&&(!it.phases||it.phases.includes(ph));
     if(ok&&!itemMarks[it.id])addItemMark(it);else if(!ok&&itemMarks[it.id]){scene.remove(itemMarks[it.id]);delete itemMarks[it.id];}});}
 /* ---------- 手機訊息、教學提示、畫面外箭頭 ---------- */
 let msgT=null;
