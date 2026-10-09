@@ -404,7 +404,7 @@ function tick(){
     const act=mode==="walk"?activeSides():[];
     for(const id in sideMarks)sideMarks[id].visible=false;
     act.forEach(sd=>{const tg=targetOf(sd.target);if(!tg)return;const mk=sideMarks[sd.id]||(sideMarks[sd.id]=addSideMark());mk.visible=true;mk.position.set(tg.x,tg.h+Math.sin(t*3+1)*.1,tg.z);});
-    if(mode==="walk"){const z=zoneAt(player.position.x,player.position.z);if(z&&z[0]!==G.zone){G.zone=z[0];if(!G.zonesSeen)G.zonesSeen={};if(!G.zonesSeen[z[0]]){G.zonesSeen[z[0]]=1;showBanner(z[0],z[5]);}}}
+    if(mode==="walk"){const z=zoneAt(player.position.x,player.position.z);if(z&&z[0]!==G.zone){G.zone=z[0];if(!G.zonesSeen)G.zonesSeen={};if(!G.zonesSeen[z[0]]){G.zonesSeen[z[0]]=1;showBanner(z[0],(G.line.zoneText&&G.line.zoneText[z[0]])||z[5]);}}}
     const m=targetOf(step()?.target);marker.visible=mode==="walk"&&!!m;if(m)marker.position.set(m.x,m.h+Math.sin(t*3)*.12,m.z);
     tickItemMarks(t);tickEdge();tickTips();
     tickClock(dt);tickNight(dt);tickRain(dt);moveNPCs(dt);tickCrowd();if(mode!=="title")tickAmbient(dt);tickFX(dt);

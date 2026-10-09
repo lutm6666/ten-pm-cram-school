@@ -1,14 +1,14 @@
 /* ================= 夜晚的氣氛：窗外、街道、環境音、鐘聲 ================= */
-const NIGHT=0x101826,DAY=0xa9cbe6;const cars=[],NIGHT_PARTS={glows:[],bmat:null};
+const NIGHT=0x101826,DAY=0xa9cbe6;const cars=[],NIGHT_PARTS={glows:[],bmat:null,ground:[]};
 /* 下午場：天還亮著，窗外大樓不亮燈、路燈關著 */
-function setDaylight(on){scene.background=new THREE.Color(on?DAY:NIGHT);NIGHT_PARTS.glows.forEach(m=>m.visible=!on);if(NIGHT_PARTS.bmat){NIGHT_PARTS.bmat.emissiveIntensity=on?.05:.55;NIGHT_PARTS.bmat.color=new THREE.Color(on?0xb8c4d2:0xffffff);}}
+function setDaylight(on){scene.background=new THREE.Color(on?DAY:NIGHT);NIGHT_PARTS.glows.forEach(m=>m.visible=!on);NIGHT_PARTS.ground.forEach(([m,n,d])=>{m.material.color=new THREE.Color(on?d:n);});if(NIGHT_PARTS.bmat){NIGHT_PARTS.bmat.emissiveIntensity=on?.05:.55;NIGHT_PARTS.bmat.color=new THREE.Color(on?0xb8c4d2:0xffffff);}}
 function buildNight(){
   scene.background=new THREE.Color(NIGHT);
-  const out=new THREE.Mesh(new THREE.PlaneGeometry(140,140),new THREE.MeshLambertMaterial({color:0x1a2230}));out.rotation.x=-Math.PI/2;out.position.set(14,-.08,9);scene.add(out);
+  const out=new THREE.Mesh(new THREE.PlaneGeometry(140,140),new THREE.MeshLambertMaterial({color:0x1a2230}));NIGHT_PARTS.ground.push([out,0x1a2230,0x8d9aa6]);out.rotation.x=-Math.PI/2;out.position.set(14,-.08,9);scene.add(out);
   // 南邊的馬路與騎樓
-  const road=new THREE.Mesh(new THREE.PlaneGeometry(80,4.2),new THREE.MeshLambertMaterial({color:0x262d38}));road.rotation.x=-Math.PI/2;road.position.set(14,-.06,21);scene.add(road);
+  const road=new THREE.Mesh(new THREE.PlaneGeometry(80,4.2),new THREE.MeshLambertMaterial({color:0x262d38}));NIGHT_PARTS.ground.push([road,0x262d38,0x5b6370]);road.rotation.x=-Math.PI/2;road.position.set(14,-.06,21);scene.add(road);
   for(let x=-24;x<54;x+=3){const l=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.12),new THREE.MeshBasicMaterial({color:0x8a8f5a}));l.rotation.x=-Math.PI/2;l.position.set(x,-.05,21);scene.add(l);}
-  const side=new THREE.Mesh(new THREE.PlaneGeometry(80,1.6),new THREE.MeshLambertMaterial({color:0x3a414c}));side.rotation.x=-Math.PI/2;side.position.set(14,-.055,18.6);scene.add(side);
+  const side=new THREE.Mesh(new THREE.PlaneGeometry(80,1.6),new THREE.MeshLambertMaterial({color:0x3a414c}));NIGHT_PARTS.ground.push([side,0x3a414c,0xa3a9b0]);side.rotation.x=-Math.PI/2;side.position.set(14,-.055,18.6);scene.add(side);
   // 路燈
   for(let x=-6;x<36;x+=9){const pole=new THREE.Mesh(new THREE.BoxGeometry(.1,2.6,.1),new THREE.MeshLambertMaterial({color:0x555c66}));pole.position.set(x,1.3,19.2);scene.add(pole);
     const lamp=new THREE.Mesh(new THREE.BoxGeometry(.5,.12,.3),new THREE.MeshBasicMaterial({color:0xffd27a}));lamp.position.set(x,2.6,19.5);scene.add(lamp);

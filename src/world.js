@@ -80,7 +80,7 @@ function person(color,opts={}){
   if(opts.name){const l=label(opts.name,"#ffffff",opts.tagBg||"#1c2633",34);l.position.y=g.userData.top+.32;g.add(l);g.userData.label=l;}
   scene.add(g);return g;
 }
-function setPose(p,sit){const u=p.userData;u.seated=sit;u.legL.rotation.x=u.legR.rotation.x=sit?-Math.PI/2:0;u.rig.position.y=sit&&u.kid?.13:0;u.torso.rotation.x=0;}
+function setPose(p,sit){const u=p.userData;u.seated=sit;u.legL.rotation.x=u.legR.rotation.x=sit?-Math.PI/2:0;u.rig.position.y=sit&&u.kid?.22:0;u.torso.rotation.x=0;}
 /* 對話泡泡 */
 const emoteCache={};
 function emote(p,text,dur=2.4){const u=p.userData;if(u.emoteSpr){p.remove(u.emoteSpr);}

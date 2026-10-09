@@ -467,7 +467,7 @@ function person(color,opts={}){
   if(opts.name){const l=label(opts.name,"#ffffff",opts.tagBg||"#1c2633",34);l.position.y=g.userData.top+.32;g.add(l);g.userData.label=l;}
   scene.add(g);return g;
 }
-function setPose(p,sit){const u=p.userData;u.seated=sit;u.legL.rotation.x=u.legR.rotation.x=sit?-Math.PI/2:0;u.rig.position.y=sit&&u.kid?.13:0;u.torso.rotation.x=0;}
+function setPose(p,sit){const u=p.userData;u.seated=sit;u.legL.rotation.x=u.legR.rotation.x=sit?-Math.PI/2:0;u.rig.position.y=sit&&u.kid?.22:0;u.torso.rotation.x=0;}
 /* 對話泡泡 */
 const emoteCache={};
 function emote(p,text,dur=2.4){const u=p.userData;if(u.emoteSpr){p.remove(u.emoteSpr);}
@@ -735,16 +735,16 @@ function startEffect(kind){
 }
 
 /* ================= 夜晚的氣氛：窗外、街道、環境音、鐘聲 ================= */
-const NIGHT=0x101826,DAY=0xa9cbe6;const cars=[],NIGHT_PARTS={glows:[],bmat:null};
+const NIGHT=0x101826,DAY=0xa9cbe6;const cars=[],NIGHT_PARTS={glows:[],bmat:null,ground:[]};
 /* 下午場：天還亮著，窗外大樓不亮燈、路燈關著 */
-function setDaylight(on){scene.background=new THREE.Color(on?DAY:NIGHT);NIGHT_PARTS.glows.forEach(m=>m.visible=!on);if(NIGHT_PARTS.bmat){NIGHT_PARTS.bmat.emissiveIntensity=on?.05:.55;NIGHT_PARTS.bmat.color=new THREE.Color(on?0xb8c4d2:0xffffff);}}
+function setDaylight(on){scene.background=new THREE.Color(on?DAY:NIGHT);NIGHT_PARTS.glows.forEach(m=>m.visible=!on);NIGHT_PARTS.ground.forEach(([m,n,d])=>{m.material.color=new THREE.Color(on?d:n);});if(NIGHT_PARTS.bmat){NIGHT_PARTS.bmat.emissiveIntensity=on?.05:.55;NIGHT_PARTS.bmat.color=new THREE.Color(on?0xb8c4d2:0xffffff);}}
 function buildNight(){
   scene.background=new THREE.Color(NIGHT);
-  const out=new THREE.Mesh(new THREE.PlaneGeometry(140,140),new THREE.MeshLambertMaterial({color:0x1a2230}));out.rotation.x=-Math.PI/2;out.position.set(14,-.08,9);scene.add(out);
+  const out=new THREE.Mesh(new THREE.PlaneGeometry(140,140),new THREE.MeshLambertMaterial({color:0x1a2230}));NIGHT_PARTS.ground.push([out,0x1a2230,0x8d9aa6]);out.rotation.x=-Math.PI/2;out.position.set(14,-.08,9);scene.add(out);
   // 南邊的馬路與騎樓
-  const road=new THREE.Mesh(new THREE.PlaneGeometry(80,4.2),new THREE.MeshLambertMaterial({color:0x262d38}));road.rotation.x=-Math.PI/2;road.position.set(14,-.06,21);scene.add(road);
+  const road=new THREE.Mesh(new THREE.PlaneGeometry(80,4.2),new THREE.MeshLambertMaterial({color:0x262d38}));NIGHT_PARTS.ground.push([road,0x262d38,0x5b6370]);road.rotation.x=-Math.PI/2;road.position.set(14,-.06,21);scene.add(road);
   for(let x=-24;x<54;x+=3){const l=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.12),new THREE.MeshBasicMaterial({color:0x8a8f5a}));l.rotation.x=-Math.PI/2;l.position.set(x,-.05,21);scene.add(l);}
-  const side=new THREE.Mesh(new THREE.PlaneGeometry(80,1.6),new THREE.MeshLambertMaterial({color:0x3a414c}));side.rotation.x=-Math.PI/2;side.position.set(14,-.055,18.6);scene.add(side);
+  const side=new THREE.Mesh(new THREE.PlaneGeometry(80,1.6),new THREE.MeshLambertMaterial({color:0x3a414c}));NIGHT_PARTS.ground.push([side,0x3a414c,0xa3a9b0]);side.rotation.x=-Math.PI/2;side.position.set(14,-.055,18.6);scene.add(side);
   // 路燈
   for(let x=-6;x<36;x+=9){const pole=new THREE.Mesh(new THREE.BoxGeometry(.1,2.6,.1),new THREE.MeshLambertMaterial({color:0x555c66}));pole.position.set(x,1.3,19.2);scene.add(pole);
     const lamp=new THREE.Mesh(new THREE.BoxGeometry(.5,.12,.3),new THREE.MeshBasicMaterial({color:0xffd27a}));lamp.position.set(x,2.6,19.5);scene.add(lamp);
@@ -1586,6 +1586,7 @@ LINES.care={
  msgs:[["14:35","何主任","我今天在總部開會，五點半才會到。櫃台先麻煩你。"],["15:40","國小家長群","今天三點五十放學喔～"],["16:45","小芸","我五點到！今天影印機好像又怪怪的"],["17:50","安安阿嬤","老師，我六點會到"],["18:12","小米媽媽","老師不好意思，我會晚一點😢"]],
  preStatus:"準備中",noItems:true,endAt:"18:30",daylight:true,crowd:"kids",
  board:"今日作業\n數習 p.32・國習 p.18",
+ zoneText:{"高三 B 班教室":"晚上是高三 B 班，下午借給安親班。桌子併起來，椅子降低一格。","自習室":"晚上七點才開。下午只有冷氣在等人。","主任室":"主任今天在總部開會，桌上只有一杯冷掉的咖啡。","大廳":"下午的大廳很安靜。家長來詢問、來繳費，都在這裡。"},
  schedule:[["14:00","pre"],["16:10","class"],["17:30","break"],["17:45","class"],["18:00","leave"]],
  phaseStatus:{class:"寫作業",break:"點心時間",leave:"接送中",close:"接送中"},
  bells:{class:["安親時間","小朋友回到座位，開始寫作業。"],break:["點心時間","休息十五分鐘，吃點心。"],leave:["接送時間","家長陸續來接小朋友了。"]},
@@ -2729,7 +2730,7 @@ function tick(){
     const act=mode==="walk"?activeSides():[];
     for(const id in sideMarks)sideMarks[id].visible=false;
     act.forEach(sd=>{const tg=targetOf(sd.target);if(!tg)return;const mk=sideMarks[sd.id]||(sideMarks[sd.id]=addSideMark());mk.visible=true;mk.position.set(tg.x,tg.h+Math.sin(t*3+1)*.1,tg.z);});
-    if(mode==="walk"){const z=zoneAt(player.position.x,player.position.z);if(z&&z[0]!==G.zone){G.zone=z[0];if(!G.zonesSeen)G.zonesSeen={};if(!G.zonesSeen[z[0]]){G.zonesSeen[z[0]]=1;showBanner(z[0],z[5]);}}}
+    if(mode==="walk"){const z=zoneAt(player.position.x,player.position.z);if(z&&z[0]!==G.zone){G.zone=z[0];if(!G.zonesSeen)G.zonesSeen={};if(!G.zonesSeen[z[0]]){G.zonesSeen[z[0]]=1;showBanner(z[0],(G.line.zoneText&&G.line.zoneText[z[0]])||z[5]);}}}
     const m=targetOf(step()?.target);marker.visible=mode==="walk"&&!!m;if(m)marker.position.set(m.x,m.h+Math.sin(t*3)*.12,m.z);
     tickItemMarks(t);tickEdge();tickTips();
     tickClock(dt);tickNight(dt);tickRain(dt);moveNPCs(dt);tickCrowd();if(mode!=="title")tickAmbient(dt);tickFX(dt);
