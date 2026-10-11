@@ -1,7 +1,7 @@
-name: 3D screenshots (art prototype)
+name: 3D screenshots
 on:
   push:
-    branches: [art-overhaul-prototype]
+    branches: [main, art-overhaul-prototype]
     paths: ['src/**', 'build.py', 'tests/shots.js', '.github/workflows/screenshots.yml']
   workflow_dispatch:
 permissions:
@@ -19,12 +19,19 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: python3 build.py --dbg https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js tests/shots.html
       - run: OUT=out node tests/shots.js
-      - name: Push screenshots to ci-screenshots-art branch
+      - name: Push screenshots
         run: |
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            OUT_BRANCH="ci-screenshots"
+            LABEL="Screenshots"
+          else
+            OUT_BRANCH="ci-screenshots-art"
+            LABEL="Art prototype screenshots"
+          fi
           cd out
-          git init -q -b ci-screenshots-art
+          git init -q -b "${OUT_BRANCH}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          echo "Art prototype screenshots for ${GITHUB_SHA}" > README.md
-          git add -A && git commit -qm "art screenshots for ${GITHUB_SHA}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-screenshots-art
+          echo "${LABEL} for ${GITHUB_SHA}" > README.md
+          git add -A && git commit -qm "screenshots for ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "${OUT_BRANCH}"
