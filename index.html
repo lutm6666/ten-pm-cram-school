@@ -222,9 +222,9 @@ dl.list dd{margin:0;color:var(--muted);font-size:.9rem}
 .due{color:var(--muted)}.due.warn{color:var(--amber);font-weight:700}.due.late{color:var(--red);font-weight:700}
 
 /* 畫面外目標的方向箭頭 */
-.edge{position:fixed;z-index:5;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;border:3px solid #f0b45a;background:rgba(28,20,8,.78);color:#f0b45a;display:grid;place-items:center;font-size:1.2rem;font-weight:900;padding:0;box-shadow:0 0 0 4px rgba(240,180,90,.25);animation:edgep 1.2s ease-in-out infinite}
+.edge{position:fixed;z-index:5;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:2px solid #f0b45a;background:rgba(28,20,8,.78);color:#f0b45a;display:grid;place-items:center;font-size:.95rem;font-weight:900;padding:0;box-shadow:0 0 0 3px rgba(240,180,90,.25);animation:edgep 1.2s ease-in-out infinite}
 .edge span{display:block;transition:transform .1s linear}
-@keyframes edgep{50%{box-shadow:0 0 0 9px rgba(240,180,90,0)}}
+@keyframes edgep{50%{box-shadow:0 0 0 7px rgba(240,180,90,0)}}
 /* 手機訊息 */
 .msg{position:fixed;left:16px;z-index:6;max-width:min(320px,calc(100% - 32px));background:var(--glass);border:1px solid var(--rule);border-left:4px solid var(--blue);border-radius:4px;padding:6px 12px;backdrop-filter:blur(6px);box-shadow:0 4px 16px rgba(0,0,0,.15);animation:fade .3s ease}
 .msg small{display:block;font-size:.72rem;color:var(--muted)}
@@ -475,14 +475,14 @@ function person(color,opts={}){
   [armL,armR].forEach(a=>{const hand=new THREE.Mesh(bgeo(.1,.08,.1),mat(0xf0d2b6));hand.position.y=-.45;a.add(hand);});
   g.userData={eyes,mouth,blinkAt:Math.random()*4,top:hip+torsoH+.37,rig,torso,head,legL,legR,armL,armR,seated:false,phase:Math.random()*6,seed:Math.random()*10,walk:0,act:null};
   if(opts.kid){rig.scale.setScalar(.72);g.userData.top*=.72;g.userData.kid=true;} // 小朋友
-  if(opts.name){const l=label(opts.name,"#ffffff",opts.tagBg||"#1c2633",34);l.position.y=g.userData.top+.32;g.add(l);g.userData.label=l;}
+  if(opts.name){const l=label(opts.name,"#ffffff",opts.tagBg||"#1c2633",34);l.scale.multiplyScalar(.7);l.position.y=g.userData.top+.24;g.add(l);g.userData.label=l;}
   scene.add(g);return g;
 }
 function setPose(p,sit){const u=p.userData;u.seated=sit;u.legL.rotation.x=u.legR.rotation.x=sit?-Math.PI/2:0;u.rig.position.y=sit&&u.kid?.22:0;u.torso.rotation.x=0;}
 /* 對話泡泡 */
 const emoteCache={};
 function emote(p,text,dur=2.4){const u=p.userData;if(u.emoteSpr){p.remove(u.emoteSpr);}
-  const s=label(text,"#1c2633","rgba(255,255,255,.96)",40);s.scale.multiplyScalar(.85);s.position.y=u.top+(u.label?.78:.42);p.add(s);u.emoteSpr=s;u.emoteUntil=performance.now()/1000+dur;}
+  const s=label(text,"#1c2633","rgba(255,255,255,.96)",40);s.scale.multiplyScalar(.85);s.position.y=u.top+(u.label?.6:.42);p.add(s);u.emoteSpr=s;u.emoteUntil=performance.now()/1000+dur;}
 function tickEmote(p,now){const u=p.userData;if(u.emoteSpr&&now>u.emoteUntil){p.remove(u.emoteSpr);u.emoteSpr=null;}}
 /* 肢體動畫 */
 function animPerson(p,dt,t,st={}){
@@ -2798,7 +2798,7 @@ function nextStep(){if(G.idx===0)store.set("tipWalk",true);const st=step();if(st
 
 /* ---------- 目標與附近的東西 ---------- */
 function guideTarget(t){const m=targetOf(t);if(t&&t.npc){const u=npcs[t.npc].userData;if(u.moving&&u.anchor)return{...m,x:u.anchor[0],z:u.anchor[1]};}return m;}
-function targetOf(t){if(!t)return null;if(t.npc){const n=npcs[t.npc];return{x:n.position.x,z:n.position.z,h:n.userData.top+.85,name:CHARS[t.npc].name,kind:"npc",id:t.npc};}
+function targetOf(t){if(!t)return null;if(t.npc){const n=npcs[t.npc];return{x:n.position.x,z:n.position.z,h:n.userData.top+.68,name:CHARS[t.npc].name,kind:"npc",id:t.npc};}
   const s=SPOTS[t.spot];return{x:s.pos[0],z:s.pos[1],h:s.h+.5,name:s.name,kind:"spot"};}
 function activeSides(){const list=SIDES[G.line.id]||[],ids=G.steps.map(s=>s.id);
   const mainNpc=G.steps[G.idx]&&G.steps[G.idx].target&&G.steps[G.idx].target.npc;
