@@ -7,7 +7,6 @@ function fmCanvasTex(key,w,h,draw,rx=1,ry=1){
   const c=document.createElement('canvas');c.width=w;c.height=h;
   const g=c.getContext('2d');draw(g,w,h);
   const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);
-  if(THREE.sRGBEncoding!==undefined)t.encoding=THREE.sRGBEncoding;
   const an=renderer&&renderer.capabilities&&renderer.capabilities.getMaxAnisotropy?renderer.capabilities.getMaxAnisotropy():4;
   t.anisotropy=Math.min(8,an||4);FM.textures[key]=t;return t;
 }
@@ -27,7 +26,7 @@ function fmVinylTex(){
     g.strokeStyle='rgba(255,255,255,.34)';g.lineWidth=1;
     for(let x=2;x<=w;x+=128){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
     for(let y=2;y<=h;y+=128){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
-  },512,512,4.5,4.5);
+  },4.5,4.5);
 }
 function fmWoodTex(){
   return fmCanvasTex('counterWood',512,256,(g,w,h)=>{
@@ -41,13 +40,13 @@ function fmWoodTex(){
       g.lineWidth=.6+rnd()*1.7;g.stroke();
     }
     const grad=g.createLinearGradient(0,0,0,h);grad.addColorStop(0,'rgba(255,255,255,.13)');grad.addColorStop(.5,'rgba(255,255,255,0)');grad.addColorStop(1,'rgba(71,43,25,.08)');g.fillStyle=grad;g.fillRect(0,0,w,h);
-  },512,256,3.2,1.2);
+  },3.2,1.2);
 }
 function fmPaintTex(){
   return fmCanvasTex('blueLaminate',256,256,(g,w,h)=>{
     g.fillStyle='#294c67';g.fillRect(0,0,w,h);const rnd=fmRand(4431);
     for(let i=0;i<1500;i++){const a=.02+rnd()*.045;g.fillStyle=rnd()>.5?`rgba(255,255,255,${a})`:`rgba(0,0,0,${a})`;const s=.5+rnd();g.fillRect(rnd()*w,rnd()*h,s,s);}
-  },256,256,1,1);
+  },1,1);
 }
 function fmFabricTex(){
   return fmCanvasTex('sofaFabric',256,256,(g,w,h)=>{
@@ -56,7 +55,7 @@ function fmFabricTex(){
     for(let i=0;i<w;i+=4){g.beginPath();g.moveTo(i,0);g.lineTo(i,h);g.stroke();}
     g.strokeStyle='rgba(40,24,20,.07)';
     for(let i=0;i<h;i+=4){g.beginPath();g.moveTo(0,i);g.lineTo(w,i);g.stroke();}
-  },256,256,2,4);
+  },2,4);
 }
 function fmMat(key,opts={}){
   if(FM.materials[key])return FM.materials[key];
@@ -69,10 +68,22 @@ function fmCyl(rt,rb,h,mat,x,y,z,parent,seg=18){const m=new THREE.Mesh(new THREE
 function fmChamferGeo(w,h,d,r=.06){
   r=Math.min(r,w*.24,d*.24);const x=w/2,z=d/2,y=h/2;
   const p=[[-x+r,-z],[x-r,-z],[x,-z+r],[x,z-r],[x-r,z],[-x+r,z],[-x,z-r],[-x,-z+r]];
-  const verts=[];const tri=(a,b,c)=>{verts.push(...a,...b,...c);};
-  for(let i=1;i<7;i++){tri([p[0][0],-y,p[0][1]],[p[i+1][0],-y,p[i+1][1]],[p[i][0],-y,p[i][1]]);tri([p[0][0],y,p[0][1]],[p[i][0],y,p[i][1]],[p[i+1][0],y,p[i+1][1]]);}
-  for(let i=0;i<8;i++){const j=(i+1)%8,a=p[i],b=p[j];tri([a[0],-y,a[1]],[b[0],-y,b[1]],[b[0],y,b[1]]);tri([a[0],-y,a[1]],[b[0],y,b[1]],[a[0],y,a[1]]);}
-  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.computeVertexNormals();return geo;
+  const verts=[],uvs=[];
+  const add=v=>{verts.push(...v);uvs.push(v[0]/w+.5,v[2]/d+.5);};
+  const tri=(a,b,c)=>{add(a);add(b);add(c);};
+  for(let i=1;i<7;i++){
+    tri([p[0][0],-y,p[0][1]],[p[i+1][0],-y,p[i+1][1]],[p[i][0],-y,p[i][1]]);
+    tri([p[0][0],y,p[0][1]],[p[i][0],y,p[i][1]],[p[i+1][0],y,p[i+1][1]]);
+  }
+  for(let i=0;i<8;i++){
+    const j=(i+1)%8,a=p[i],b=p[j];
+    tri([a[0],-y,a[1]],[b[0],-y,b[1]],[b[0],y,b[1]]);
+    tri([a[0],-y,a[1]],[b[0],y,b[1]],[a[0],y,a[1]]);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  geo.computeVertexNormals();return geo;
 }
 function fmChamfer(w,h,d,r,mat,x,y,z,parent){const m=new THREE.Mesh(fmChamferGeo(w,h,d,r),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m;}
 function fmPlane(w,h,mat,x,y,z,rx=0,ry=0,rz=0,parent){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);m.position.set(x,y,z);m.rotation.set(rx,ry,rz);m.receiveShadow=true;(parent||scene).add(m);return m;}
@@ -142,7 +153,7 @@ function fmWaitingTable(group){
   const mag2=fmChamfer(.34,.042,.25,.025,fmMat('magazine2',{color:0xdf7665,rough:.82}),1.10,.59,15.45,group);mag2.rotation.y=-.10;
 }
 function fmEntryMat(group){
-  const tex=fmCanvasTex('entryMat',256,128,(g,w,h)=>{g.fillStyle='#58636d';g.fillRect(0,0,w,h);g.strokeStyle='rgba(255,255,255,.08)';for(let y=2;y<h;y+=5){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}},256,128,2,2);
+  const tex=fmCanvasTex('entryMat',256,128,(g,w,h)=>{g.fillStyle='#58636d';g.fillRect(0,0,w,h);g.strokeStyle='rgba(255,255,255,.08)';for(let y=2;y<h;y+=5){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}},2,2);
   const mat=fmMat('entryMatMat',{map:tex,rough:.98});fmBox(2.25,.022,1.00,mat,4.45,.018,16.95,group);
   fmBox(1.45,.008,.045,fmMat('entryGold',{color:0xd3ad55,rough:.58,metal:.12}),4.45,.034,16.95,group);
 }
