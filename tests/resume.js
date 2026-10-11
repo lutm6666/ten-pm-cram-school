@@ -15,7 +15,7 @@ async function drain(){for(let g=0;g<60;g++){
  if(await vis('#dlg .choice')){await p.click('#dlg .choice >> nth=1');continue;}
  if(await vis('[data-act=dnext]')){await p.click('[data-act=dnext]');continue;}
  return;}}
-async function doStep(){await drain();await p.click('[data-act=guide]');for(let k=0;k<300;k++){await p.waitForTimeout(60);if(await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'}))break;}await p.click('#actBtn');await drain();}
+async function doStep(){await drain();await p.locator('[data-act=guide]:visible').click();for(let k=0;k<300;k++){await p.waitForTimeout(60);if(await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'}))break;}await p.click('#actBtn');await drain();}
 await drain();await doStep();await doStep();
 const before=await p.evaluate(()=>[__dbg.G.idx,__dbg.G.time,__dbg.G.log.length]);
 await p.click('[data-act=home]');await p.waitForTimeout(200);
