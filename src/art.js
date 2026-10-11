@@ -2,8 +2,12 @@
    原則：不靠全螢幕濾鏡改觀感。保留原版清楚的色調，只增加真正的 3D 物件、材質分層與角色辨識度。 */
 
 /* ---------- 小型美術工具 ---------- */
+const ART_MATERIAL_CACHE=new Map();
 function artMat(color,rough=.78,metal=.02){
-  return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+  const key=`${color}|${rough}|${metal}`;
+  if(ART_MATERIAL_CACHE.has(key))return ART_MATERIAL_CACHE.get(key);
+  const m=new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+  ART_MATERIAL_CACHE.set(key,m);return m;
 }
 function artBox(w,h,d,color,x,y,z,parent,rough=.78,metal=.02){
   const m=new THREE.Mesh(bgeo(w,h,d),artMat(color,rough,metal));
@@ -78,8 +82,8 @@ function artFrontDesk(){
   // 文件盤與講義
   [0,1,2].forEach(i=>{artPaper(.55,.36,3.65+i*.07,1.08+i*.045,11.20-i*.015,i===1?0xfff2b2:0xf8f5ed,-.06);});
   artBox(.07,.18,.07,0x315d88,5.55,1.17,11.14);artBox(.07,.16,.07,0xc84630,5.62,1.16,11.14);
-  // 壓克力立牌 / 試聽表
-  const stand=artBox(.34,.42,.025,0xdde9ef,1.95,1.30,11.16,null,.2,.02);stand.material.transparent=true;stand.material.opacity=.78;
+  // 壓克力立牌 / 試聽表。快取材質是共享的，透明設定要用獨立 clone，避免污染同參數物件。
+  const stand=artBox(.34,.42,.025,0xdde9ef,1.95,1.30,11.16,null,.2,.02);stand.material=stand.material.clone();stand.material.transparent=true;stand.material.opacity=.78;
   artPaper(.26,.17,1.95,1.115,11.08,0xfff3c2,0);
   // 等候區小桌與雜誌
   artCyl(.42,.42,.055,0x8a6b50,.95,.47,15.35,null,20);artCyl(.09,.11,.40,0x65717c,.95,.24,15.35,null,14);
@@ -174,7 +178,7 @@ function artDecorateWorld(){
   artClassroomDetails();artStudyDetails();artJuniorDetails();artHallDetails();
 }
 
-/* ---------- 建世界：保留原版色調，只提高 Retina 清晰度與加入實體細節 ---------- */
+/* ---------- 建世界：保留原版色調，限制像素倍率並加入實體細節 ---------- */
 const ART_BASE_BUILD_WORLD=buildWorld;
 buildWorld=function(){
   // 恢復 Claude 原版調色，讓比較只看「美術內容」本身。
@@ -183,8 +187,7 @@ buildWorld=function(){
   C.desk=0xb08355;C.deskTop=0xd8b688;C.counter=0x34506a;C.copier=0x98a1a9;C.frame=0xa8afb5;
   ART_BASE_BUILD_WORLD();
   if(renderer){
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,innerWidth<600?2.25:2));
-    if(THREE.sRGBEncoding!==undefined)renderer.outputEncoding=THREE.sRGBEncoding;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,innerWidth<600?1.5:2));
     if(THREE.NoToneMapping!==undefined)renderer.toneMapping=THREE.NoToneMapping;
   }
   // 保留原本白光，不再加暖冷濾鏡或區域光霧。
