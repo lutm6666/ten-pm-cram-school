@@ -78,7 +78,7 @@ function artTuneScene(){
   artZoneLight(20.0,14.4,0xe2ecff,.19,.065,7.7); // 自習室
   artZoneLight(32.0,5.4,0xd9e8ff,.22,.07,7.5);   // 國中 C 班
   artAddWallContactShadows();
-  [player,...Object.values(npcs)].filter(Boolean).forEach(o=>artBlobShadow(o,o===player?.38:.32,o===player?.18:.14));
+  [player,...Object.values(npcs)].filter(Boolean).forEach(o=>artBlobShadow(o,o===player ? .38 : .32,o===player ? .18 : .14));
 }
 
 const ART_BASE_BUILD_WORLD=buildWorld;
