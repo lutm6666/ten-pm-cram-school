@@ -1,9 +1,8 @@
 name: 3D screenshots
 on:
   push:
-    branches: [main, art-overhaul-prototype]
+    branches: [main]
     paths: ['src/**', 'build.py', 'tests/shots.js', '.github/workflows/screenshots.yml']
-  workflow_dispatch:
 permissions:
   contents: write
 jobs:
@@ -21,17 +20,10 @@ jobs:
       - run: OUT=out node tests/shots.js
       - name: Push screenshots
         run: |
-          if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            OUT_BRANCH="ci-screenshots"
-            LABEL="Screenshots"
-          else
-            OUT_BRANCH="ci-screenshots-art"
-            LABEL="Art prototype screenshots"
-          fi
           cd out
-          git init -q -b "${OUT_BRANCH}"
+          git init -q -b ci-screenshots
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          echo "${LABEL} for ${GITHUB_SHA}" > README.md
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          echo "Screenshots for ${GITHUB_SHA}" > README.md
           git add -A && git commit -qm "screenshots for ${GITHUB_SHA}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "${OUT_BRANCH}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-screenshots
