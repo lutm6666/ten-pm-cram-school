@@ -189,7 +189,7 @@ function buildWorld(){
   wallSign("國中部　手機請放籃子",31.6,1.7,17.78,Math.PI,2.6,.45,"#1c2633","#ffd43b",44);
   extras.forEach(e=>{e.p.position.set(e.home[0],0,e.home[1]);e.p.rotation.y=e.home[2];setPose(e.p,true);e.state="seat";});
 
-  marker=label("！","#ffffff","#c9302a",56);marker.scale.multiplyScalar(1.1);scene.add(marker);
+  marker=label("！","#ffffff","#c9302a",56);marker.scale.multiplyScalar(.75);scene.add(marker);
   resize();window.addEventListener("resize",resize);buildGrid();
 }
 function makeNPC(id){const c=CHARS[id];const p=person(c.body,{name:`${c.name}｜${c.short}`,tagBg:c.color,hair:c.hair,kid:c.kid});npcs[id]=p;p.visible=false;return p;}
@@ -212,7 +212,7 @@ function moveAgent(n,dt,speed=2.6){const u=n.userData;if(!u.path||!n.visible){u.
   if(d<.06){u.path.shift();return;}const sp=Math.min(d,speed*dt);n.position.x+=vx/d*sp;n.position.z+=vz/d*sp;n.rotation.y=Math.atan2(vx,vz);u.moving=true;}
 function moveNPCs(dt){for(const id in npcs)moveAgent(npcs[id],dt);extras.forEach(e=>moveAgent(e.p,dt,e.speed||2.2));}
 function addInfoMark(info){const s=label("i","#ffffff","#5f6b78",40);s.scale.multiplyScalar(.75);s.position.set(info.pos[0],info.h||1.6,info.pos[1]);scene.add(s);infoMarks[info.id]=s;}
-function addSideMark(){const s=label("？","#1c2633","#f0b45a",48);scene.add(s);return s;}
+function addSideMark(){const s=label("？","#1c2633","#f0b45a",48);s.scale.multiplyScalar(.75);scene.add(s);return s;}
 /* 收集物：地上一閃一閃的四角星（金色星星加深色外框與影子，淺色地板上也看得到） */
 let sparkTex=null,shadowTex=null;
 function sparkTextures(){if(sparkTex)return;
