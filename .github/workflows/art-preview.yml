@@ -1,0 +1,41 @@
+name: Art preview static site
+on:
+  push:
+    branches: [art-overhaul-prototype]
+    paths:
+      - 'src/**'
+      - 'assets/**'
+      - 'build.py'
+      - 'manifest.webmanifest'
+      - 'sw.js'
+      - '.github/workflows/art-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build preview
+        run: python3 build.py
+      - name: Assemble preview branch
+        run: |
+          rm -rf preview-out
+          mkdir preview-out
+          cp index.html preview-out/
+          cp manifest.webmanifest preview-out/
+          cp sw.js preview-out/
+          cp -R assets preview-out/
+          printf '%s\n' 'Art prototype preview for ${GITHUB_SHA}' > preview-out/README.txt
+      - name: Publish preview branch
+        run: |
+          cd preview-out
+          git init -q -b art-preview-site
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -qm "art preview for ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" art-preview-site
