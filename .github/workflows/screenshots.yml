@@ -1,7 +1,7 @@
-name: 3D screenshots
+name: 3D screenshots (art prototype)
 on:
   push:
-    branches: [main]
+    branches: [art-overhaul-prototype]
     paths: ['src/**', 'build.py', 'tests/shots.js', '.github/workflows/screenshots.yml']
   workflow_dispatch:
 permissions:
@@ -19,12 +19,12 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: python3 build.py --dbg https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js tests/shots.html
       - run: OUT=out node tests/shots.js
-      - name: Push screenshots to ci-screenshots branch
+      - name: Push screenshots to ci-screenshots-art branch
         run: |
           cd out
-          git init -q -b ci-screenshots
+          git init -q -b ci-screenshots-art
           git config user.name "github-actions[bot]"
-          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-          echo "Screenshots for ${GITHUB_SHA}" > README.md
-          git add -A && git commit -qm "screenshots for ${GITHUB_SHA}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-screenshots
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          echo "Art prototype screenshots for ${GITHUB_SHA}" > README.md
+          git add -A && git commit -qm "art screenshots for ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-screenshots-art
