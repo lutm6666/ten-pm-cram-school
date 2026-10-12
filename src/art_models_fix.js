@@ -1,10 +1,15 @@
-/* art_models.js 整併前修正：舊模型替換、UV、材質比例與門牌定位。 */
+/* art_models.js 整併前修正：舊模型替換、UV、材質比例、效能與門牌定位。 */
 
 /* fmChamferGeo 原本只有頂/底面的 UV 有面積；側面上下頂點共用同一組 x/z UV，
    會讓側面木紋/烤漆貼圖塌成一條線。改成頂/底用平面 UV、側面沿周長展開。
-   側面 U 依真實邊長比例累積，因此長邊、倒角與短邊不會各自被硬拉成一整張貼圖。 */
+   側面 U 依真實邊長比例累積，因此長邊、倒角與短邊不會各自被硬拉成一整張貼圖。
+   Phase 2 有大量同尺寸桌腳、椅架與板件，因此再以尺寸+r 做 BufferGeometry 快取。 */
+const FM_CHAMFER_CACHE=new Map();
 fmChamferGeo=function(w,h,d,r=.06){
-  r=Math.min(r,w*.24,d*.24);const x=w/2,z=d/2,y=h/2;
+  r=Math.min(r,w*.24,d*.24);
+  const key=[w,h,d,r].map(v=>Number(v).toFixed(4)).join('|');
+  if(FM_CHAMFER_CACHE.has(key))return FM_CHAMFER_CACHE.get(key);
+  const x=w/2,z=d/2,y=h/2;
   const p=[[-x+r,-z],[x-r,-z],[x,-z+r],[x,z-r],[x-r,z],[-x+r,z],[-x,z-r],[-x,-z+r]];
   const verts=[],uvs=[];
   const add=(v,uv)=>{verts.push(...v);uvs.push(...uv);};
@@ -27,15 +32,19 @@ fmChamferGeo=function(w,h,d,r=.06){
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
   geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
-  geo.computeVertexNormals();return geo;
+  geo.computeVertexNormals();FM_CHAMFER_CACHE.set(key,geo);return geo;
 };
 
 /* 同一張程序貼圖可以共用 Canvas，但不同尺寸家具不能共用同一組 repeat。
-   clone() 只複製 Texture 狀態、仍共用原 image，避免為每張桌子再建立 512px Canvas。 */
+   clone() 只複製 Texture 狀態、仍共用原 image，避免為每張桌子再建立 512px Canvas。
+   測試 stub 比真實 Three.js 精簡，center/rotation 若不存在就略過，不影響遊戲本體。 */
 function fmTextureView(key,base,rx,ry,rotation=0){
   const k='view:'+key;if(FM.textures[k])return FM.textures[k];
-  const t=base.clone();t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);
-  t.center.set(.5,.5);t.rotation=rotation;t.needsUpdate=true;
+  const t=base.clone?base.clone():base;t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  if(t.repeat&&t.repeat.set)t.repeat.set(rx,ry);
+  if(t.center&&t.center.set)t.center.set(.5,.5);
+  if('rotation' in t)t.rotation=rotation;
+  t.needsUpdate=true;
   FM.textures[k]=t;return t;
 }
 const FM_UV_BASE_MAT=fmMat;
