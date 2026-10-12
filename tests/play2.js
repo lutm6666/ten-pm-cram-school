@@ -31,19 +31,29 @@ await drain();
 for(const id of grab){const pos=await p.evaluate(id=>__dbg.ITEMS.find(i=>i.id===id).pos,id);
   const ok=await walkUntil(pos[0],pos[1],`(()=>{const n=__dbg.near();return n&&n.type==='item'&&n.it.id==='${id}'})()`);
   if(ok){await p.click('#actBtn');await drain();}console.log('grab',id,ok);}
-let guard=0;
+let guard=0,flowFailed=false;
 while(guard++<60){
   if(await vis('.report'))break;await drain();if(await vis('.report'))break;
   if(process.env.GRAB==='all'){const ms=await p.evaluate(()=>__dbg.marks);for(const id of ms){const pos=await p.evaluate(id=>__dbg.ITEMS.find(i=>i.id===id).pos,id);
       const ok=await walkUntil(pos[0],pos[1],`(()=>{const n=__dbg.near();return n&&n.type==='item'&&n.it.id==='${id}'})()`);console.log('  item',id,ok?'picked':'NOT REACHED');if(ok){await p.click('#actBtn');await drain();}}}
-  const sides=await p.evaluate(()=>__dbg.activeSides().map(s=>[s.id,(()=>{const t=__dbg.targetOf(s.target);return[t.x,t.z]})()]));
-  if(sides.length){const [id]=sides[0];let ok=false;for(let r=0;r<12&&!ok;r++){const [x,z]=await p.evaluate(id=>{const s=__dbg.activeSides().find(s=>s.id===id);const t=__dbg.targetOf(s.target);return[t.x,t.z]},id);
+  const sides=await p.evaluate(()=>__dbg.activeSides().map(s=>[s.id,(()=>{const t=__dbg.targetOf(s.target);return t?[t.x,t.z]:[null,null]})()]));
+  if(sides.length){const [id]=sides[0];let ok=false;for(let r=0;r<12&&!ok;r++){const pos=await p.evaluate(id=>{const s=__dbg.activeSides().find(s=>s.id===id);const t=s&&__dbg.targetOf(s.target);return t?[t.x,t.z]:null},id);if(!pos)break;const [x,z]=pos;
       await p.evaluate(([x,z])=>__dbg.go(x,z),[x,z]);for(let k=0;k<25;k++){await p.waitForTimeout(60);if(await p.evaluate(`(()=>{const n=__dbg.near();return n&&n.type==='side'&&n.sd.id==='${id}'})()`)){ok=true;break;}}}
     console.log('  side',id,ok?'done':'NOT REACHED');if(ok){await p.click('#actBtn');await drain();continue;}else break;}
-  const g=await p.textContent('.nextcard .g');await p.click('[data-act=guide]');
-  let ok=false;for(let k=0;k<300;k++){await p.waitForTimeout(60);const n=await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'});if(n){ok=true;break;}}
-  console.log('step',g,ok?'ok':'NOT REACHED');if(!ok)console.log(await p.evaluate(()=>{const d=__dbg,n=d.near();return JSON.stringify({path:d.path,guiding:d.guiding,keys:d.keys,pos:d.pos(),tg:d.targetOf(d.G.steps[d.G.idx].target),mode:d.mode,near:n&&n.type,id:d.G.steps[d.G.idx].id,sides:d.activeSides().map(s=>s.id)})}));if(!ok)break;try{await p.click('#actBtn',{timeout:5000});}catch(e){console.log('CLICKFAIL',await p.evaluate(()=>JSON.stringify({mode:__dbg.mode,dock:document.getElementById('dock').hidden,cover:document.getElementById('cover').hidden,coverHTML:document.getElementById('cover').innerHTML.slice(0,120),dlg:document.getElementById('dlg').hidden,sheet:document.getElementById('sheet').hidden,id:__dbg.G.steps[__dbg.G.idx].id})));break;}
+  const state=await p.evaluate(()=>{const d=__dbg,st=d.G&&d.G.steps[d.G.idx];return{mode:d.mode,idx:d.G&&d.G.idx,len:d.G&&d.G.steps.length,stepId:st&&st.id,goal:st&&st.goal,target:st&&st.target,report:!!document.querySelector('.report')};});
+  if(!state.stepId){
+    if(state.report||state.mode==='end')break;
+    flowFailed=true;errs.push(`flow lost step at idx ${state.idx}/${state.len}, mode=${state.mode}`);console.log('FLOWSTATE',JSON.stringify(state));break;
+  }
+  const g=await p.textContent('.nextcard .g');
+  const guide=await vis('[data-act=guide]');if(!guide){flowFailed=true;errs.push(`guide missing at ${state.stepId}`);console.log('FLOWSTATE',JSON.stringify(state));break;}
+  await p.click('[data-act=guide]');
+  let ok=false;for(let k=0;k<300;k++){await p.waitForTimeout(60);const n=await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'});if(n){ok=true;break;}if(await vis('.report'))break;}
+  console.log('step',g,ok?'ok':'NOT REACHED');
+  if(!ok){const diag=await p.evaluate(()=>{const d=__dbg,st=d.G&&d.G.steps[d.G.idx],tg=st&&st.target?d.targetOf(st.target):null,n=d.near();return{path:d.path,guiding:d.guiding,keys:d.keys,pos:d.pos(),tg,mode:d.mode,near:n&&n.type,idx:d.G&&d.G.idx,len:d.G&&d.G.steps.length,id:st&&st.id,sides:d.activeSides().map(s=>s.id),report:!!document.querySelector('.report')};});console.log('FLOWSTATE',JSON.stringify(diag));if(diag.report||diag.mode==='end')break;flowFailed=true;errs.push(`main target not reached: ${diag.id||'no-step'}`);break;}
+  try{await p.click('#actBtn',{timeout:5000});}catch(e){const diag=await p.evaluate(()=>{const st=__dbg.G&&__dbg.G.steps[__dbg.G.idx];return{mode:__dbg.mode,dock:document.getElementById('dock').hidden,cover:document.getElementById('cover').hidden,coverHTML:document.getElementById('cover').innerHTML.slice(0,120),dlg:document.getElementById('dlg').hidden,sheet:document.getElementById('sheet').hidden,id:st&&st.id};});console.log('CLICKFAIL',JSON.stringify(diag));flowFailed=true;errs.push(`action click failed: ${diag.id||'no-step'}`);break;}
 }
 await drain();
 if(await vis('[data-act=shareCard]')){await p.click('[data-act=shareCard]');const ok=await p.evaluate(()=>{const i=document.querySelector('#sheet img');return !!(i&&i.src.startsWith('data:image/png')&&i.src.length>20000)});console.log('share card',ok?'ok':'FAIL');if(!ok)errs.push('share card failed');await p.click('#sheet [data-act=closeSheet]');}
-console.log('report:',(await p.textContent('.report h2').catch(()=>'NONE')),'| log:',await p.evaluate(()=>__dbg.G&&__dbg.G.log.map(l=>l[1]).join(' / ')),'| errors',errs);await b.close();})();
+const report=await p.textContent('.report h2').catch(()=>'NONE');console.log('report:',report,'| log:',await p.evaluate(()=>__dbg.G&&__dbg.G.log.map(l=>l[1]).join(' / ')),'| errors',errs);
+await b.close();if(flowFailed||errs.length){console.error('PLAYTHROUGH FAILED',errs);process.exit(1);}})();
