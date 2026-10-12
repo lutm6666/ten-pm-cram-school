@@ -41,10 +41,10 @@ function p2StudentDesk(r,color,top){
   solids.push(r);
   const cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2;
   const g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
-  const wood=fmMat('p2:deskWood',{map:fmWoodTex(),rough:.62,metal:0});
+  const wood=p2Std('deskWoodSolid',0xc29d70,.70,0);
   const metal=p2Std('deskFrame',0x59626b,.38,.48);
   const basket=p2Std('deskBasket',0x747d85,.52,.30);
-  p2Mesh(fmChamferGeo(1.22,.075,.54,.045),wood,g,0,.745,0);
+  p2Mesh(new THREE.BoxGeometry(1.22,.09,.54),wood,g,0,.745,0);
   [-.47,.47].forEach(xx=>[-.17,.17].forEach(zz=>p2Mesh(fmChamferGeo(.045,.66,.045,.012),metal,g,xx,.35,zz)));
   p2Mesh(fmChamferGeo(.94,.035,.035,.010),metal,g,0,.29,-.16);
   p2Mesh(fmChamferGeo(.94,.035,.035,.010),metal,g,0,.29,.16);
