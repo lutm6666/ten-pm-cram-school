@@ -72,13 +72,13 @@ function fmChamferGeo(w,h,d,r=.06){
   const add=v=>{verts.push(...v);uvs.push(v[0]/w+.5,v[2]/d+.5);};
   const tri=(a,b,c)=>{add(a);add(b);add(c);};
   for(let i=1;i<7;i++){
-    tri([p[0][0],-y,p[0][1]],[p[i+1][0],-y,p[i+1][1]],[p[i][0],-y,p[i][1]]);
-    tri([p[0][0],y,p[0][1]],[p[i][0],y,p[i][1]],[p[i+1][0],y,p[i+1][1]]);
+    tri([p[0][0],-y,p[0][1]],[p[i][0],-y,p[i][1]],[p[i+1][0],-y,p[i+1][1]]);
+    tri([p[0][0],y,p[0][1]],[p[i+1][0],y,p[i+1][1]],[p[i][0],y,p[i][1]]);
   }
   for(let i=0;i<8;i++){
     const j=(i+1)%8,a=p[i],b=p[j];
-    tri([a[0],-y,a[1]],[b[0],-y,b[1]],[b[0],y,b[1]]);
-    tri([a[0],-y,a[1]],[b[0],y,b[1]],[a[0],y,a[1]]);
+    tri([a[0],-y,a[1]],[b[0],y,b[1]],[b[0],-y,b[1]]);
+    tri([a[0],-y,a[1]],[a[0],y,a[1]],[b[0],y,b[1]]);
   }
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
