@@ -41,6 +41,11 @@ const {chromium}=require('playwright');
   a=await audit();
   assert(a.totalCareKids===8,'安親班到班後場景總數為 8 個小朋友',JSON.stringify(a));
 
+  // 主任說 17:30 回分校，點心段落要真的看得到他從門口回來。
+  await p.evaluate(()=>__dbg.jump('c_snack'));await p.waitForTimeout(150);
+  a=await audit();
+  assert(a.movingNpcs.includes('boss'),'17:30 左右主任真的回到分校',JSON.stringify(a));
+
   // 3) 最後一個孩子等待接送時，高三生必須真的逐批進 B 班。
   await p.evaluate(()=>__dbg.jump('c_late'));
   await p.waitForTimeout(5200);
@@ -55,10 +60,18 @@ const {chromium}=require('playwright');
   a=await audit();
   assert(a.visibleJh+a.namedJh.length===9,'18:30 C 班畫面與「九個人」一致',JSON.stringify(a));
 
-  // 5) 數學線以兩位試聽生計分，場景也補齊第二位。
+  // 5) 晚間共用時間線：17:20 高三背景生與自習生都尚未到，之後依課表出現。
   await start('teacher');
   a=await audit();
   assert(a.trial2Visible===true,'兩位試聽生的第二位有實際場景模型',JSON.stringify(a));
+  assert(a.visibleHigh===0,'17:20 高三背景學生尚未提早坐滿教室',JSON.stringify(a));
+  assert(a.visibleStudy===0,'17:20 自習室背景學生尚未提早出現',JSON.stringify(a));
+  await p.evaluate(()=>__dbg.jump('erase'));await p.waitForTimeout(250);
+  a=await audit();
+  assert(a.visibleHigh>0&&a.visibleStudy===0,'18:30 高三已到班，但 19:00 自習背景生仍未提早出現',JSON.stringify(a));
+  await p.evaluate(()=>__dbg.jump('zhe'));await p.waitForTimeout(1200);
+  a=await audit();
+  assert(a.visibleStudy>0,'19:00 後自習室背景學生開始進場',JSON.stringify(a));
 
   await b.close();
   if(fails.length){console.error('\nConsistency failures:\n- '+fails.join('\n- '));process.exit(1);}
