@@ -1,7 +1,8 @@
-/* art_models.js 整併前修正：舊模型替換、UV 與門牌定位。 */
+/* art_models.js 整併前修正：舊模型替換、UV、材質比例與門牌定位。 */
 
 /* fmChamferGeo 原本只有頂/底面的 UV 有面積；側面上下頂點共用同一組 x/z UV，
-   會讓側面木紋/烤漆貼圖塌成一條線。改成頂/底用平面 UV、側面沿周長展開。 */
+   會讓側面木紋/烤漆貼圖塌成一條線。改成頂/底用平面 UV、側面沿周長展開。
+   側面 U 依真實邊長比例累積，因此長邊、倒角與短邊不會各自被硬拉成一整張貼圖。 */
 fmChamferGeo=function(w,h,d,r=.06){
   r=Math.min(r,w*.24,d*.24);const x=w/2,z=d/2,y=h/2;
   const p=[[-x+r,-z],[x-r,-z],[x,-z+r],[x,z-r],[x-r,z],[-x+r,z],[-x,z-r],[-x,-z+r]];
@@ -27,6 +28,35 @@ fmChamferGeo=function(w,h,d,r=.06){
   geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
   geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
   geo.computeVertexNormals();return geo;
+};
+
+/* 同一張程序貼圖可以共用 Canvas，但不同尺寸家具不能共用同一組 repeat。
+   clone() 只複製 Texture 狀態、仍共用原 image，避免為每張桌子再建立 512px Canvas。 */
+function fmTextureView(key,base,rx,ry,rotation=0){
+  const k='view:'+key;if(FM.textures[k])return FM.textures[k];
+  const t=base.clone();t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);
+  t.center.set(.5,.5);t.rotation=rotation;t.needsUpdate=true;
+  FM.textures[k]=t;return t;
+}
+const FM_UV_BASE_MAT=fmMat;
+fmMat=function(key,opts={}){
+  if(FM.materials[key])return FM.materials[key];
+  let map=opts.map;
+  if(map){
+    // 以物件實際尺度分 profile，讓木紋/表面顆粒在不同房間維持接近的物理尺寸。
+    const profiles={
+      'counterWoodMat':[3.8,.95],
+      'p2:deskWood':[1.15,.55],
+      'p2:podiumWood':[1.20,.60],
+      'p2env:officeWood':[2.55,.82],
+      'p2env:counterWood':[1.75,.55],
+      'p2env:wallWood':[2.85,.46],
+      'navyPaint':[3.6,1.35],
+      'sofaFabricMat':[1.15,1.35]
+    };
+    const pf=profiles[key];if(pf)map=fmTextureView(key,map,pf[0],pf[1],pf[2]||0);
+  }
+  return FM_UV_BASE_MAT(key,{...opts,map});
 };
 
 /* 新櫃台 / 沙發是替換，不和舊方塊疊放。 */
