@@ -1,0 +1,29 @@
+name: Narrative consistency
+on:
+  push:
+    branches: [art-overhaul-phase2]
+    paths:
+      - 'src/**'
+      - 'tests/consistency.js'
+      - 'build.py'
+      - 'package.json'
+      - '.github/workflows/consistency.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  consistency:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - name: Build test page
+        run: npm run build:test
+      - name: Check narrative and scene state
+        run: node tests/consistency.js
