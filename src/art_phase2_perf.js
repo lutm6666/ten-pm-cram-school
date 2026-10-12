@@ -1,5 +1,5 @@
-/* ================= Phase 2：重複幾何快取 =================
-   目標：降低人物與圓形家具重複建立 BufferGeometry 的成本。
+/* ================= Phase 2：重複幾何快取 + 場景 profiler =================
+   目標：降低人物與圓形家具重複建立 BufferGeometry 的成本，並量化 mesh 熱點。
    只共用幾何資料，不改 Mesh、Material、動畫骨架或 transform。 */
 
 const P2_PERF_GEO_CACHE=new Map();
@@ -25,3 +25,30 @@ if(THREE.CylinderGeometry&&!THREE.CylinderGeometry.__p2Cached){
 if(THREE.CircleGeometry&&!THREE.CircleGeometry.__p2Cached){
   const Base=THREE.CircleGeometry,C=p2PerfCachedCtor('circle',Base);C.__p2Cached=true;C.__p2Base=Base;THREE.CircleGeometry=C;
 }
+
+/* 場景 profiler：不改渲染，只盤點 draw-call 候選熱點。
+   會在 CI screenshot artifact 留下 teacher / care / jh 三組 JSON。 */
+function p2PerfAudit(){
+  if(!scene||!scene.traverse)return null;
+  const geoCount=new Map(),matCount=new Map();
+  let meshes=0,visibleMeshes=0;
+  scene.traverse(o=>{
+    if(!o||!o.isMesh)return;
+    meshes++;if(o.visible!==false)visibleMeshes++;
+    if(o.geometry)geoCount.set(o.geometry,(geoCount.get(o.geometry)||0)+1);
+    const mats=Array.isArray(o.material)?o.material:[o.material];
+    mats.forEach(m=>{if(m)matCount.set(m,(matCount.get(m)||0)+1);});
+  });
+  const names=new Map();
+  if(typeof FM_CHAMFER_CACHE!=='undefined')for(const [k,g] of FM_CHAMFER_CACHE)names.set(g,'chamfer:'+k);
+  for(const [k,g] of P2_PERF_GEO_CACHE)names.set(g,k);
+  const top=[...geoCount.entries()].sort((a,b)=>b[1]-a[1]).slice(0,16).map(([g,count])=>({
+    count,
+    key:names.get(g)||g.type||g.constructor&&g.constructor.name||'geometry',
+    vertices:g.attributes&&g.attributes.position&&g.attributes.position.count||null
+  }));
+  const summary={meshes,visibleMeshes,uniqueGeometries:geoCount.size,uniqueMaterials:matCount.size,cachedRoundGeometries:P2_PERF_GEO_CACHE.size,cachedChamferGeometries:typeof FM_CHAMFER_CACHE!=='undefined'?FM_CHAMFER_CACHE.size:null,topGeometries:top};
+  window.__artPerf=summary;
+  return summary;
+}
+window.__p2PerfAudit=p2PerfAudit;
