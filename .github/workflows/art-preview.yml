@@ -1,5 +1,7 @@
 name: Art preview static site
 on:
+  push:
+    branches: [art-overhaul-phase2]
   workflow_dispatch:
 
 permissions:
