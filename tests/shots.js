@@ -7,11 +7,12 @@ for(const [tag,vp] of [['phone',{width:390,height:844,hasTouch:true,isMobile:tru
   const errs=[];p.on('pageerror',e=>errs.push(e.message));
   await p.goto('file://'+__dirname+'/shots.html');await p.waitForTimeout(2500);
   const shot=async n=>{await p.waitForTimeout(1600);await p.screenshot({path:`${OUT}/${tag}-${n}.png`});};
+  const perf=async label=>{const v=await p.evaluate(()=>window.__p2PerfAudit?window.__p2PerfAudit():null);if(v){fs.writeFileSync(`${OUT}/${tag}-perf-${label}.json`,JSON.stringify(v,null,2));console.log(`[perf:${tag}:${label}] ${JSON.stringify(v)}`);}return v;};
   await shot('01-title');
   await p.click('[data-act=start]');
   const vis=s=>p.isVisible(s).catch(()=>false);
   const drain=async()=>{for(let i=0;i<20;i++){if(await vis('[data-act=chapterGo]'))await p.click('[data-act=chapterGo]');else if(await vis('#dlg .choice'))await p.click('#dlg .choice >> nth=0');else if(await vis('[data-act=dnext]'))await p.click('[data-act=dnext]');else break;}};
-  await drain();await shot('02-start');
+  await drain();await perf('teacher');await shot('02-start');
   await p.evaluate(()=>__dbg.tp(20,3.4,0));await shot('03-whiteboard');
   await p.evaluate(()=>__dbg.tp(10.4,10,Math.PI/2));await shot('04-schedule');
   await p.evaluate(()=>__dbg.tp(2.4,10.6,0));await shot('05-lobby-sign');
@@ -23,12 +24,12 @@ for(const [tag,vp] of [['phone',{width:390,height:844,hasTouch:true,isMobile:tru
   await p.evaluate(()=>{__dbg.CAM.tilt=.5;__dbg.CAM.zoom=1.6;__dbg.tp(4.5,15.6,Math.PI);});await shot('11-night-out');
   // 下午場：安親班
   await p.evaluate(()=>{localStorage.removeItem('ten-pm:save')});await p.reload();await p.waitForTimeout(1500);
-  await p.click('[data-role=care]');await p.click('[data-act=start]');await drain();await shot('12-care-start');
+  await p.click('[data-role=care]');await p.click('[data-act=start]');await drain();await perf('care');await shot('12-care-start');
   await p.evaluate(()=>__dbg.jump('c_homework'));await drain();await p.waitForTimeout(9000);await p.evaluate(()=>__dbg.tp(18,8,0));await shot('13-care-kids');
   await p.evaluate(()=>__dbg.tp(4.5,14,0));await shot('14-care-lobby');
   // 國中部
   await p.evaluate(()=>{localStorage.removeItem('ten-pm:save')});await p.reload();await p.waitForTimeout(1500);
-  await p.click('[data-role=jh]');await p.click('[data-act=start]');await drain();
+  await p.click('[data-role=jh]');await p.click('[data-act=start]');await drain();await perf('jh');
   await p.evaluate(()=>__dbg.jump('j_class'));await drain();await p.waitForTimeout(3000);await p.evaluate(()=>__dbg.tp(32,8.6,0));await shot('15-jh-class');
   await p.evaluate(()=>__dbg.tp(31,14.5,0));await shot('16-jh-lockers');
   fs.writeFileSync(`${OUT}/${tag}-errors.txt`,errs.join('\n')||'none');await p.close();}
