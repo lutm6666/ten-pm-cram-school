@@ -10,86 +10,12 @@ function p2Std(key,color,rough=.76,metal=.02){return fmMat('p2:'+key,{color,roug
 function p2Mesh(geo,material,parent,x=0,y=0,z=0){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m;}
 function p2HideFirstMesh(group){if(!group)return;const m=group.children&&group.children.find(o=>o&&o.isMesh);if(m)m.visible=false;}
 
-/* ---------- 人物本體 ---------- */
-function p2Hair(head,hairColor,variant,kid){
-  const hair=p2Std('hair:'+hairColor,hairColor,.84,0);
-  // 低多邊形髮帽，取代原本的方盒頭髮。
-  const cap=p2Mesh(new THREE.SphereGeometry(kid?.178:.182,10,7),hair,head,0,.075,-.008);
-  cap.scale.set(1.04,.72,1.04);
-  if(variant===0){
-    // 短髮：瀏海分三束，輪廓比單一方塊自然。
-    [-.095,-.025,.055].forEach((x,i)=>{const q=p2Mesh(fmChamferGeo(.09,.13,.075,.025),hair,head,x,.035,.145);q.rotation.z=(i-1)*.10;});
-  }else if(variant===1){
-    // 側分短髮。
-    const side=p2Mesh(fmChamferGeo(.075,.25,.20,.025),hair,head,-.145,-.005,-.015);side.rotation.z=-.08;
-    const fringe=p2Mesh(fmChamferGeo(.19,.10,.07,.025),hair,head,.035,.075,.145);fringe.rotation.z=-.18;
-  }else if(variant===2){
-    // 鮑伯頭：兩側髮束延伸到臉頰。
-    [-1,1].forEach(s=>{const q=p2Mesh(fmChamferGeo(.075,.27,.18,.03),hair,head,s*.145,-.045,-.005);q.rotation.z=-s*.04;});
-    p2Mesh(fmChamferGeo(.25,.11,.065,.025),hair,head,0,.07,.147);
-  }else{
-    // 馬尾／束髮，遠距離也能和短髮角色分開。
-    p2Mesh(fmChamferGeo(.24,.10,.07,.025),hair,head,0,.07,.147);
-    const tie=p2Mesh(new THREE.SphereGeometry(.055,8,6),hair,head,0,.035,-.185);
-    const tail=p2Mesh(new THREE.SphereGeometry(.09,8,6),hair,head,0,-.045,-.235);tail.scale.set(.72,1.35,.72);
-  }
-}
-function p2RoleDetails(p,color,opts,seed){
-  const u=p.userData,torso=u.torso,head=u.head,name=opts.name||'';
-  const dark=p2Std('detailDark',0x27313b,.70,.03),paper=p2Std('detailLight',0xf1eee6,.90,0);
-  if(/主任/.test(name)){
-    // 主任：深色西裝前襟 + 領帶。
-    const lapL=p2Mesh(fmChamferGeo(.12,.30,.025,.018),paper,torso,-.105,.29,.153);lapL.rotation.z=-.28;
-    const lapR=p2Mesh(fmChamferGeo(.12,.30,.025,.018),paper,torso,.105,.29,.153);lapR.rotation.z=.28;
-    const tie=p2Mesh(fmChamferGeo(.055,.25,.024,.012),p2Std('bossTie',0x7d2f31,.72,0),torso,0,.25,.169);tie.rotation.z=.02;
-  }else if(/小芸/.test(name)){
-    // 小芸：細腰帶 + 馬尾固定辨識。
-    p2Mesh(fmChamferGeo(.47,.055,.292,.025),p2Std('yunBelt',0x53606d,.72,.02),torso,0,.10,0);
-  }else if(/媽媽|爸爸|家長/.test(name)){
-    // 家長：側背包，避免和學生只靠衣服顏色區分。
-    const bag=p2Mesh(fmChamferGeo(.22,.28,.11,.045),p2Std('parentBag',0x725443,.82,.01),torso,.29,.20,-.08);bag.rotation.z=-.08;
-    const strap=p2Mesh(fmChamferGeo(.025,.55,.018,.008),dark,torso,.13,.31,.152);strap.rotation.z=-.42;
-  }else if(/^你｜/.test(name)){
-    // 玩家：袖口與腰部的小色塊，鏡頭拉遠時仍容易找到自己。
-    p2Mesh(fmChamferGeo(.48,.055,.29,.025),p2Std('playerWaist',0x46515c,.72,.02),torso,0,.095,0);
-  }else if(name && !/試聽生/.test(name)){
-    // 其他有名角色用一個小胸袋，和背景路人做層級區別。
-    p2Mesh(fmChamferGeo(.105,.095,.018,.018),p2Std('staffPocket',0xe4e7ea,.88,0),torso,.13,.29,.162);
-  }
-  // 少量角色配眼鏡，固定由 seed 決定，避免每次重整亂跳。
-  if(!u.kid && seed%5===0){
-    [-.072,.072].forEach(x=>{const rim=p2Mesh(new THREE.CircleGeometry(.054,12),dark,head,x,.035,.166);rim.scale.set(1,.78,1);});
-    p2Mesh(fmChamferGeo(.055,.014,.012,.004),dark,head,0,.035,.169);
-  }
-}
+/* ---------- 人物：回歸原版方塊比例 ---------- */
+// 原版 person 已提供方塊頭、軀幹、四肢、鞋子、衣領與名牌。
+// 不再以球頭和圓柱四肢覆蓋它，避免不同造型語言混用。
 person=function(color,opts={}){
-  // 先沿用既有動畫 rig、標籤、鞋子、識別證等功能層，再替換核心幾何。
-  const p=P2_BASE_PERSON(color,opts),u=p.userData,name=opts.name||'',seed=p2Hash(name+'|'+color+'|'+(opts.hair||0));
-  const skin=p2Std('skin',0xf0d2b6,.90,0),cloth=p2Std('cloth:'+color,color,.88,0),pants=p2Std('pants',0x2c3440,.86,.01);
-
-  // 頭：隱藏方盒皮膚與原版方盒頭髮，但保留眼睛、嘴與表情動畫。
-  if(u.head&&u.head.children){u.head.children.slice(0,3).forEach(o=>{if(o&&o.isMesh)o.visible=false;});}
-  const face=p2Mesh(new THREE.SphereGeometry(.17,10,8),skin,u.head,0,0,0);face.scale.set(.96,1.04,.94);
-  let hairVariant=seed%4;if(/小芸/.test(name))hairVariant=3;if(opts.kid)hairVariant=seed%3;
-  p2Hair(u.head,opts.hair||0x2a2421,hairVariant,!!opts.kid);
-
-  // 身體：方盒 torso 換成六角低多邊形衣身，腰部稍收。
-  p2HideFirstMesh(u.torso);
-  const body=p2Mesh(new THREE.CylinderGeometry(.235,.265,.50,6),cloth,u.torso,0,.25,0);body.rotation.y=Math.PI/6;body.scale.z=.68;
-
-  // 手腳：沿用原本 limb pivot，所以所有走路、聊天、坐姿動畫都仍有效。
-  [u.armL,u.armR].forEach(a=>{p2HideFirstMesh(a);const arm=p2Mesh(new THREE.CylinderGeometry(.057,.068,.40,7),cloth,a,0,-.20,0);arm.scale.z=.88;});
-  [u.legL,u.legR].forEach(l=>{p2HideFirstMesh(l);const leg=p2Mesh(new THREE.CylinderGeometry(.068,.078,.42,7),pants,l,0,-.21,0);leg.scale.z=.88;});
-
-  // 小朋友稍微增加坐姿可見高度。原版只抬 .22，部分俯視角只剩頭頂。
-  if(opts.kid)u.p2KidSeatLift=.07;
-  p2RoleDetails(p,color,opts,seed);
-  return p;
+  return P2_BASE_PERSON(color,opts);
 };
-
-// 保留原 setPose 行為，只替小朋友坐姿再抬高一點。
-const P2_BASE_SETPOSE=setPose;
-setPose=function(p,sit){P2_BASE_SETPOSE(p,sit);const u=p.userData;if(sit&&u.kid&&u.p2KidSeatLift)u.rig.position.y+=u.p2KidSeatLift;};
 
 /* ---------- 椅子：塑膠椅面 + 金屬骨架 ---------- */
 chair=function(x,z,ry){
