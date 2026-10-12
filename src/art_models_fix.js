@@ -16,8 +16,8 @@ fmChamferGeo=function(w,h,d,r=.06){
   const tri=(a,b,c,ua,ub,uc)=>{add(a,ua);add(b,ub);add(c,uc);};
   const faceUV=v=>[v[0]/w+.5,v[2]/d+.5];
   for(let i=1;i<7;i++){
-    const b0=[p[0][0],-y,p[0][1]],b1=[p[i+1][0],-y,p[i+1][1]],b2=[p[i][0],-y,p[i][1]];
-    const t0=[p[0][0],y,p[0][1]],t1=[p[i][0],y,p[i][1]],t2=[p[i+1][0],y,p[i+1][1]];
+    const b0=[p[0][0],-y,p[0][1]],b1=[p[i][0],-y,p[i][1]],b2=[p[i+1][0],-y,p[i+1][1]];
+    const t0=[p[0][0],y,p[0][1]],t1=[p[i+1][0],y,p[i+1][1]],t2=[p[i][0],y,p[i][1]];
     tri(b0,b1,b2,faceUV(b0),faceUV(b1),faceUV(b2));
     tri(t0,t1,t2,faceUV(t0),faceUV(t1),faceUV(t2));
   }
@@ -26,8 +26,8 @@ fmChamferGeo=function(w,h,d,r=.06){
   for(let i=0;i<8;i++){
     const j=(i+1)%8,a=p[i],b=p[j],u0=run/perimeter,u1=(run+edgeLen[i])/perimeter;run+=edgeLen[i];
     const a0=[a[0],-y,a[1]],b0=[b[0],-y,b[1]],b1=[b[0],y,b[1]],a1=[a[0],y,a[1]];
-    tri(a0,b0,b1,[u0,0],[u1,0],[u1,1]);
-    tri(a0,b1,a1,[u0,0],[u1,1],[u0,1]);
+    tri(a0,b1,b0,[u0,0],[u1,1],[u1,0]);
+    tri(a0,a1,b1,[u0,0],[u0,1],[u1,1]);
   }
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
