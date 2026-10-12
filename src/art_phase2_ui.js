@@ -32,12 +32,13 @@ function p2UiLabelEntry(actor,id,priority,dist){
   const w=Math.max(72,Math.min(168,70+base[0]*58)),h=innerWidth<600?32:28;
   return {actor,label,id,priority,dist,p,rect:{l:p.x-w/2,r:p.x+w/2,t:p.y-h/2,b:p.y+h/2}};
 }
+function p2UiResolvedTarget(t){return typeof t==='function'?t(G):t;}
 function p2UiTuneLabels(){
   if(!G||!player||!camera||mode!=="walk")return;
   const mobile=innerWidth<600,maxDist=mobile?5.4:7.2,maxLabels=mobile?4:7;
-  const mainId=step&&step()&&step().target&&step().target.npc||null;
+  const cur=step&&step(),mainTarget=p2UiResolvedTarget(cur&&cur.target),mainId=mainTarget&&mainTarget.npc||null;
   const sideIds=new Set(),chatIds=new Set();
-  try{activeSides().forEach(sd=>{if(sd.target&&sd.target.npc)sideIds.add(sd.target.npc);});}catch(e){}
+  try{activeSides().forEach(sd=>{const t=p2UiResolvedTarget(sd.target);if(t&&t.npc)sideIds.add(t.npc);});}catch(e){}
   try{chatTargets().forEach(id=>chatIds.add(id));}catch(e){}
   const pZone=zoneAt(player.position.x,player.position.z),pZoneName=pZone&&pZone[0],entries=[];
 
