@@ -63,9 +63,9 @@ function p2Podium(r){
 }
 function p2StudyTable(r){
   solids.push(r);const cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,w=r[2]-r[0],g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
-  const top=fmMat('p2:studyTop',{color:0xd8d0c1,rough:.80,metal:0});
+  const top=p2Std('studyTopWood',0xb68b63,.78,0);
   const metal=p2Std('studyFrame',0x667079,.40,.45);
-  p2Mesh(fmChamferGeo(w,.075,.92,.045),top,g,0,.745,0);
+  p2Mesh(new THREE.BoxGeometry(w,.105,.92),top,g,0,.745,0);
   [-w/2+.28,w/2-.28].forEach(xx=>[-.30,.30].forEach(zz=>p2Mesh(fmChamferGeo(.055,.66,.055,.014),metal,g,xx,.35,zz)));
   p2Mesh(fmChamferGeo(w-.52,.04,.04,.012),metal,g,0,.30,0);
 }
