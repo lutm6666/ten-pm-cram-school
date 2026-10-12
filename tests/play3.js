@@ -34,17 +34,18 @@ let guard=0;
 while(guard++<60){
   if(await vis('.report'))break;await drain();if(await vis('.report'))break;
   const sides=await p.evaluate(()=>__dbg.activeSides().map(s=>s.id));
-  if(sides.length){const id=sides[0];let ok=false;for(let r=0;r<12&&!ok;r++){const target=await p.evaluate(id=>{const s=__dbg.activeSides().find(s=>s.id===id);if(!s||!s.target)return null;const t=__dbg.targetOf(s.target);return t&&Number.isFinite(t.x)&&Number.isFinite(t.z)?[t.x,t.z]:null},id);
-      if(!target){console.log('  side target unavailable',id,await p.evaluate(()=>({idx:__dbg.G&&__dbg.G.idx,active:__dbg.activeSides().map(s=>({id:s.id,target:s.target||null}))})));break;}
+  if(sides.length){const id=sides[0];let ok=false;for(let r=0;r<30&&!ok;r++){const target=await p.evaluate(id=>{const s=__dbg.activeSides().find(s=>s.id===id);if(!s||!s.target)return null;const t=__dbg.targetOf(s.target);return t&&Number.isFinite(t.x)&&Number.isFinite(t.z)?[t.x,t.z]:null},id);
+      if(!target){await p.waitForTimeout(600);continue;}
       const [x,z]=target;
       await p.evaluate(([x,z])=>__dbg.go(x,z),[x,z]);for(let k=0;k<25;k++){await p.waitForTimeout(60);if(await p.evaluate(`(()=>{const n=__dbg.near();return n&&n.type==='side'&&n.sd.id==='${id}'})()`)){ok=true;break;}}}
     console.log('  side',id,ok?'done':'NOT REACHED');if(ok){await p.click('#actBtn');await drain();continue;}else break;}
   const g=await p.textContent('.nextcard .g');await p.click('[data-act=guide]');
-  let ok=false;for(let k=0;k<300;k++){await p.waitForTimeout(60);const n=await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'});if(n){ok=true;break;}}
+  let ok=false;for(let k=0;k<750;k++){await p.waitForTimeout(60);const n=await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'});if(n){ok=true;break;}}
   console.log('step',g,ok?'ok':'NOT REACHED');if(!ok)console.log(await p.evaluate(()=>{const d=__dbg,n=d.near(),G=d.G,st=G&&G.steps&&G.steps[G.idx];return JSON.stringify({path:d.path,guiding:d.guiding,keys:d.keys,pos:d.pos(),tg:st?d.targetOf(st.target):null,mode:d.mode,near:n&&n.type,idx:G&&G.idx,stepCount:G&&G.steps&&G.steps.length,id:st&&st.id,done:G&&G.done,report:!!document.querySelector('.report'),sides:d.activeSides().map(s=>s.id)})}));if(!ok)break;try{await p.click('#actBtn',{timeout:5000});}catch(e){console.log('CLICKFAIL',await p.evaluate(()=>{const G=__dbg.G,st=G&&G.steps&&G.steps[G.idx];return JSON.stringify({mode:__dbg.mode,dock:document.getElementById('dock').hidden,cover:document.getElementById('cover').hidden,coverHTML:document.getElementById('cover').innerHTML.slice(0,120),dlg:document.getElementById('dlg').hidden,sheet:document.getElementById('sheet').hidden,idx:G&&G.idx,id:st&&st.id,done:G&&G.done})}));break;}
 }
 await drain();
 console.log(line,'report:',(await p.textContent('.report h2').catch(()=>'NONE')),'| log:',await p.evaluate(()=>__dbg.G&&__dbg.G.log.map(l=>l[1]).join(' / ')),'| errors',errs);
+require('assert').strictEqual(await vis('.report'),true,`${line} did not reach an ending`);require('assert').deepStrictEqual(errs,[]);
 await p.click('[data-act=title]');}
 const ep=await p.isVisible('[data-act=epilogue]');console.log('epilogue button',ep);if(ep){await p.click('[data-act=epilogue]');console.log((await p.textContent('#cover')).slice(0,700));}
 await b.close();})();

@@ -66,6 +66,15 @@ function artAddBaseboards(){
 }
 function artThreshold(x,z,w,d,color=0x77818b){artBox(w,.02,d,color,x,.012,z,null,.72,.04);}
 function artAddDoorThresholds(){
+  // Explicit open entry: the old continuous perimeter wall hid the doorway.
+  const entry=new THREE.Group();entry.name='p2-main-entrance';scene.add(entry);
+  [3.25,5.75].forEach(x=>artBox(.12,2.20,.18,0x647481,x,1.1,17.87,entry));
+  artBox(2.62,.13,.18,0x647481,4.5,2.20,17.87,entry);
+  artThreshold(4.5,17.84,2.35,.25);
+  const sign=wallSign('入口 / 出口',4.5,2.04,17.73,Math.PI,1.25,.25,'#ffffff','#386657',34);sign.material.side=THREE.DoubleSide;
+  // Open classroom jambs make the C-class entrance readable from both sides.
+  [29.54,31.66].forEach(x=>artBox(.10,1.45,.18,0x657985,x,.725,11));
+  artThreshold(30.6,11,1.9,.30);
   // 幾個最常經過的門口，直接用實體門檻增加空間分區感。
   [[9,2.5,.30,1.7],[9,7,.30,1.7],[9,13.5,.30,2.5],[12,2,.30,1.8],[12,9,.30,1.8],[12,14,.30,1.8],[28,14,.30,1.8]].forEach(v=>artThreshold(...v));
 }

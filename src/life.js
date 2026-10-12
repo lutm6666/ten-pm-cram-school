@@ -42,10 +42,10 @@ function setKidCrowd(ph,instant,now,kids){
 }
 function tickCrowd(){
   const now=clockT.elapsedTime;
-  extras.forEach(e=>{const p=e.p;
-    if(e.state==="toArrive"&&now>e.at){e.state="arriving";p.visible=true;agentPlace(p,DOOR[0],DOOR[1],Math.PI);setPose(p,false);
+  [...extras].sort((a,b)=>(a.arriveClock??a.at??Infinity)-(b.arriveClock??b.at??Infinity)).forEach(e=>{const p=e.p;
+    if(e.state==="toArrive"&&now>e.at&&enterAgent(p,DOOR,e.home,()=>{e.state="seat";})){e.state="arriving";
       if(Math.random()<.5)emote(p,e.kind==="kid"?pick(["老師好！","我要喝水","今天作業好多","我第一名！"]):pick(["老師好","好熱","今天考什麼？","呼～趕上了"]),2);
-      agentGo(p,e.home[0],e.home[1],e.home[2],()=>{e.state="seat";});}
+    }
     if(e.state==="leaving"&&now>e.leaveAt){e.state="exiting";if(Math.random()<.35)emote(p,["掰掰","回家了～","好餓","明天見"][Math.floor(Math.random()*4)],2);
       agentGo(p,DOOR[0],DOOR[1],0,()=>{p.visible=false;e.state="gone";});}
   });
@@ -84,6 +84,7 @@ function tickAmbient(dt){
   }
 }
 function npcAct(id,n,t){
+  if(n.userData.act==='cover')return 'cover';
   const u=n.userData;if(u.moving)return null;const x=n.position.x,z=n.position.z,ph=crowdPhase;
   if(id==="yun"&&Math.hypot(x-3.75,z-10.3)<1)return (t%12)<7?"type":"phone";
   if(id==="teacher"){if(ph==="class"&&Math.hypot(x-20,z-1.2)<1.2)return "board";if(x<9&&z>5&&z<9)return "cup";}

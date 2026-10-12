@@ -21,6 +21,7 @@ const toMin=s=>{const [h,m]=s.split(":").map(Number);return h*60+m;},fmt=m=>{m=M
 const MIN_PER_SEC=1/4;
 const lineOf=(id,day)=>day===2&&LINES2[id]?LINES2[id]:LINES[id];
 function newGame(lineId,day=1){
+  endQuake();nextEntryAt=0;
   const L=lineOf(lineId,day),name=(store.get("name","")||"").trim();
   const sur=name?(/^[一-鿿]/.test(name)?name[0]:name+" "):"許";
   G={line:L,idx:0,s:{},h:{...L.hidden},f:{},log:[],items:[],sidesDone:{},tName:lineId==="teacher"?sur+"老師":"許老師",pName:name||({yun:"小芸",boss:"何主任",care:"蔡老師"}[lineId]||"你"),name,tipShown:false,status:"",time:"17:20",chapterTitle:""};
@@ -50,7 +51,7 @@ function enterStep(){
   else if(st.auto){mode="walk";renderAll();openStep();}
   else{mode="walk";renderAll();}
 }
-function nextStep(){if(G.idx===0)store.set("tipWalk",true);const st=step();if(st&&st.after)for(const id in st.after)setNPC(id,val(st.after[id],G));G.idx++;path=null;enterStep();}
+function nextStep(){if(G.idx===0)store.set("tipWalk",true);const st=step();if(st?.onClose)st.onClose();if(st&&st.after)for(const id in st.after)setNPC(id,val(st.after[id],G));G.idx++;path=null;enterStep();}
 
 /* ---------- 目標與附近的東西 ---------- */
 function guideTarget(t){const m=targetOf(t);if(t&&t.npc){const u=npcs[t.npc].userData;if(u.moving&&u.anchor)return{...m,x:u.anchor[0],z:u.anchor[1]};}return m;}
@@ -155,6 +156,7 @@ function applyFx(fx){const out=[];for(const k in fx){if(!fx[k])continue;
   return out.join("");}
 function resolveChoice(c,onDone,arg){
   const a=arg!==undefined?arg:G;
+  if(c.onResolve)c.onResolve(a);
   const fx=val(c.fx,a)||{},res=val(c.res,a),log=val(c.log,a);
   if(c.min)spend(c.min);if(c.set)Object.assign(G.f,c.set);if(log)G.log.push([G.time,log]);
   const deltas=applyFx(fx);renderHud();
@@ -165,6 +167,7 @@ function resolveChoice(c,onDone,arg){
   runDialog({pages,chatId,deltas:deltas||`<span class="d">沒有變化</span>`,endLabel:dead?"……":"好",noskip:true,onEnd:()=>dead?finish():onDone()});
 }
 function openStep(){
+  if(step().onOpen)step().onOpen();
   const st=step();if(st.effect)startEffect(st.effect);const carry=G.idx===0&&G.line.carry&&G.day!==2?G.line.carry(G):[];if(st.id==="ev_rain")startRain(12);if(/phone|calls|ymom|bmom|ycalls|ot_group/.test(st.id))ring(2);let pages=val(st.pages,G);const choices=st.choices?val(st.choices,G):null;
   if(carry.length)pages=[...carry,...pages];
   if(G.due!=null&&G.clock>G.due+.5&&!st.auto){const late=Math.floor(G.clock-G.due),k=Math.min(3,Math.ceil(late/5));G.lates++;G.lateMin+=late;const lf=G.line.late||{};const fx={};for(const a in lf.fx||{})fx[a]=lf.fx[a]*k;const d=applyFx(fx);G.log.push([G.time,`遲到 ${late} 分鐘`]);pages=[[null,`你晚了 ${late} 分鐘。${lf.text||""}`],...pages];if(d)G.lateDeltas=d;renderHud();}
@@ -227,6 +230,7 @@ function openCodex(){
 
 /* ---------- 開場與結算 ---------- */
 function showTitle(){
+  endQuake();
   mode="title";G=null;renderAll();$("dlg").hidden=true;$("sheet").hidden=true;$("sheetBg").hidden=true;
   const c=$("cover");c.className="cover";c.hidden=false;const lines=Object.values(LINES);
   if(!LINES[pickedLine])pickedLine="teacher";
@@ -303,6 +307,7 @@ function epilogue(){
 function saveGame(){if(!G)return;store.set("save",{line:G.line.id,day:G.day||1,steps:G.steps.map(s=>({id:s.id,t:s.t})),idx:G.idx,s:G.s,h:G.h,f:G.f,log:G.log,items:G.items,sidesDone:G.sidesDone,clock:G.clock,status:G.status,chapterTitle:G.chapterTitle,lates:G.lates,lateMin:G.lateMin,minis:G.minis,chatUsed:G.chatUsed||[],chatWith:G.chatWith||[],hard:G.hard,pName:G.pName,tName:G.tName,name:G.name,pos:[player.position.x,player.position.z],when:Date.now()});}
 function clearSave(){store.set("save",null);}
 function resumeGame(){
+  endQuake();nextEntryAt=0;
   const sv=store.get("save",null);if(!sv||!LINES[sv.line])return showTitle();
   const L=lineOf(sv.line,sv.day||1);$("cover").hidden=true;startAmbient();
   G={line:L,idx:sv.idx,s:sv.s,h:sv.h,f:sv.f,log:sv.log,items:sv.items,sidesDone:sv.sidesDone,clock:sv.clock,status:sv.status,chapterTitle:sv.chapterTitle,lates:sv.lates||0,lateMin:sv.lateMin||0,minis:sv.minis||{},day:sv.day||1,chatUsed:sv.chatUsed||[],chatWith:sv.chatWith||[],hard:sv.hard,pName:sv.pName,tName:sv.tName,name:sv.name,tipShown:true};
@@ -434,8 +439,9 @@ function tick(){
       if(ix||iz){const cy=Math.cos(CAM.yaw),sy=Math.sin(CAM.yaw);dx=ix*cy+iz*sy;dz=-ix*sy+iz*cy;}
       if(!dx&&!dz&&path&&path.length){const [px,pz]=path[0],vx=px-player.position.x,vz=pz-player.position.z,dd=Math.hypot(vx,vz);if(dd<.08)path.shift();else{dx=vx/dd;dz=vz/dd;}}
       if(dx||dz){const l=Math.hypot(dx,dz);dx/=l;dz/=l;const ox=player.position.x,oz=player.position.z;stepPlayer(ox+dx*3.4*dt,oz+dz*3.4*dt);
-        if(path&&Math.hypot(player.position.x-ox,player.position.z-oz)<.002){G.stuck=(G.stuck||0)+dt;if(G.stuck>.4){G.stuck=0;const end=path[path.length-1];path=findPath(end[0],end[1]);}}else G.stuck=0;player.rotation.y=Math.atan2(dx,dz);G.moving=true;}
-      else G.moving=false;
+        player.userData.stepDistance=Math.hypot(player.position.x-ox,player.position.z-oz);
+        if(path&&player.userData.stepDistance<.002){G.stuck=(G.stuck||0)+dt;if(G.stuck>.4){G.stuck=0;const end=path[path.length-1];path=findPath(end[0],end[1]);}}else G.stuck=0;player.rotation.y=Math.atan2(dx,dz);G.moving=player.userData.stepDistance>.001;}
+      else{G.moving=false;player.userData.stepDistance=0;}
       near=nearest();const key=near?near.type+near.label:"";if(key!==lastNearKey){lastNearKey=key;renderDock();}
       if(guiding&&near&&near.type==="main"&&path&&path.length<=1){path=null;}
       if(guiding&&!(near&&near.type==="main")){G.reg=(G.reg||0)-dt;if(G.reg<=0){G.reg=.6;const tg=guideTarget(step().target);const end=path&&path.length?path[path.length-1]:null;
@@ -447,7 +453,10 @@ function tick(){
     if(mode==="walk"){const z=zoneAt(player.position.x,player.position.z);if(z&&z[0]!==G.zone){G.zone=z[0];if(!G.zonesSeen)G.zonesSeen={};if(!G.zonesSeen[z[0]]){G.zonesSeen[z[0]]=1;showBanner(z[0],(G.line.zoneText&&G.line.zoneText[z[0]])||z[5]);}}}
     const m=targetOf(step()?.target);marker.visible=mode==="walk"&&!!m;if(m)marker.position.set(m.x,m.h+Math.sin(t*3)*.12,m.z);
     tickItemMarks(t);tickEdge();tickTips();
-    tickClock(dt);p2StoryUpdate();tickNight(dt);tickRain(dt);moveNPCs(dt);tickCrowd();if(mode!=="title")tickAmbient(dt);tickFX(dt);
+    tickClock(dt);p2StoryUpdate();tickNight(dt);tickRain(dt);
+    const quakeDialog=step()?.id==='ev_quake'&&mode==='dialog';
+    if(!quakeDialog){moveNPCs(dt);tickCrowd();if(mode!=="title")tickAmbient(dt);}else if(quakeScene&&!quakeScene.covered&&D?.choices)FX.shake=1;
+    tickFX(dt);
     const spk=mode==="dialog"&&D?D.pages[D.i][0]:null,now=performance.now()/1000;
     animPerson(player,dt,t,{walk:mode==="walk"&&G.moving,talk:spk==="me"});tickEmote(player,now);
     for(const id in npcs){const n=npcs[id];if(!n.visible)continue;animPerson(n,dt,t,{walk:n.userData.moving,talk:spk===id,act:npcAct(id,n,t),raise:id==="parent"&&G.line.id==="teacher"&&step()?.id==="ask"&&mode==="walk"});tickEmote(n,now);}

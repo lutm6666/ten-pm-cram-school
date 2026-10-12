@@ -11,6 +11,7 @@ setCrowd=function(ph,instant){
   const now=clockT.elapsedTime;
   const hold=(list,start,spacing)=>list.forEach((e,i)=>{
     const at=start+i*spacing;
+    e.arriveClock=at;e.speed=1.9+(i%5)*.07;
     if(G.clock<at){e.p.visible=false;e.p.userData.path=null;e.p.userData.act=null;e.state='clockWait';e.arriveClock=at;}
     else if(e.state==='clockWait'){e.state='toArrive';e.at=now+(i%4)*.12;}
   });
@@ -24,10 +25,10 @@ if(LINES.care){
   if(snack){snack.npc=snack.npc||{};snack.npc.boss=[P.bossOffice[0],P.bossOffice[1],P.bossOffice[2]||0,PC.door];}
 }
 
-/* C 班共 9 人，阿翔尚未交手機時籃子應該是其他 8 支，不是 12 支。 */
+/* 18:10 同學仍陸續進場，不能在畫面未到齊時保證籃子已有固定數量。 */
 if(LINES.jh){
   const x=LINES.jh.steps.find(s=>s.id==='j_xiang');
-  if(x&&x.pages){const old=x.pages;x.pages=G=>old(G).map(r=>[r[0],typeof r[1]==='string'?r[1].replace('籃子裡已經有十二支手機了。只差他一支。','籃子裡已經有八支手機了。只差他一支。'):r[1]]);}
+  if(x&&x.pages){const old=x.pages;x.pages=G=>old(G).map(r=>[r[0],typeof r[1]==='string'?r[1].replace('籃子裡已經有十二支手機了。只差他一支。','同學陸續把手機放進籃子，阿翔還拿著自己的那一支。'):r[1]]);}
 }
 
 /* 自習室實際以少量代表性模型呈現，不再寫成畫面上看不到的「十幾雙眼睛」。 */

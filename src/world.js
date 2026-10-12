@@ -1,7 +1,7 @@
 /* ================= 3D 樓層 ================= */
 const W=36,H=18;
 const WALLS=[
- [0,0,36,.2],[0,17.8,36,18],[0,0,.2,18],[35.8,0,36,18],
+ [0,0,36,.2],[0,17.8,3.3,18],[5.7,17.8,36,18],[0,0,.2,18],[35.8,0,36,18],
  [27.9,0,28.1,13],[27.9,15,28.1,18],[28,10.9,29.6,11.1],[31.6,10.9,36,11.1],
  [0,4.9,9,5.1],[0,8.9,9,9.1],
  [8.9,0,9.1,1.5],[8.9,3.5,9.1,6],[8.9,8,9.1,12],[8.9,15,9.1,18],
@@ -91,11 +91,16 @@ function tickEmote(p,now){const u=p.userData;if(u.emoteSpr&&now>u.emoteUntil){p.
 /* 肢體動畫 */
 function animPerson(p,dt,t,st={}){
   const u=p.userData;if(!u||!u.rig)return;
-  const act=st.act||u.act;
-  u.walk+=((st.walk?1:0)-u.walk)*Math.min(1,dt*10);if(st.walk)u.phase+=dt*11;
+  const act=st.walk?null:(st.act||u.act);
+  u.walk+=((st.walk?1:0)-u.walk)*Math.min(1,dt*10);
+  if(st.walk)u.phase+=(u.stepDistance??dt*2.6)*Math.PI*2/.95;
+  u.stepDistance=0;
   const w=u.walk,sw=Math.sin(u.phase),br=Math.sin(t*2+u.seed),k=Math.min(1,dt*12),L=(o,v)=>o+(v-o)*k;
   let aL,aR,zL=.05,zR=-.05,hx=0,hy=Math.sin(t*.5+u.seed)*.12,tx=0;
-  if(!u.seated){
+  if(act==='cover'){
+    u.legL.rotation.x=u.legR.rotation.x=-1.25;u.rig.position.y=-.38;
+    aL=aR=-2.8;hx=.55;tx=.65;
+  }else if(!u.seated){
     u.legL.rotation.x=sw*.7*w;u.legR.rotation.x=-sw*.7*w;u.rig.position.y=Math.abs(Math.cos(u.phase))*.06*w;
     aL=-sw*.6*w+br*.04;aR=sw*.6*w-br*.04;tx=.06*w;
     if(act==="phone"){aR=-2.5;zR=-.55;hy=.25;}
@@ -142,7 +147,7 @@ function buildWorld(){
   furn([8.2,16.7,8.75,17.5],1.1,0xdfe6ea);box(.12,.12,.06,0x3b82f6,8.36,.85,16.66);box(.12,.12,.06,0xe11d48,8.6,.85,16.66);
   wallSign("歡迎試聽\n高三學測衝刺班",2.2,1.9,9.12,0,2.2,.9,"#ffd166","#1c2633",50);
   wallSign("去年學測榜單\n頂標 3・前標 11",.22,1.6,15.6,Math.PI/2,2.2,1.1,"#c9302a","#fff6e8",46);
-  wallSign("學測衝刺班 熱烈招生中",4.5,1.7,17.78,Math.PI,3,.5,"#c9302a","#ffffff",46);
+  wallSign("學測衝刺班 熱烈招生中",4.5,2.55,17.78,Math.PI,3,.5,"#c9302a","#ffffff",46);
   const plant=new THREE.Mesh(new THREE.SphereGeometry(.38,8,6),new THREE.MeshLambertMaterial({color:0x5f8a4f}));plant.position.set(.65,.65,9.6);scene.add(plant);solids.push([.25,9.2,1.05,10.0]);
 
   // 主任室
@@ -196,21 +201,73 @@ function makeNPC(id){const c=CHARS[id];const p=person(c.body,{name:`${c.name}｜
 function makePlayer(line){if(player)scene.remove(player);player=person(line.body,{name:`你｜${line.short}`,tagBg:"#d9a21b",hair:0x2a2421});return player;}
 /* 走到某處：坐著的人先站起來；到了如果是椅子就坐下 */
 function agentGo(p,x,z,rot,onArrive){const u=p.userData;
-  const pth=findPathFrom(p.position.x,p.position.z,x,z);if(!pth){p.position.set(x,0,z);p.rotation.y=rot??p.rotation.y;setPose(p,isChair(x,z));onArrive&&onArrive();return;}
-  if(u.seated){setPose(p,false);}pth.push([x,z]);u.path=pth;u.endRot=rot;u.onArrive=onArrive||null;}
-function agentPlace(p,x,z,rot){p.userData.path=null;p.position.set(x,0,z);p.rotation.y=rot??Math.PI;setPose(p,isChair(x,z));}
+  // Ambient offsets and story targets can fall inside a desk. Finish on a free
+  // cell instead of appending an unchecked segment through furniture.
+  if(!isChair(x,z)&&blockedAt(x,z)){const [i,j]=nearestFree(...cellOf(x,z));x=(i+.5)*CELL;z=(j+.5)*CELL;}
+  const pth=findPathFrom(p.position.x,p.position.z,x,z);if(!pth){u.path=null;u.moving=false;u.routeFailed=true;return;}
+  u.routeFailed=false;
+  if(u.seated){u.departSeat=[p.position.x,p.position.z];setPose(p,false);}pth.push([x,z]);u.path=pth;u.endRot=rot;u.onArrive=onArrive||null;}
+function agentPlace(p,x,z,rot){const u=p.userData;u.path=null;u.moving=false;u.stepDistance=0;u.onArrive=null;p.position.set(x,0,z);p.rotation.y=rot??Math.PI;setPose(p,isChair(x,z));}
+let nextEntryAt=0;
+function entryFree(from){return clockT.elapsedTime>=nextEntryAt&&!Object.values(npcs).concat(extras.map(e=>e.p)).some(p=>p.visible&&Math.hypot(p.position.x-from[0],p.position.z-from[1])<.85);}
+function enterAgent(p,from,to,onArrive){
+  if(!entryFree(from))return false;
+  nextEntryAt=clockT.elapsedTime+1.6;p.visible=true;agentPlace(p,from[0],from[1],Math.PI);setPose(p,false);
+  agentGo(p,to[0],to[1],to[2],onArrive);return true;
+}
 function setNPC(id,spec,instant){ // spec: [x,z,rotY] 或 null（不在場）
-  const n=npcs[id]||makeNPC(id);const u=n.userData;if(!spec){n.visible=false;u.path=null;return;}
+  const n=npcs[id]||makeNPC(id);const u=n.userData;if(!spec){n.visible=false;u.path=null;u.entrySpec=null;u.moving=false;return;}
   u.anchor=[spec[0],spec[1],spec[2]??Math.PI];
   const far=Math.hypot(n.position.x-spec[0],n.position.z-spec[1]);
   if(!instant&&n.visible&&far>.3&&far<45){agentGo(n,spec[0],spec[1],spec[2]??Math.PI);return;}
-  if(!instant&&!n.visible&&spec[3]){n.visible=true;agentPlace(n,spec[3][0],spec[3][1],Math.PI);agentGo(n,spec[0],spec[1],spec[2]??Math.PI);return;} // 從別處走進來
+  if(!instant&&!n.visible&&spec[3]){u.entrySpec=spec;if(enterAgent(n,spec[3],u.anchor))u.entrySpec=null;return;}
+  u.entrySpec=null;
   n.visible=true;agentPlace(n,spec[0],spec[1],spec[2]);}
-function moveAgent(n,dt,speed=2.6){const u=n.userData;if(!u.path||!n.visible){u.moving=false;return;}
+function moveAgent(n,dt,speed=2.6){const u=n.userData;u.stepDistance=0;u.moving=false;if(!u.path||!n.visible||u.act==='cover')return;
   if(!u.path.length){u.path=null;u.moving=false;if(u.endRot!=null)n.rotation.y=u.endRot;setPose(n,isChair(n.position.x,n.position.z));const f=u.onArrive;u.onArrive=null;f&&f();return;}
   const [x,z]=u.path[0],vx=x-n.position.x,vz=z-n.position.z,d=Math.hypot(vx,vz);
-  if(d<.06){u.path.shift();return;}const sp=Math.min(d,speed*dt);n.position.x+=vx/d*sp;n.position.z+=vz/d*sp;n.rotation.y=Math.atan2(vx,vz);u.moving=true;}
-function moveNPCs(dt){for(const id in npcs)moveAgent(npcs[id],dt);extras.forEach(e=>moveAgent(e.p,dt,e.speed||2.2));}
+  if(d<.025){u.path.shift();return;}
+  const sp=Math.min(d,speed*dt),nx=n.position.x+vx/d*sp,nz=n.position.z+vz/d*sp;
+  // Following traffic yields before body overlap. Seated people are part of furniture.
+  const actors=Object.values(npcs).concat(extras.map(e=>e.p));
+  const obstacle=actors.find(p=>p!==n&&p.visible&&!p.userData.seated&&Math.hypot(nx-p.position.x,nz-p.position.z)<.66&&Math.hypot(nx-p.position.x,nz-p.position.z)<Math.hypot(n.position.x-p.position.x,n.position.z-p.position.z));
+  if(obstacle){
+    u.yieldTime=(u.yieldTime||0)+dt;
+    if(u.yieldTime>.6){
+      const end=u.path[u.path.length-1],avoid=actors.filter(p=>p!==n&&p.visible&&!p.userData.seated).map(p=>[p.position.x,p.position.z]);
+      const detour=findPathFrom(n.position.x,n.position.z,end[0],end[1],avoid);
+      if(detour){detour.push(end);u.path=detour;}u.yieldTime=0;return;
+    }
+    // A small passing step lets opposing traffic and standing NPCs clear each other.
+    const side=u.passSide||1;for(const sign of [side,-side]){
+      const sx=n.position.x+vz/d*sp*sign,sz=n.position.z-vx/d*sp*sign;
+      if(!blockedAt(sx,sz)&&!actors.some(p=>p!==n&&p.visible&&!p.userData.seated&&Math.hypot(sx-p.position.x,sz-p.position.z)<.66)){
+        n.rotation.y=Math.atan2(sx-n.position.x,sz-n.position.z);n.position.x=sx;n.position.z=sz;u.passSide=sign;u.stepDistance=sp;u.moving=true;return;
+      }
+    }return;
+  }
+  u.yieldTime=0;
+  // The final approach may enter only its own chair footprint; route segments stay on the grid.
+  const ownSeat=u.path.length===1&&isChair(x,z)&&d<.9;
+  if(u.departSeat&&Math.hypot(nx-u.departSeat[0],nz-u.departSeat[1])>.9)u.departSeat=null;
+  const hitSolid=(a,b)=>solids.some(s=>a>s[0]-R&&a<s[2]+R&&b>s[1]-R&&b<s[3]+R&&!(ownSeat&&x>s[0]&&x<s[2]&&z>s[1]&&z<s[3])&&!(u.departSeat&&u.departSeat[0]>s[0]&&u.departSeat[0]<s[2]&&u.departSeat[1]>s[1]&&u.departSeat[1]<s[3]));
+  if(hitSolid(nx,nz)){
+    // Axis-wise escape prevents a smoothed path from cutting a desk corner
+    // after a passing step, without allowing any penetration of the desk.
+    for(const [ax,az] of [[n.position.x,nz],[nx,n.position.z]]){
+      const travel=Math.hypot(ax-n.position.x,az-n.position.z);
+      if(travel>.0001&&!hitSolid(ax,az)&&!actors.some(p=>p!==n&&p.visible&&!p.userData.seated&&Math.hypot(ax-p.position.x,az-p.position.z)<.66)){
+        setPose(n,false);n.rotation.y=Math.atan2(ax-n.position.x,az-n.position.z);n.position.x=ax;n.position.z=az;u.stepDistance=travel;u.moving=true;return;
+      }
+    }
+    u.blockTime=(u.blockTime||0)+dt;if(u.blockTime>.2){const end=u.path[u.path.length-1],reroute=findPathFrom(n.position.x,n.position.z,end[0],end[1]);if(reroute){reroute.push(end);u.path=reroute;}u.blockTime=0;}return;
+  }
+  u.blockTime=0;
+  setPose(n,false);n.position.x=nx;n.position.z=nz;n.rotation.y=Math.atan2(vx,vz);u.stepDistance=sp;u.moving=true;}
+function moveNPCs(dt){
+  for(const id in npcs){const n=npcs[id],u=n.userData;if(u.entrySpec){const s=u.entrySpec;if(enterAgent(n,s[3],u.anchor))u.entrySpec=null;}moveAgent(n,dt);}
+  extras.forEach(e=>moveAgent(e.p,dt,e.speed||2.05));
+}
 function addInfoMark(info){const s=label("i","#ffffff","#5f6b78",40);s.scale.multiplyScalar(.75);s.position.set(info.pos[0],info.h||1.6,info.pos[1]);scene.add(s);infoMarks[info.id]=s;}
 function addSideMark(){const s=label("？","#1c2633","#f0b45a",48);s.scale.multiplyScalar(.75);scene.add(s);return s;}
 /* 收集物：地上一閃一閃的四角星（金色星星加深色外框與影子，淺色地板上也看得到） */
@@ -238,19 +295,21 @@ function blockedAt(x,z,r=R){if(x<r||z<r||x>W-r||z>H-r)return true;for(const s of
 function buildGrid(){gridB=new Uint8Array(GW*GH);for(let j=0;j<GH;j++)for(let i=0;i<GW;i++)gridB[j*GW+i]=blockedAt((i+.5)*CELL,(j+.5)*CELL)?1:0;}
 const cellOf=(x,z)=>[Math.max(0,Math.min(GW-1,Math.floor(x/CELL))),Math.max(0,Math.min(GH-1,Math.floor(z/CELL)))];
 function nearestFree(i,j){if(!gridB[j*GW+i])return[i,j];for(let r=1;r<40;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;const a=i+di,b=j+dj;if(a>=0&&b>=0&&a<GW&&b<GH&&!gridB[b*GW+a])return[a,b];}return[i,j];}
-function los(ax,az,bx,bz){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.05);for(let k=1;k<=n;k++){const t=k/n;if(blockedAt(ax+(bx-ax)*t,az+(bz-az)*t,R+.07))return false;}return true;}
+function los(ax,az,bx,bz,avoid=[]){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.05);for(let k=1;k<=n;k++){const t=k/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t;if(blockedAt(x,z,R+.07)||avoid.some(p=>Math.hypot(x-p[0],z-p[1])<.72))return false;}return true;}
 function findPath(tx,tz){return findPathFrom(player.position.x,player.position.z,tx,tz);}
-function findPathFrom(fx,fz,tx,tz){
+function findPathFrom(fx,fz,tx,tz,avoid=[]){
+  const routeGrid=avoid.length?gridB.slice():gridB;
+  if(avoid.length)for(let j=0;j<GH;j++)for(let i=0;i<GW;i++)if(avoid.some(p=>Math.hypot((i+.5)*CELL-p[0],(j+.5)*CELL-p[1])<.72))routeGrid[j*GW+i]=1;
   const [si,sj]=nearestFree(...cellOf(fx,fz)),[gi,gj]=nearestFree(...cellOf(tx,tz));
   const N=GW*GH,g=new Float32Array(N).fill(1e9),prev=new Int32Array(N).fill(-1),closed=new Uint8Array(N),s=sj*GW+si,goal=gj*GW+gi;g[s]=0;
   const h=k=>Math.hypot(k%GW-gi,Math.floor(k/GW)-gj);const open=[s];
   while(open.length){let bi=0,bf=g[open[0]]+h(open[0]);for(let k=1;k<open.length;k++){const f=g[open[k]]+h(open[k]);if(f<bf){bf=f;bi=k;}}
     const cur=open[bi];open[bi]=open[open.length-1];open.pop();if(cur===goal)break;if(closed[cur])continue;closed[cur]=1;const ci=cur%GW,cj=Math.floor(cur/GW);
     for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){if(!di&&!dj)continue;const a=ci+di,b=cj+dj;if(a<0||b<0||a>=GW||b>=GH)continue;const k=b*GW+a;
-      if(gridB[k]||closed[k])continue;if(di&&dj&&(gridB[cj*GW+a]||gridB[b*GW+ci]))continue;const ng=g[cur]+(di&&dj?1.414:1);if(ng<g[k]){g[k]=ng;prev[k]=cur;open.push(k);}}}
+      if(routeGrid[k]||closed[k])continue;if(di&&dj&&(routeGrid[cj*GW+a]||routeGrid[b*GW+ci]))continue;const ng=g[cur]+(di&&dj?1.414:1);if(ng<g[k]){g[k]=ng;prev[k]=cur;open.push(k);}}}
   if(prev[goal]<0&&goal!==s)return null;
   const pts=[];for(let k=goal;k!==-1&&k!==s;k=prev[k])pts.unshift([(k%GW+.5)*CELL,(Math.floor(k/GW)+.5)*CELL]);
-  const out=[];let ax=fx,az=fz,i=0;while(i<pts.length){let j=pts.length-1;while(j>i&&!los(ax,az,pts[j][0],pts[j][1]))j--;out.push(pts[j]);[ax,az]=pts[j];i=j+1;}
+  const out=[];let ax=fx,az=fz,i=0;while(i<pts.length){let j=pts.length-1;while(j>i&&!los(ax,az,pts[j][0],pts[j][1],avoid))j--;out.push(pts[j]);[ax,az]=pts[j];i=j+1;}
   return out;
 }
 function stepPlayer(x,z){const p=player.position;if(blockedAt(p.x,p.z)){p.x=x;p.z=z;return;}if(!blockedAt(x,p.z))p.x=x;if(!blockedAt(p.x,z))p.z=z;}

@@ -15,7 +15,7 @@ async function drain(){for(let g=0;g<60;g++){
  if(await vis('#dlg .choice')){await p.click('#dlg .choice >> nth=1');continue;}
  if(await vis('[data-act=dnext]')){await p.click('[data-act=dnext]');continue;}
  return;}}
-async function doStep(){await drain();await p.locator('[data-act=guide]:visible').first().click();for(let k=0;k<300;k++){await p.waitForTimeout(60);if(await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'}))break;}await p.click('#actBtn');await drain();}
+async function doStep(){await drain();if(await vis('.report'))return;await p.locator('[data-act=guide]:visible').first().click();await p.waitForFunction(()=>__dbg.near()?.type==='main',{},{timeout:45000});await p.click('#actBtn');await drain();}
 await drain();await doStep();await doStep();
 const before=await p.evaluate(()=>[__dbg.G.idx,__dbg.G.time,__dbg.G.log.length]);
 await p.click('[data-act=home]');await p.waitForTimeout(200);
@@ -23,7 +23,9 @@ console.log('resume btn:',await p.textContent('[data-act=resume]').catch(()=>'NO
 await p.click('[data-act=resume]');await p.waitForTimeout(300);
 const after=await p.evaluate(()=>[__dbg.G.idx,__dbg.G.time,__dbg.G.log.length,__dbg.mode]);
 console.log('before',before,'after',after);
+require('assert').deepStrictEqual(after.slice(0,3),before);
 for(let i=0;i<14;i++){if(await vis('.report'))break;await doStep();}
 console.log('report',await p.textContent('.report h2').catch(()=>'NONE'),'resume after finish:',await p.isVisible('[data-act=resume]'),errs);
+require('assert').strictEqual(await vis('.report'),true);require('assert').deepStrictEqual(errs,[]);
 await p.click('[data-act=codex]').catch(()=>{});await p.click('[data-tab=ach]').catch(()=>{});console.log((await p.textContent('#sheet').catch(()=>'')).slice(0,200));
 await b.close();})();

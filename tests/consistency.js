@@ -42,7 +42,8 @@ const {chromium}=require('playwright');
   assert(a.totalCareKids===8,'安親班到班後場景總數為 8 個小朋友',JSON.stringify(a));
 
   // 主任說 17:30 回分校，點心段落要真的看得到他從門口回來。
-  await p.evaluate(()=>__dbg.jump('c_snack'));await p.waitForTimeout(150);
+  await p.evaluate(()=>__dbg.jump('c_snack'));
+  await p.waitForFunction(()=>__consistencyAudit().movingNpcs.includes('boss'),{},{timeout:10000});
   a=await audit();
   assert(a.movingNpcs.includes('boss'),'17:30 左右主任真的回到分校',JSON.stringify(a));
 
@@ -71,7 +72,8 @@ const {chromium}=require('playwright');
   await p.evaluate(()=>__dbg.jump('erase'));await p.waitForTimeout(250);
   a=await audit();
   assert(a.visibleHigh>0&&a.visibleStudy===0,'18:30 高三已到班，但 19:00 自習背景生仍未提早出現',JSON.stringify(a));
-  await p.evaluate(()=>__dbg.jump('zhe'));await p.waitForTimeout(1200);
+  await p.evaluate(()=>__dbg.jump('zhe'));
+  await p.waitForFunction(()=>__consistencyAudit().visibleStudy>0,{},{timeout:10000});
   a=await audit();
   assert(a.visibleStudy>0,'19:00 後自習室背景學生開始進場',JSON.stringify(a));
 

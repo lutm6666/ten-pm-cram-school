@@ -45,8 +45,9 @@ function p2EnvFloors(){
   p2Floor(7.96,6.96,32,14.5,'jhStorage','#d8d1c6','rgba(100,88,76,.10)',[117,103,90],4,3.2);
 }
 
-function p2CabinetUnit(x,z,w,h,d,bodyMat,doorMat,parent){
+function p2CabinetUnit(x,z,w,h,d,bodyMat,doorMat,parent,ry=0){
   const g=new THREE.Group();g.position.set(x,0,z);(parent||scene).add(g);
+  g.rotation.y=ry;g.userData.frontYaw=ry;g.name='p2-cabinet';
   p2Mesh(fmChamferGeo(w,h,d,.045),bodyMat,g,0,h/2,0);
   const gap=.035,doorW=(w-gap*3)/2;
   [-1,1].forEach(s=>{
@@ -84,9 +85,10 @@ function p2LoungeTable(r){
 function p2Fridge(r){
   solids.push(r);const cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
   const body=p2Std('fridgeBody',0xe5e8e9,.55,.15),edge=p2Std('fridgeEdge',0xa1a8ae,.36,.46);
-  p2Mesh(fmChamferGeo(.78,1.68,.98,.07),body,g,0,.84,0);
-  p2Mesh(fmChamferGeo(.69,.018,.035,.009),edge,g,0,1.05,.505);
-  p2Mesh(fmChamferGeo(.035,.42,.035,.009),edge,g,.27,.86,.51);
+  g.rotation.y=Math.PI/2;g.name='p2-fridge';g.userData.frontYaw=g.rotation.y;
+  p2Mesh(fmChamferGeo(.98,1.68,.78,.07),body,g,0,.84,0);
+  p2Mesh(fmChamferGeo(.89,.018,.035,.009),edge,g,0,1.05,.405);
+  p2Mesh(fmChamferGeo(.035,.42,.035,.009),edge,g,.37,.86,.41);
 }
 function p2CounterCabinet(r,h){
   solids.push(r);const w=r[2]-r[0],d=r[3]-r[1],cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
@@ -97,11 +99,12 @@ function p2CounterCabinet(r,h){
 function p2JhLockers(r){
   solids.push(r);const w=r[2]-r[0],d=r[3]-r[1],cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
   const body=p2Std('lockerBody',0x71808e,.58,.12),door=p2Std('lockerDoor',0x8796a4,.62,.10),handle=p2Std('lockerHandle',0x444d55,.32,.55);
-  p2Mesh(fmChamferGeo(w,1.48,d,.035),body,g,0,.74,0);
-  const rows=4,cols=2;for(let r0=0;r0<rows;r0++)for(let c=0;c<cols;c++){
-    const yy=.20+r0*.35,xx=(c?1:-1)*.30;
-    p2Mesh(fmChamferGeo(.52,.31,.035,.015),door,g,xx,yy,d/2+.023);
-    p2Mesh(fmChamferGeo(.035,.08,.022,.007),handle,g,xx+(c?-.16:.16),yy,d/2+.055);
+  g.rotation.y=-Math.PI/2;g.name='p2-lockers';g.userData.frontYaw=g.rotation.y;
+  p2Mesh(fmChamferGeo(d,1.48,w,.035),body,g,0,.74,0);
+  const rows=4,cols=8;for(let r0=0;r0<rows;r0++)for(let c=0;c<cols;c++){
+    const yy=.20+r0*.35,xx=-d/2+(c+.5)*d/cols;
+    p2Mesh(fmChamferGeo(d/cols-.045,.31,.035,.015),door,g,xx,yy,w/2+.023);
+    p2Mesh(fmChamferGeo(.035,.08,.022,.007),handle,g,xx+.20,yy,w/2+.055);
   }
 }
 
@@ -133,16 +136,16 @@ function p2RoomIdentity(){
   wallSign('代課・請假・影印提醒',5.75,1.45,5.13,0,2.2,.48,'#3d4b55','#f0e4c8',38);
 
   // B 班：右側教材櫃 + 公告欄。
-  p2CabinetUnit(27.25,8.55,.75,1.18,.42,p2Std('classCab',0x7b858b,.60,.14),p2Std('classCabDoor',0x9da6aa,.66,.10));
+  p2CabinetUnit(27.25,8.55,.75,1.18,.42,p2Std('classCab',0x7b858b,.60,.14),p2Std('classCabDoor',0x9da6aa,.66,.10),null,-Math.PI/2);
   wallSign('高三 B 班\n本週進度：空間向量',27.72,1.48,7.15,-Math.PI/2,2.0,.68,'#64462f','#f1dfb9',38);
 
   // 自習室：安靜區書架與規則板。
-  const shelf=p2CabinetUnit(27.20,16.35,.82,1.25,.40,p2Std('studyShelf',0x66766c,.68,.06),p2Std('studyShelfDoor',0x87958a,.72,.04));
+  const shelf=p2CabinetUnit(27.20,16.35,.82,1.25,.40,p2Std('studyShelf',0x66766c,.68,.06),p2Std('studyShelfDoor',0x87958a,.72,.04),null,-Math.PI/2);
   p2ShelfBooks(shelf,0,.98,.225,.55,6);
   wallSign('自習室\n手機靜音・小聲討論',12.18,1.48,16.0,Math.PI/2,1.8,.68,'#36564a','#eef1e9',38);
 
   // 國中 C 班：彩色教材櫃與會考公告，語彙和高中區分開。
-  p2CabinetUnit(35.35,8.65,.72,1.10,.42,p2Std('jhCab',0x678b88,.62,.08),p2Std('jhCabDoor',0x86aaa5,.70,.04));
+  p2CabinetUnit(35.35,8.65,.72,1.10,.42,p2Std('jhCab',0x678b88,.62,.08),p2Std('jhCabDoor',0x86aaa5,.70,.04),null,-Math.PI/2);
   wallSign('會考倒數\n單字・作文・複習考',35.72,1.48,7.20,-Math.PI/2,1.9,.72,'#2f6657','#e8f0df',38);
 
   // 國中部置物區：手搖飲／書包提示板，和教室形成明顯切換。

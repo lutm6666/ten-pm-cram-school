@@ -119,6 +119,7 @@ setCrowd=function(ph,instant){
   const now=clockT.elapsedTime;
   extras.filter(e=>e.kind==='jh').forEach((e,i)=>{
     const at=18*60+i*1.4;
+    e.arriveClock=at;e.speed=1.9+(i%4)*.07;
     if(G.clock<at){
       e.p.visible=false;e.p.userData.path=null;e.p.userData.act=null;e.state='clockWait';e.arriveClock=at;
     }else if(e.state==='clockWait'){
@@ -155,7 +156,7 @@ function consNpcReady(n){return !!(n&&n.visible&&!n.userData.path&&!n.userData.m
 
 targetOf=function(t){
   t=consTarget(t);if(!t)return null;
-  if(t.npc){const n=npcs[t.npc];if(!n||!n.visible)return null;return{x:n.position.x,z:n.position.z,h:n.userData.top+.8,name:CHARS[t.npc].name,kind:'npc',id:t.npc};}
+  if(t.npc){const n=npcs[t.npc];if(!n||(!n.visible&&!n.userData.entrySpec))return null;const a=!n.visible&&n.userData.anchor;return{x:a?a[0]:n.position.x,z:a?a[1]:n.position.z,h:n.userData.top+.8,name:CHARS[t.npc].name,kind:'npc',id:t.npc};}
   const s=SPOTS[t.spot];if(!s)return null;return{x:s.pos[0],z:s.pos[1],h:s.h+.5,name:s.name,kind:'spot'};
 };
 guideTarget=function(t){

@@ -1,12 +1,24 @@
 /* ================= 隨機事件：每一輪抽兩件，插在固定的空檔 ================= */
 const byLine=(G,m)=>m[G.line.id]||(G.line.id==="care"?m.yun:G.line.id==="jh"?m.teacher:null)||{};
+// Earthquake narration refers to the people actually near the player, even before class.
+let quakeScene=null;
+function beginQuake(){
+  const z=zoneAt(player.position.x,player.position.z),zone=z&&z[0]||'走廊';
+  const people=Object.values(npcs).concat(extras.map(e=>e.p)).filter(p=>p.visible&&Math.hypot(p.position.x-player.position.x,p.position.z-player.position.z)<4&&zoneAt(p.position.x,p.position.z)?.[0]===zone);
+  quakeScene={zone,people,covered:false,classroom:zone.includes('教室')&&people.some(p=>p.userData.seated)};
+}
+function coverQuake(){if(!quakeScene)return;quakeScene.covered=true;FX.shake=0;[player,...quakeScene.people].forEach(p=>{p.userData.quakePose={act:p.userData.act,seated:p.userData.seated};p.userData.act='cover';p.userData.moving=false;});}
+function endQuake(){
+  if(quakeScene)[player,...quakeScene.people].forEach(p=>{const u=p.userData,old=u.quakePose;if(old){u.act=old.act;setPose(p,old.seated);u.rig.position.y=old.seated&&u.kid?.22:0;delete u.quakePose;}});
+  quakeScene=null;FX.shake=0;
+}
 const EVENTS=[
- {id:"quake",phases:["pre","class","break"],make:()=>({auto:true,effect:"shake",goal:"地震！",
-  pages:G=>[[null,"桌子突然晃了起來。吊燈在晃，有人尖叫了一聲。"],[null,"是地震。大概三級，晃了十秒左右。"]],
+ {id:"quake",phases:["pre","class","break"],make:()=>({auto:true,effect:"shake",goal:"地震！",onOpen:beginQuake,onClose:endQuake,
+  pages:G=>[[null,`${quakeScene.zone}的地板突然晃了起來。是地震。`],[null,quakeScene.classroom?"桌椅還在晃，附近的同學看著你，等你指示。":"晃動還沒停。先顧好眼前的人，遠離玻璃與可能倒下的櫃子。"]],
   choices:G=>[
-   {label:"叫大家躲到桌子底下",fx:G=>byLine(G,{teacher:{voice:-5,stu:6},yun:{ord:8,pat:-3},boss:{calm:-3,rep:5}}),log:"地震時叫大家躲桌下",res:[[null,"大家鑽到桌子底下。停了之後有人笑出來：「老師你躲最快。」氣氛反而輕鬆了。"]]},
-   {label:"先穩住，等它停",fx:G=>byLine(G,{teacher:{stu:2},yun:{pat:3},boss:{calm:5}}),log:"地震時先穩住",res:[[null,"十秒後停了。你深呼吸一下，大家也跟著安靜下來。"]]},
-   {label:"繼續做事，當作沒事",fx:G=>byLine(G,{teacher:{stu:-5},yun:{ord:-5},boss:{rep:-3}}),log:"地震時照常做事",res:[[null,"震完了，一半的人在滑手機看地震報告。"]]}]})},
+   {label:"就近趴下、掩護、穩住",onResolve:coverQuake,fx:G=>byLine(G,{teacher:{voice:-5,stu:6},yun:{ord:8,pat:-3},boss:{calm:-3,rep:5}}),log:"地震時就近掩護",res:G=>[[null,quakeScene.classroom?"你和附近的同學低下身、護住頭頸。片刻後晃動停了，大家仍維持掩護姿勢，確認安全再起身。":`此刻你在${quakeScene.zone}。你${quakeScene.people.length?'提醒身邊的人一起':''}蹲低、護住頭頸。片刻後晃動停了，先確認周圍安全，再起身。`]]},
+   {label:"先穩住，等它停",onResolve:()=>{FX.shake=0;},fx:G=>byLine(G,{teacher:{stu:2},yun:{pat:3},boss:{calm:5}}),log:"地震時先穩住",res:[[null,"片刻後晃動停了。你深呼吸一下，確認身邊的人是否平安。"]]},
+   {label:"繼續做事，當作沒事",onResolve:()=>{FX.shake=0;},fx:G=>byLine(G,{teacher:{stu:-5},yun:{ord:-5},boss:{rep:-3}}),log:"地震時照常做事",res:[[null,"震完了，你才停下手邊的事，拿手機查看地震消息。"]]}]})},
  {id:"blackout",phases:["pre","class","break"],make:()=>({auto:true,effect:"dark",goal:"停電了",
   pages:G=>[[null,"燈閃了兩下，全暗。冷氣「咚」一聲停了。"],[null,"三秒後燈亮了，冷氣沒有回來。整層樓開始變熱。"]],
   choices:G=>[

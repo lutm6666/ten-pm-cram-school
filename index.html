@@ -408,7 +408,7 @@ const SIDES={};
 /* ================= 3D 樓層 ================= */
 const W=36,H=18;
 const WALLS=[
- [0,0,36,.2],[0,17.8,36,18],[0,0,.2,18],[35.8,0,36,18],
+ [0,0,36,.2],[0,17.8,3.3,18],[5.7,17.8,36,18],[0,0,.2,18],[35.8,0,36,18],
  [27.9,0,28.1,13],[27.9,15,28.1,18],[28,10.9,29.6,11.1],[31.6,10.9,36,11.1],
  [0,4.9,9,5.1],[0,8.9,9,9.1],
  [8.9,0,9.1,1.5],[8.9,3.5,9.1,6],[8.9,8,9.1,12],[8.9,15,9.1,18],
@@ -498,11 +498,16 @@ function tickEmote(p,now){const u=p.userData;if(u.emoteSpr&&now>u.emoteUntil){p.
 /* 肢體動畫 */
 function animPerson(p,dt,t,st={}){
   const u=p.userData;if(!u||!u.rig)return;
-  const act=st.act||u.act;
-  u.walk+=((st.walk?1:0)-u.walk)*Math.min(1,dt*10);if(st.walk)u.phase+=dt*11;
+  const act=st.walk?null:(st.act||u.act);
+  u.walk+=((st.walk?1:0)-u.walk)*Math.min(1,dt*10);
+  if(st.walk)u.phase+=(u.stepDistance??dt*2.6)*Math.PI*2/.95;
+  u.stepDistance=0;
   const w=u.walk,sw=Math.sin(u.phase),br=Math.sin(t*2+u.seed),k=Math.min(1,dt*12),L=(o,v)=>o+(v-o)*k;
   let aL,aR,zL=.05,zR=-.05,hx=0,hy=Math.sin(t*.5+u.seed)*.12,tx=0;
-  if(!u.seated){
+  if(act==='cover'){
+    u.legL.rotation.x=u.legR.rotation.x=-1.25;u.rig.position.y=-.38;
+    aL=aR=-2.8;hx=.55;tx=.65;
+  }else if(!u.seated){
     u.legL.rotation.x=sw*.7*w;u.legR.rotation.x=-sw*.7*w;u.rig.position.y=Math.abs(Math.cos(u.phase))*.06*w;
     aL=-sw*.6*w+br*.04;aR=sw*.6*w-br*.04;tx=.06*w;
     if(act==="phone"){aR=-2.5;zR=-.55;hy=.25;}
@@ -549,7 +554,7 @@ function buildWorld(){
   furn([8.2,16.7,8.75,17.5],1.1,0xdfe6ea);box(.12,.12,.06,0x3b82f6,8.36,.85,16.66);box(.12,.12,.06,0xe11d48,8.6,.85,16.66);
   wallSign("歡迎試聽\n高三學測衝刺班",2.2,1.9,9.12,0,2.2,.9,"#ffd166","#1c2633",50);
   wallSign("去年學測榜單\n頂標 3・前標 11",.22,1.6,15.6,Math.PI/2,2.2,1.1,"#c9302a","#fff6e8",46);
-  wallSign("學測衝刺班 熱烈招生中",4.5,1.7,17.78,Math.PI,3,.5,"#c9302a","#ffffff",46);
+  wallSign("學測衝刺班 熱烈招生中",4.5,2.55,17.78,Math.PI,3,.5,"#c9302a","#ffffff",46);
   const plant=new THREE.Mesh(new THREE.SphereGeometry(.38,8,6),new THREE.MeshLambertMaterial({color:0x5f8a4f}));plant.position.set(.65,.65,9.6);scene.add(plant);solids.push([.25,9.2,1.05,10.0]);
 
   // 主任室
@@ -603,21 +608,73 @@ function makeNPC(id){const c=CHARS[id];const p=person(c.body,{name:`${c.name}｜
 function makePlayer(line){if(player)scene.remove(player);player=person(line.body,{name:`你｜${line.short}`,tagBg:"#d9a21b",hair:0x2a2421});return player;}
 /* 走到某處：坐著的人先站起來；到了如果是椅子就坐下 */
 function agentGo(p,x,z,rot,onArrive){const u=p.userData;
-  const pth=findPathFrom(p.position.x,p.position.z,x,z);if(!pth){p.position.set(x,0,z);p.rotation.y=rot??p.rotation.y;setPose(p,isChair(x,z));onArrive&&onArrive();return;}
-  if(u.seated){setPose(p,false);}pth.push([x,z]);u.path=pth;u.endRot=rot;u.onArrive=onArrive||null;}
-function agentPlace(p,x,z,rot){p.userData.path=null;p.position.set(x,0,z);p.rotation.y=rot??Math.PI;setPose(p,isChair(x,z));}
+  // Ambient offsets and story targets can fall inside a desk. Finish on a free
+  // cell instead of appending an unchecked segment through furniture.
+  if(!isChair(x,z)&&blockedAt(x,z)){const [i,j]=nearestFree(...cellOf(x,z));x=(i+.5)*CELL;z=(j+.5)*CELL;}
+  const pth=findPathFrom(p.position.x,p.position.z,x,z);if(!pth){u.path=null;u.moving=false;u.routeFailed=true;return;}
+  u.routeFailed=false;
+  if(u.seated){u.departSeat=[p.position.x,p.position.z];setPose(p,false);}pth.push([x,z]);u.path=pth;u.endRot=rot;u.onArrive=onArrive||null;}
+function agentPlace(p,x,z,rot){const u=p.userData;u.path=null;u.moving=false;u.stepDistance=0;u.onArrive=null;p.position.set(x,0,z);p.rotation.y=rot??Math.PI;setPose(p,isChair(x,z));}
+let nextEntryAt=0;
+function entryFree(from){return clockT.elapsedTime>=nextEntryAt&&!Object.values(npcs).concat(extras.map(e=>e.p)).some(p=>p.visible&&Math.hypot(p.position.x-from[0],p.position.z-from[1])<.85);}
+function enterAgent(p,from,to,onArrive){
+  if(!entryFree(from))return false;
+  nextEntryAt=clockT.elapsedTime+1.6;p.visible=true;agentPlace(p,from[0],from[1],Math.PI);setPose(p,false);
+  agentGo(p,to[0],to[1],to[2],onArrive);return true;
+}
 function setNPC(id,spec,instant){ // spec: [x,z,rotY] 或 null（不在場）
-  const n=npcs[id]||makeNPC(id);const u=n.userData;if(!spec){n.visible=false;u.path=null;return;}
+  const n=npcs[id]||makeNPC(id);const u=n.userData;if(!spec){n.visible=false;u.path=null;u.entrySpec=null;u.moving=false;return;}
   u.anchor=[spec[0],spec[1],spec[2]??Math.PI];
   const far=Math.hypot(n.position.x-spec[0],n.position.z-spec[1]);
   if(!instant&&n.visible&&far>.3&&far<45){agentGo(n,spec[0],spec[1],spec[2]??Math.PI);return;}
-  if(!instant&&!n.visible&&spec[3]){n.visible=true;agentPlace(n,spec[3][0],spec[3][1],Math.PI);agentGo(n,spec[0],spec[1],spec[2]??Math.PI);return;} // 從別處走進來
+  if(!instant&&!n.visible&&spec[3]){u.entrySpec=spec;if(enterAgent(n,spec[3],u.anchor))u.entrySpec=null;return;}
+  u.entrySpec=null;
   n.visible=true;agentPlace(n,spec[0],spec[1],spec[2]);}
-function moveAgent(n,dt,speed=2.6){const u=n.userData;if(!u.path||!n.visible){u.moving=false;return;}
+function moveAgent(n,dt,speed=2.6){const u=n.userData;u.stepDistance=0;u.moving=false;if(!u.path||!n.visible||u.act==='cover')return;
   if(!u.path.length){u.path=null;u.moving=false;if(u.endRot!=null)n.rotation.y=u.endRot;setPose(n,isChair(n.position.x,n.position.z));const f=u.onArrive;u.onArrive=null;f&&f();return;}
   const [x,z]=u.path[0],vx=x-n.position.x,vz=z-n.position.z,d=Math.hypot(vx,vz);
-  if(d<.06){u.path.shift();return;}const sp=Math.min(d,speed*dt);n.position.x+=vx/d*sp;n.position.z+=vz/d*sp;n.rotation.y=Math.atan2(vx,vz);u.moving=true;}
-function moveNPCs(dt){for(const id in npcs)moveAgent(npcs[id],dt);extras.forEach(e=>moveAgent(e.p,dt,e.speed||2.2));}
+  if(d<.025){u.path.shift();return;}
+  const sp=Math.min(d,speed*dt),nx=n.position.x+vx/d*sp,nz=n.position.z+vz/d*sp;
+  // Following traffic yields before body overlap. Seated people are part of furniture.
+  const actors=Object.values(npcs).concat(extras.map(e=>e.p));
+  const obstacle=actors.find(p=>p!==n&&p.visible&&!p.userData.seated&&Math.hypot(nx-p.position.x,nz-p.position.z)<.66&&Math.hypot(nx-p.position.x,nz-p.position.z)<Math.hypot(n.position.x-p.position.x,n.position.z-p.position.z));
+  if(obstacle){
+    u.yieldTime=(u.yieldTime||0)+dt;
+    if(u.yieldTime>.6){
+      const end=u.path[u.path.length-1],avoid=actors.filter(p=>p!==n&&p.visible&&!p.userData.seated).map(p=>[p.position.x,p.position.z]);
+      const detour=findPathFrom(n.position.x,n.position.z,end[0],end[1],avoid);
+      if(detour){detour.push(end);u.path=detour;}u.yieldTime=0;return;
+    }
+    // A small passing step lets opposing traffic and standing NPCs clear each other.
+    const side=u.passSide||1;for(const sign of [side,-side]){
+      const sx=n.position.x+vz/d*sp*sign,sz=n.position.z-vx/d*sp*sign;
+      if(!blockedAt(sx,sz)&&!actors.some(p=>p!==n&&p.visible&&!p.userData.seated&&Math.hypot(sx-p.position.x,sz-p.position.z)<.66)){
+        n.rotation.y=Math.atan2(sx-n.position.x,sz-n.position.z);n.position.x=sx;n.position.z=sz;u.passSide=sign;u.stepDistance=sp;u.moving=true;return;
+      }
+    }return;
+  }
+  u.yieldTime=0;
+  // The final approach may enter only its own chair footprint; route segments stay on the grid.
+  const ownSeat=u.path.length===1&&isChair(x,z)&&d<.9;
+  if(u.departSeat&&Math.hypot(nx-u.departSeat[0],nz-u.departSeat[1])>.9)u.departSeat=null;
+  const hitSolid=(a,b)=>solids.some(s=>a>s[0]-R&&a<s[2]+R&&b>s[1]-R&&b<s[3]+R&&!(ownSeat&&x>s[0]&&x<s[2]&&z>s[1]&&z<s[3])&&!(u.departSeat&&u.departSeat[0]>s[0]&&u.departSeat[0]<s[2]&&u.departSeat[1]>s[1]&&u.departSeat[1]<s[3]));
+  if(hitSolid(nx,nz)){
+    // Axis-wise escape prevents a smoothed path from cutting a desk corner
+    // after a passing step, without allowing any penetration of the desk.
+    for(const [ax,az] of [[n.position.x,nz],[nx,n.position.z]]){
+      const travel=Math.hypot(ax-n.position.x,az-n.position.z);
+      if(travel>.0001&&!hitSolid(ax,az)&&!actors.some(p=>p!==n&&p.visible&&!p.userData.seated&&Math.hypot(ax-p.position.x,az-p.position.z)<.66)){
+        setPose(n,false);n.rotation.y=Math.atan2(ax-n.position.x,az-n.position.z);n.position.x=ax;n.position.z=az;u.stepDistance=travel;u.moving=true;return;
+      }
+    }
+    u.blockTime=(u.blockTime||0)+dt;if(u.blockTime>.2){const end=u.path[u.path.length-1],reroute=findPathFrom(n.position.x,n.position.z,end[0],end[1]);if(reroute){reroute.push(end);u.path=reroute;}u.blockTime=0;}return;
+  }
+  u.blockTime=0;
+  setPose(n,false);n.position.x=nx;n.position.z=nz;n.rotation.y=Math.atan2(vx,vz);u.stepDistance=sp;u.moving=true;}
+function moveNPCs(dt){
+  for(const id in npcs){const n=npcs[id],u=n.userData;if(u.entrySpec){const s=u.entrySpec;if(enterAgent(n,s[3],u.anchor))u.entrySpec=null;}moveAgent(n,dt);}
+  extras.forEach(e=>moveAgent(e.p,dt,e.speed||2.05));
+}
 function addInfoMark(info){const s=label("i","#ffffff","#5f6b78",40);s.scale.multiplyScalar(.75);s.position.set(info.pos[0],info.h||1.6,info.pos[1]);scene.add(s);infoMarks[info.id]=s;}
 function addSideMark(){const s=label("？","#1c2633","#f0b45a",48);s.scale.multiplyScalar(.75);scene.add(s);return s;}
 /* 收集物：地上一閃一閃的四角星（金色星星加深色外框與影子，淺色地板上也看得到） */
@@ -645,19 +702,21 @@ function blockedAt(x,z,r=R){if(x<r||z<r||x>W-r||z>H-r)return true;for(const s of
 function buildGrid(){gridB=new Uint8Array(GW*GH);for(let j=0;j<GH;j++)for(let i=0;i<GW;i++)gridB[j*GW+i]=blockedAt((i+.5)*CELL,(j+.5)*CELL)?1:0;}
 const cellOf=(x,z)=>[Math.max(0,Math.min(GW-1,Math.floor(x/CELL))),Math.max(0,Math.min(GH-1,Math.floor(z/CELL)))];
 function nearestFree(i,j){if(!gridB[j*GW+i])return[i,j];for(let r=1;r<40;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;const a=i+di,b=j+dj;if(a>=0&&b>=0&&a<GW&&b<GH&&!gridB[b*GW+a])return[a,b];}return[i,j];}
-function los(ax,az,bx,bz){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.05);for(let k=1;k<=n;k++){const t=k/n;if(blockedAt(ax+(bx-ax)*t,az+(bz-az)*t,R+.07))return false;}return true;}
+function los(ax,az,bx,bz,avoid=[]){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.05);for(let k=1;k<=n;k++){const t=k/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t;if(blockedAt(x,z,R+.07)||avoid.some(p=>Math.hypot(x-p[0],z-p[1])<.72))return false;}return true;}
 function findPath(tx,tz){return findPathFrom(player.position.x,player.position.z,tx,tz);}
-function findPathFrom(fx,fz,tx,tz){
+function findPathFrom(fx,fz,tx,tz,avoid=[]){
+  const routeGrid=avoid.length?gridB.slice():gridB;
+  if(avoid.length)for(let j=0;j<GH;j++)for(let i=0;i<GW;i++)if(avoid.some(p=>Math.hypot((i+.5)*CELL-p[0],(j+.5)*CELL-p[1])<.72))routeGrid[j*GW+i]=1;
   const [si,sj]=nearestFree(...cellOf(fx,fz)),[gi,gj]=nearestFree(...cellOf(tx,tz));
   const N=GW*GH,g=new Float32Array(N).fill(1e9),prev=new Int32Array(N).fill(-1),closed=new Uint8Array(N),s=sj*GW+si,goal=gj*GW+gi;g[s]=0;
   const h=k=>Math.hypot(k%GW-gi,Math.floor(k/GW)-gj);const open=[s];
   while(open.length){let bi=0,bf=g[open[0]]+h(open[0]);for(let k=1;k<open.length;k++){const f=g[open[k]]+h(open[k]);if(f<bf){bf=f;bi=k;}}
     const cur=open[bi];open[bi]=open[open.length-1];open.pop();if(cur===goal)break;if(closed[cur])continue;closed[cur]=1;const ci=cur%GW,cj=Math.floor(cur/GW);
     for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){if(!di&&!dj)continue;const a=ci+di,b=cj+dj;if(a<0||b<0||a>=GW||b>=GH)continue;const k=b*GW+a;
-      if(gridB[k]||closed[k])continue;if(di&&dj&&(gridB[cj*GW+a]||gridB[b*GW+ci]))continue;const ng=g[cur]+(di&&dj?1.414:1);if(ng<g[k]){g[k]=ng;prev[k]=cur;open.push(k);}}}
+      if(routeGrid[k]||closed[k])continue;if(di&&dj&&(routeGrid[cj*GW+a]||routeGrid[b*GW+ci]))continue;const ng=g[cur]+(di&&dj?1.414:1);if(ng<g[k]){g[k]=ng;prev[k]=cur;open.push(k);}}}
   if(prev[goal]<0&&goal!==s)return null;
   const pts=[];for(let k=goal;k!==-1&&k!==s;k=prev[k])pts.unshift([(k%GW+.5)*CELL,(Math.floor(k/GW)+.5)*CELL]);
-  const out=[];let ax=fx,az=fz,i=0;while(i<pts.length){let j=pts.length-1;while(j>i&&!los(ax,az,pts[j][0],pts[j][1]))j--;out.push(pts[j]);[ax,az]=pts[j];i=j+1;}
+  const out=[];let ax=fx,az=fz,i=0;while(i<pts.length){let j=pts.length-1;while(j>i&&!los(ax,az,pts[j][0],pts[j][1],avoid))j--;out.push(pts[j]);[ax,az]=pts[j];i=j+1;}
   return out;
 }
 function stepPlayer(x,z){const p=player.position;if(blockedAt(p.x,p.z)){p.x=x;p.z=z;return;}if(!blockedAt(x,p.z))p.x=x;if(!blockedAt(p.x,z))p.z=z;}
@@ -706,10 +765,10 @@ function setKidCrowd(ph,instant,now,kids){
 }
 function tickCrowd(){
   const now=clockT.elapsedTime;
-  extras.forEach(e=>{const p=e.p;
-    if(e.state==="toArrive"&&now>e.at){e.state="arriving";p.visible=true;agentPlace(p,DOOR[0],DOOR[1],Math.PI);setPose(p,false);
+  [...extras].sort((a,b)=>(a.arriveClock??a.at??Infinity)-(b.arriveClock??b.at??Infinity)).forEach(e=>{const p=e.p;
+    if(e.state==="toArrive"&&now>e.at&&enterAgent(p,DOOR,e.home,()=>{e.state="seat";})){e.state="arriving";
       if(Math.random()<.5)emote(p,e.kind==="kid"?pick(["老師好！","我要喝水","今天作業好多","我第一名！"]):pick(["老師好","好熱","今天考什麼？","呼～趕上了"]),2);
-      agentGo(p,e.home[0],e.home[1],e.home[2],()=>{e.state="seat";});}
+    }
     if(e.state==="leaving"&&now>e.leaveAt){e.state="exiting";if(Math.random()<.35)emote(p,["掰掰","回家了～","好餓","明天見"][Math.floor(Math.random()*4)],2);
       agentGo(p,DOOR[0],DOOR[1],0,()=>{p.visible=false;e.state="gone";});}
   });
@@ -748,6 +807,7 @@ function tickAmbient(dt){
   }
 }
 function npcAct(id,n,t){
+  if(n.userData.act==='cover')return 'cover';
   const u=n.userData;if(u.moving)return null;const x=n.position.x,z=n.position.z,ph=crowdPhase;
   if(id==="yun"&&Math.hypot(x-3.75,z-10.3)<1)return (t%12)<7?"type":"phone";
   if(id==="teacher"){if(ph==="class"&&Math.hypot(x-20,z-1.2)<1.2)return "board";if(x<9&&z>5&&z<9)return "cup";}
@@ -903,6 +963,15 @@ function artAddBaseboards(){
 }
 function artThreshold(x,z,w,d,color=0x77818b){artBox(w,.02,d,color,x,.012,z,null,.72,.04);}
 function artAddDoorThresholds(){
+  // Explicit open entry: the old continuous perimeter wall hid the doorway.
+  const entry=new THREE.Group();entry.name='p2-main-entrance';scene.add(entry);
+  [3.25,5.75].forEach(x=>artBox(.12,2.20,.18,0x647481,x,1.1,17.87,entry));
+  artBox(2.62,.13,.18,0x647481,4.5,2.20,17.87,entry);
+  artThreshold(4.5,17.84,2.35,.25);
+  const sign=wallSign('入口 / 出口',4.5,2.04,17.73,Math.PI,1.25,.25,'#ffffff','#386657',34);sign.material.side=THREE.DoubleSide;
+  // Open classroom jambs make the C-class entrance readable from both sides.
+  [29.54,31.66].forEach(x=>artBox(.10,1.45,.18,0x657985,x,.725,11));
+  artThreshold(30.6,11,1.9,.30);
   // 幾個最常經過的門口，直接用實體門檻增加空間分區感。
   [[9,2.5,.30,1.7],[9,7,.30,1.7],[9,13.5,.30,2.5],[12,2,.30,1.8],[12,9,.30,1.8],[12,14,.30,1.8],[28,14,.30,1.8]].forEach(v=>artThreshold(...v));
 }
@@ -1034,6 +1103,7 @@ buildWorld=function(){
 };
 
 /* 日夜切換完全交回原遊戲，不再覆寫曝光。 */
+
 /* =============== 美術實驗層 v3：櫃台區模型 + 紋理重製 ===============
    這一層不做全螢幕濾鏡，只改物件本體。先用櫃台區當成 A/B 樣板。 */
 
@@ -1433,8 +1503,9 @@ function p2EnvFloors(){
   p2Floor(7.96,6.96,32,14.5,'jhStorage','#d8d1c6','rgba(100,88,76,.10)',[117,103,90],4,3.2);
 }
 
-function p2CabinetUnit(x,z,w,h,d,bodyMat,doorMat,parent){
+function p2CabinetUnit(x,z,w,h,d,bodyMat,doorMat,parent,ry=0){
   const g=new THREE.Group();g.position.set(x,0,z);(parent||scene).add(g);
+  g.rotation.y=ry;g.userData.frontYaw=ry;g.name='p2-cabinet';
   p2Mesh(fmChamferGeo(w,h,d,.045),bodyMat,g,0,h/2,0);
   const gap=.035,doorW=(w-gap*3)/2;
   [-1,1].forEach(s=>{
@@ -1472,9 +1543,10 @@ function p2LoungeTable(r){
 function p2Fridge(r){
   solids.push(r);const cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
   const body=p2Std('fridgeBody',0xe5e8e9,.55,.15),edge=p2Std('fridgeEdge',0xa1a8ae,.36,.46);
-  p2Mesh(fmChamferGeo(.78,1.68,.98,.07),body,g,0,.84,0);
-  p2Mesh(fmChamferGeo(.69,.018,.035,.009),edge,g,0,1.05,.505);
-  p2Mesh(fmChamferGeo(.035,.42,.035,.009),edge,g,.27,.86,.51);
+  g.rotation.y=Math.PI/2;g.name='p2-fridge';g.userData.frontYaw=g.rotation.y;
+  p2Mesh(fmChamferGeo(.98,1.68,.78,.07),body,g,0,.84,0);
+  p2Mesh(fmChamferGeo(.89,.018,.035,.009),edge,g,0,1.05,.405);
+  p2Mesh(fmChamferGeo(.035,.42,.035,.009),edge,g,.37,.86,.41);
 }
 function p2CounterCabinet(r,h){
   solids.push(r);const w=r[2]-r[0],d=r[3]-r[1],cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
@@ -1485,11 +1557,12 @@ function p2CounterCabinet(r,h){
 function p2JhLockers(r){
   solids.push(r);const w=r[2]-r[0],d=r[3]-r[1],cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
   const body=p2Std('lockerBody',0x71808e,.58,.12),door=p2Std('lockerDoor',0x8796a4,.62,.10),handle=p2Std('lockerHandle',0x444d55,.32,.55);
-  p2Mesh(fmChamferGeo(w,1.48,d,.035),body,g,0,.74,0);
-  const rows=4,cols=2;for(let r0=0;r0<rows;r0++)for(let c=0;c<cols;c++){
-    const yy=.20+r0*.35,xx=(c?1:-1)*.30;
-    p2Mesh(fmChamferGeo(.52,.31,.035,.015),door,g,xx,yy,d/2+.023);
-    p2Mesh(fmChamferGeo(.035,.08,.022,.007),handle,g,xx+(c?-.16:.16),yy,d/2+.055);
+  g.rotation.y=-Math.PI/2;g.name='p2-lockers';g.userData.frontYaw=g.rotation.y;
+  p2Mesh(fmChamferGeo(d,1.48,w,.035),body,g,0,.74,0);
+  const rows=4,cols=8;for(let r0=0;r0<rows;r0++)for(let c=0;c<cols;c++){
+    const yy=.20+r0*.35,xx=-d/2+(c+.5)*d/cols;
+    p2Mesh(fmChamferGeo(d/cols-.045,.31,.035,.015),door,g,xx,yy,w/2+.023);
+    p2Mesh(fmChamferGeo(.035,.08,.022,.007),handle,g,xx+.20,yy,w/2+.055);
   }
 }
 
@@ -1521,16 +1594,16 @@ function p2RoomIdentity(){
   wallSign('代課・請假・影印提醒',5.75,1.45,5.13,0,2.2,.48,'#3d4b55','#f0e4c8',38);
 
   // B 班：右側教材櫃 + 公告欄。
-  p2CabinetUnit(27.25,8.55,.75,1.18,.42,p2Std('classCab',0x7b858b,.60,.14),p2Std('classCabDoor',0x9da6aa,.66,.10));
+  p2CabinetUnit(27.25,8.55,.75,1.18,.42,p2Std('classCab',0x7b858b,.60,.14),p2Std('classCabDoor',0x9da6aa,.66,.10),null,-Math.PI/2);
   wallSign('高三 B 班\n本週進度：空間向量',27.72,1.48,7.15,-Math.PI/2,2.0,.68,'#64462f','#f1dfb9',38);
 
   // 自習室：安靜區書架與規則板。
-  const shelf=p2CabinetUnit(27.20,16.35,.82,1.25,.40,p2Std('studyShelf',0x66766c,.68,.06),p2Std('studyShelfDoor',0x87958a,.72,.04));
+  const shelf=p2CabinetUnit(27.20,16.35,.82,1.25,.40,p2Std('studyShelf',0x66766c,.68,.06),p2Std('studyShelfDoor',0x87958a,.72,.04),null,-Math.PI/2);
   p2ShelfBooks(shelf,0,.98,.225,.55,6);
   wallSign('自習室\n手機靜音・小聲討論',12.18,1.48,16.0,Math.PI/2,1.8,.68,'#36564a','#eef1e9',38);
 
   // 國中 C 班：彩色教材櫃與會考公告，語彙和高中區分開。
-  p2CabinetUnit(35.35,8.65,.72,1.10,.42,p2Std('jhCab',0x678b88,.62,.08),p2Std('jhCabDoor',0x86aaa5,.70,.04));
+  p2CabinetUnit(35.35,8.65,.72,1.10,.42,p2Std('jhCab',0x678b88,.62,.08),p2Std('jhCabDoor',0x86aaa5,.70,.04),null,-Math.PI/2);
   wallSign('會考倒數\n單字・作文・複習考',35.72,1.48,7.20,-Math.PI/2,1.9,.72,'#2f6657','#e8f0df',38);
 
   // 國中部置物區：手搖飲／書包提示板，和教室形成明顯切換。
@@ -1970,13 +2043,25 @@ MINIS.roster={
 
 /* ================= 隨機事件：每一輪抽兩件，插在固定的空檔 ================= */
 const byLine=(G,m)=>m[G.line.id]||(G.line.id==="care"?m.yun:G.line.id==="jh"?m.teacher:null)||{};
+// Earthquake narration refers to the people actually near the player, even before class.
+let quakeScene=null;
+function beginQuake(){
+  const z=zoneAt(player.position.x,player.position.z),zone=z&&z[0]||'走廊';
+  const people=Object.values(npcs).concat(extras.map(e=>e.p)).filter(p=>p.visible&&Math.hypot(p.position.x-player.position.x,p.position.z-player.position.z)<4&&zoneAt(p.position.x,p.position.z)?.[0]===zone);
+  quakeScene={zone,people,covered:false,classroom:zone.includes('教室')&&people.some(p=>p.userData.seated)};
+}
+function coverQuake(){if(!quakeScene)return;quakeScene.covered=true;FX.shake=0;[player,...quakeScene.people].forEach(p=>{p.userData.quakePose={act:p.userData.act,seated:p.userData.seated};p.userData.act='cover';p.userData.moving=false;});}
+function endQuake(){
+  if(quakeScene)[player,...quakeScene.people].forEach(p=>{const u=p.userData,old=u.quakePose;if(old){u.act=old.act;setPose(p,old.seated);u.rig.position.y=old.seated&&u.kid?.22:0;delete u.quakePose;}});
+  quakeScene=null;FX.shake=0;
+}
 const EVENTS=[
- {id:"quake",phases:["pre","class","break"],make:()=>({auto:true,effect:"shake",goal:"地震！",
-  pages:G=>[[null,"桌子突然晃了起來。吊燈在晃，有人尖叫了一聲。"],[null,"是地震。大概三級，晃了十秒左右。"]],
+ {id:"quake",phases:["pre","class","break"],make:()=>({auto:true,effect:"shake",goal:"地震！",onOpen:beginQuake,onClose:endQuake,
+  pages:G=>[[null,`${quakeScene.zone}的地板突然晃了起來。是地震。`],[null,quakeScene.classroom?"桌椅還在晃，附近的同學看著你，等你指示。":"晃動還沒停。先顧好眼前的人，遠離玻璃與可能倒下的櫃子。"]],
   choices:G=>[
-   {label:"叫大家躲到桌子底下",fx:G=>byLine(G,{teacher:{voice:-5,stu:6},yun:{ord:8,pat:-3},boss:{calm:-3,rep:5}}),log:"地震時叫大家躲桌下",res:[[null,"大家鑽到桌子底下。停了之後有人笑出來：「老師你躲最快。」氣氛反而輕鬆了。"]]},
-   {label:"先穩住，等它停",fx:G=>byLine(G,{teacher:{stu:2},yun:{pat:3},boss:{calm:5}}),log:"地震時先穩住",res:[[null,"十秒後停了。你深呼吸一下，大家也跟著安靜下來。"]]},
-   {label:"繼續做事，當作沒事",fx:G=>byLine(G,{teacher:{stu:-5},yun:{ord:-5},boss:{rep:-3}}),log:"地震時照常做事",res:[[null,"震完了，一半的人在滑手機看地震報告。"]]}]})},
+   {label:"就近趴下、掩護、穩住",onResolve:coverQuake,fx:G=>byLine(G,{teacher:{voice:-5,stu:6},yun:{ord:8,pat:-3},boss:{calm:-3,rep:5}}),log:"地震時就近掩護",res:G=>[[null,quakeScene.classroom?"你和附近的同學低下身、護住頭頸。片刻後晃動停了，大家仍維持掩護姿勢，確認安全再起身。":`此刻你在${quakeScene.zone}。你${quakeScene.people.length?'提醒身邊的人一起':''}蹲低、護住頭頸。片刻後晃動停了，先確認周圍安全，再起身。`]]},
+   {label:"先穩住，等它停",onResolve:()=>{FX.shake=0;},fx:G=>byLine(G,{teacher:{stu:2},yun:{pat:3},boss:{calm:5}}),log:"地震時先穩住",res:[[null,"片刻後晃動停了。你深呼吸一下，確認身邊的人是否平安。"]]},
+   {label:"繼續做事，當作沒事",onResolve:()=>{FX.shake=0;},fx:G=>byLine(G,{teacher:{stu:-5},yun:{ord:-5},boss:{rep:-3}}),log:"地震時照常做事",res:[[null,"震完了，你才停下手邊的事，拿手機查看地震消息。"]]}]})},
  {id:"blackout",phases:["pre","class","break"],make:()=>({auto:true,effect:"dark",goal:"停電了",
   pages:G=>[[null,"燈閃了兩下，全暗。冷氣「咚」一聲停了。"],[null,"三秒後燈亮了，冷氣沒有回來。整層樓開始變熱。"]],
   choices:G=>[
@@ -3734,6 +3819,7 @@ const toMin=s=>{const [h,m]=s.split(":").map(Number);return h*60+m;},fmt=m=>{m=M
 const MIN_PER_SEC=1/4;
 const lineOf=(id,day)=>day===2&&LINES2[id]?LINES2[id]:LINES[id];
 function newGame(lineId,day=1){
+  endQuake();nextEntryAt=0;
   const L=lineOf(lineId,day),name=(store.get("name","")||"").trim();
   const sur=name?(/^[一-鿿]/.test(name)?name[0]:name+" "):"許";
   G={line:L,idx:0,s:{},h:{...L.hidden},f:{},log:[],items:[],sidesDone:{},tName:lineId==="teacher"?sur+"老師":"許老師",pName:name||({yun:"小芸",boss:"何主任",care:"蔡老師"}[lineId]||"你"),name,tipShown:false,status:"",time:"17:20",chapterTitle:""};
@@ -3763,7 +3849,7 @@ function enterStep(){
   else if(st.auto){mode="walk";renderAll();openStep();}
   else{mode="walk";renderAll();}
 }
-function nextStep(){if(G.idx===0)store.set("tipWalk",true);const st=step();if(st&&st.after)for(const id in st.after)setNPC(id,val(st.after[id],G));G.idx++;path=null;enterStep();}
+function nextStep(){if(G.idx===0)store.set("tipWalk",true);const st=step();if(st?.onClose)st.onClose();if(st&&st.after)for(const id in st.after)setNPC(id,val(st.after[id],G));G.idx++;path=null;enterStep();}
 
 /* ---------- 目標與附近的東西 ---------- */
 function guideTarget(t){const m=targetOf(t);if(t&&t.npc){const u=npcs[t.npc].userData;if(u.moving&&u.anchor)return{...m,x:u.anchor[0],z:u.anchor[1]};}return m;}
@@ -3868,6 +3954,7 @@ function applyFx(fx){const out=[];for(const k in fx){if(!fx[k])continue;
   return out.join("");}
 function resolveChoice(c,onDone,arg){
   const a=arg!==undefined?arg:G;
+  if(c.onResolve)c.onResolve(a);
   const fx=val(c.fx,a)||{},res=val(c.res,a),log=val(c.log,a);
   if(c.min)spend(c.min);if(c.set)Object.assign(G.f,c.set);if(log)G.log.push([G.time,log]);
   const deltas=applyFx(fx);renderHud();
@@ -3878,6 +3965,7 @@ function resolveChoice(c,onDone,arg){
   runDialog({pages,chatId,deltas:deltas||`<span class="d">沒有變化</span>`,endLabel:dead?"……":"好",noskip:true,onEnd:()=>dead?finish():onDone()});
 }
 function openStep(){
+  if(step().onOpen)step().onOpen();
   const st=step();if(st.effect)startEffect(st.effect);const carry=G.idx===0&&G.line.carry&&G.day!==2?G.line.carry(G):[];if(st.id==="ev_rain")startRain(12);if(/phone|calls|ymom|bmom|ycalls|ot_group/.test(st.id))ring(2);let pages=val(st.pages,G);const choices=st.choices?val(st.choices,G):null;
   if(carry.length)pages=[...carry,...pages];
   if(G.due!=null&&G.clock>G.due+.5&&!st.auto){const late=Math.floor(G.clock-G.due),k=Math.min(3,Math.ceil(late/5));G.lates++;G.lateMin+=late;const lf=G.line.late||{};const fx={};for(const a in lf.fx||{})fx[a]=lf.fx[a]*k;const d=applyFx(fx);G.log.push([G.time,`遲到 ${late} 分鐘`]);pages=[[null,`你晚了 ${late} 分鐘。${lf.text||""}`],...pages];if(d)G.lateDeltas=d;renderHud();}
@@ -3940,6 +4028,7 @@ function openCodex(){
 
 /* ---------- 開場與結算 ---------- */
 function showTitle(){
+  endQuake();
   mode="title";G=null;renderAll();$("dlg").hidden=true;$("sheet").hidden=true;$("sheetBg").hidden=true;
   const c=$("cover");c.className="cover";c.hidden=false;const lines=Object.values(LINES);
   if(!LINES[pickedLine])pickedLine="teacher";
@@ -4016,6 +4105,7 @@ function epilogue(){
 function saveGame(){if(!G)return;store.set("save",{line:G.line.id,day:G.day||1,steps:G.steps.map(s=>({id:s.id,t:s.t})),idx:G.idx,s:G.s,h:G.h,f:G.f,log:G.log,items:G.items,sidesDone:G.sidesDone,clock:G.clock,status:G.status,chapterTitle:G.chapterTitle,lates:G.lates,lateMin:G.lateMin,minis:G.minis,chatUsed:G.chatUsed||[],chatWith:G.chatWith||[],hard:G.hard,pName:G.pName,tName:G.tName,name:G.name,pos:[player.position.x,player.position.z],when:Date.now()});}
 function clearSave(){store.set("save",null);}
 function resumeGame(){
+  endQuake();nextEntryAt=0;
   const sv=store.get("save",null);if(!sv||!LINES[sv.line])return showTitle();
   const L=lineOf(sv.line,sv.day||1);$("cover").hidden=true;startAmbient();
   G={line:L,idx:sv.idx,s:sv.s,h:sv.h,f:sv.f,log:sv.log,items:sv.items,sidesDone:sv.sidesDone,clock:sv.clock,status:sv.status,chapterTitle:sv.chapterTitle,lates:sv.lates||0,lateMin:sv.lateMin||0,minis:sv.minis||{},day:sv.day||1,chatUsed:sv.chatUsed||[],chatWith:sv.chatWith||[],hard:sv.hard,pName:sv.pName,tName:sv.tName,name:sv.name,tipShown:true};
@@ -4147,8 +4237,9 @@ function tick(){
       if(ix||iz){const cy=Math.cos(CAM.yaw),sy=Math.sin(CAM.yaw);dx=ix*cy+iz*sy;dz=-ix*sy+iz*cy;}
       if(!dx&&!dz&&path&&path.length){const [px,pz]=path[0],vx=px-player.position.x,vz=pz-player.position.z,dd=Math.hypot(vx,vz);if(dd<.08)path.shift();else{dx=vx/dd;dz=vz/dd;}}
       if(dx||dz){const l=Math.hypot(dx,dz);dx/=l;dz/=l;const ox=player.position.x,oz=player.position.z;stepPlayer(ox+dx*3.4*dt,oz+dz*3.4*dt);
-        if(path&&Math.hypot(player.position.x-ox,player.position.z-oz)<.002){G.stuck=(G.stuck||0)+dt;if(G.stuck>.4){G.stuck=0;const end=path[path.length-1];path=findPath(end[0],end[1]);}}else G.stuck=0;player.rotation.y=Math.atan2(dx,dz);G.moving=true;}
-      else G.moving=false;
+        player.userData.stepDistance=Math.hypot(player.position.x-ox,player.position.z-oz);
+        if(path&&player.userData.stepDistance<.002){G.stuck=(G.stuck||0)+dt;if(G.stuck>.4){G.stuck=0;const end=path[path.length-1];path=findPath(end[0],end[1]);}}else G.stuck=0;player.rotation.y=Math.atan2(dx,dz);G.moving=player.userData.stepDistance>.001;}
+      else{G.moving=false;player.userData.stepDistance=0;}
       near=nearest();const key=near?near.type+near.label:"";if(key!==lastNearKey){lastNearKey=key;renderDock();}
       if(guiding&&near&&near.type==="main"&&path&&path.length<=1){path=null;}
       if(guiding&&!(near&&near.type==="main")){G.reg=(G.reg||0)-dt;if(G.reg<=0){G.reg=.6;const tg=guideTarget(step().target);const end=path&&path.length?path[path.length-1]:null;
@@ -4160,7 +4251,10 @@ function tick(){
     if(mode==="walk"){const z=zoneAt(player.position.x,player.position.z);if(z&&z[0]!==G.zone){G.zone=z[0];if(!G.zonesSeen)G.zonesSeen={};if(!G.zonesSeen[z[0]]){G.zonesSeen[z[0]]=1;showBanner(z[0],(G.line.zoneText&&G.line.zoneText[z[0]])||z[5]);}}}
     const m=targetOf(step()?.target);marker.visible=mode==="walk"&&!!m;if(m)marker.position.set(m.x,m.h+Math.sin(t*3)*.12,m.z);
     tickItemMarks(t);tickEdge();tickTips();
-    tickClock(dt);p2StoryUpdate();tickNight(dt);tickRain(dt);moveNPCs(dt);tickCrowd();if(mode!=="title")tickAmbient(dt);tickFX(dt);
+    tickClock(dt);p2StoryUpdate();tickNight(dt);tickRain(dt);
+    const quakeDialog=step()?.id==='ev_quake'&&mode==='dialog';
+    if(!quakeDialog){moveNPCs(dt);tickCrowd();if(mode!=="title")tickAmbient(dt);}else if(quakeScene&&!quakeScene.covered&&D?.choices)FX.shake=1;
+    tickFX(dt);
     const spk=mode==="dialog"&&D?D.pages[D.i][0]:null,now=performance.now()/1000;
     animPerson(player,dt,t,{walk:mode==="walk"&&G.moving,talk:spk==="me"});tickEmote(player,now);
     for(const id in npcs){const n=npcs[id];if(!n.visible)continue;animPerson(n,dt,t,{walk:n.userData.moving,talk:spk===id,act:npcAct(id,n,t),raise:id==="parent"&&G.line.id==="teacher"&&step()?.id==="ask"&&mode==="walk"});tickEmote(n,now);}
@@ -4295,6 +4389,7 @@ setCrowd=function(ph,instant){
   const now=clockT.elapsedTime;
   extras.filter(e=>e.kind==='jh').forEach((e,i)=>{
     const at=18*60+i*1.4;
+    e.arriveClock=at;e.speed=1.9+(i%4)*.07;
     if(G.clock<at){
       e.p.visible=false;e.p.userData.path=null;e.p.userData.act=null;e.state='clockWait';e.arriveClock=at;
     }else if(e.state==='clockWait'){
@@ -4331,7 +4426,7 @@ function consNpcReady(n){return !!(n&&n.visible&&!n.userData.path&&!n.userData.m
 
 targetOf=function(t){
   t=consTarget(t);if(!t)return null;
-  if(t.npc){const n=npcs[t.npc];if(!n||!n.visible)return null;return{x:n.position.x,z:n.position.z,h:n.userData.top+.8,name:CHARS[t.npc].name,kind:'npc',id:t.npc};}
+  if(t.npc){const n=npcs[t.npc];if(!n||(!n.visible&&!n.userData.entrySpec))return null;const a=!n.visible&&n.userData.anchor;return{x:a?a[0]:n.position.x,z:a?a[1]:n.position.z,h:n.userData.top+.8,name:CHARS[t.npc].name,kind:'npc',id:t.npc};}
   const s=SPOTS[t.spot];if(!s)return null;return{x:s.pos[0],z:s.pos[1],h:s.h+.5,name:s.name,kind:'spot'};
 };
 guideTarget=function(t){
@@ -4423,6 +4518,7 @@ setCrowd=function(ph,instant){
   const now=clockT.elapsedTime;
   const hold=(list,start,spacing)=>list.forEach((e,i)=>{
     const at=start+i*spacing;
+    e.arriveClock=at;e.speed=1.9+(i%5)*.07;
     if(G.clock<at){e.p.visible=false;e.p.userData.path=null;e.p.userData.act=null;e.state='clockWait';e.arriveClock=at;}
     else if(e.state==='clockWait'){e.state='toArrive';e.at=now+(i%4)*.12;}
   });
@@ -4436,10 +4532,10 @@ if(LINES.care){
   if(snack){snack.npc=snack.npc||{};snack.npc.boss=[P.bossOffice[0],P.bossOffice[1],P.bossOffice[2]||0,PC.door];}
 }
 
-/* C 班共 9 人，阿翔尚未交手機時籃子應該是其他 8 支，不是 12 支。 */
+/* 18:10 同學仍陸續進場，不能在畫面未到齊時保證籃子已有固定數量。 */
 if(LINES.jh){
   const x=LINES.jh.steps.find(s=>s.id==='j_xiang');
-  if(x&&x.pages){const old=x.pages;x.pages=G=>old(G).map(r=>[r[0],typeof r[1]==='string'?r[1].replace('籃子裡已經有十二支手機了。只差他一支。','籃子裡已經有八支手機了。只差他一支。'):r[1]]);}
+  if(x&&x.pages){const old=x.pages;x.pages=G=>old(G).map(r=>[r[0],typeof r[1]==='string'?r[1].replace('籃子裡已經有十二支手機了。只差他一支。','同學陸續把手機放進籃子，阿翔還拿著自己的那一支。'):r[1]]);}
 }
 
 /* 自習室實際以少量代表性模型呈現，不再寫成畫面上看不到的「十幾雙眼睛」。 */
