@@ -8,6 +8,7 @@ for(const [tag,vp] of [['phone',{width:390,height:844,hasTouch:true,isMobile:tru
   await p.goto('file://'+__dirname+'/shots.html');await p.waitForTimeout(2500);
   const shot=async n=>{await p.waitForTimeout(1600);await p.screenshot({path:`${OUT}/${tag}-${n}.png`});};
   const perf=async label=>{const v=await p.evaluate(()=>window.__p2PerfAudit?window.__p2PerfAudit():null);if(v){fs.writeFileSync(`${OUT}/${tag}-perf-${label}.json`,JSON.stringify(v,null,2));console.log(`[perf:${tag}:${label}] ${JSON.stringify(v)}`);}return v;};
+  const consistency=async label=>{const v=await p.evaluate(()=>window.__consistencyAudit?window.__consistencyAudit():null);if(v)fs.writeFileSync(`${OUT}/${tag}-consistency-${label}.json`,JSON.stringify(v,null,2));return v;};
   await shot('01-title');
   await p.click('[data-act=start]');
   const vis=s=>p.isVisible(s).catch(()=>false);
@@ -25,12 +26,14 @@ for(const [tag,vp] of [['phone',{width:390,height:844,hasTouch:true,isMobile:tru
   // 下午場：安親班
   await p.evaluate(()=>{localStorage.removeItem('ten-pm:save')});await p.reload();await p.waitForTimeout(1500);
   await p.click('[data-role=care]');await p.click('[data-act=start]');await drain();await perf('care');await shot('12-care-start');
-  await p.evaluate(()=>__dbg.jump('c_homework'));await drain();await p.waitForTimeout(9000);await p.evaluate(()=>__dbg.tp(18,8,0));await shot('13-care-kids');
+  await p.evaluate(()=>__dbg.jump('c_homework'));await drain();await p.waitForTimeout(9000);await p.evaluate(()=>__dbg.tp(18,8,0));await consistency('care-kids');await shot('13-care-kids');
   await p.evaluate(()=>__dbg.tp(4.5,14,0));await shot('14-care-lobby');
+  // 18:20：最後一個小朋友尚未接走時，高三生應已陸續進 B 班。
+  await p.evaluate(()=>__dbg.jump('c_late'));await p.waitForTimeout(5600);await p.evaluate(()=>__dbg.tp(19.5,8.0,0));await consistency('care-late');await shot('15-care-late-highschool');
   // 國中部
   await p.evaluate(()=>{localStorage.removeItem('ten-pm:save')});await p.reload();await p.waitForTimeout(1500);
-  await p.click('[data-role=jh]');await p.click('[data-act=start]');await drain();await perf('jh');
-  await p.evaluate(()=>__dbg.jump('j_class'));await drain();await p.waitForTimeout(3000);await p.evaluate(()=>__dbg.tp(32,8.6,0));await shot('15-jh-class');
-  await p.evaluate(()=>__dbg.tp(31,14.5,0));await shot('16-jh-lockers');
+  await p.click('[data-role=jh]');await p.click('[data-act=start]');await drain();await perf('jh');await consistency('jh-pre');
+  await p.evaluate(()=>__dbg.jump('j_class'));await drain();await p.waitForTimeout(3000);await p.evaluate(()=>__dbg.tp(32,8.6,0));await consistency('jh-class');await shot('16-jh-class');
+  await p.evaluate(()=>__dbg.tp(31,14.5,0));await shot('17-jh-lockers');
   fs.writeFileSync(`${OUT}/${tag}-errors.txt`,errs.join('\n')||'none');await p.close();}
 await b.close();})();
