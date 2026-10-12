@@ -110,7 +110,7 @@ function renderNext(){
 }
 function renderDock(){
   const d=$("dock");if(mode!=="walk"){d.hidden=true;return;}d.hidden=false;
-  const touch=matchMedia("(pointer:coarse)").matches;
+  const touch=matchMedia("(pointer:coarse)").matches||innerWidth<600;
   $("dpad").hidden=!touch;$("keys").hidden=touch;
   const a=$("actBtn");a.hidden=!near;if(near){a.textContent=near.label;a.className="act"+(near.type==="info"?" info":near.type==="chat"||near.type==="greet"?" chat":"");}
 }

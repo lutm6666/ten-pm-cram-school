@@ -148,7 +148,7 @@ function buildWorld(){
   // 主任室
   furn([2,1.8,5,2.8],.78,C.desk,C.deskTop);furn([.3,.3,1.8,.8],1.7,C.shelf);furn([6.5,3.9,8.7,4.7],.5,0x5d6b7a);
   wallSign("本期續班目標 85%",5,1.7,.22,0,2.6,.5,"#c9302a","#ffffff",48);
-  box(.5,.32,.04,0x1c2633,3.5,1.0,2.1);
+  // artOfficeDetails supplies the supported laptop; the old screen floated above this desk.
 
   // 講師休息室
   furn([2,6.2,5,7.4],.74,0xcfc6b5,0xe9e2d4);furn([.3,5.3,1.1,6.3],1.7,0xe6e9ec);furn([6.6,5.3,8.7,5.9],.9,0xbfb6a6);box(.5,.3,.36,0x333a44,7.2,1.05,5.6);

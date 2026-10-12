@@ -277,6 +277,17 @@ button.lk{font-family:inherit;cursor:pointer}
 .prog5{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:12px}
 .prog5 span{text-align:center;font-size:.78rem;padding:4px 0;border:1px solid var(--rule);border-radius:4px;color:var(--muted)}
 .prog5 span.on{background:var(--ink);color:var(--board);border-color:var(--ink);font-weight:700}
+
+/* ================= 美術實驗層 v2：不使用全螢幕濾鏡 ================= */
+.hud{box-shadow:0 5px 16px rgba(7,12,18,.10);backdrop-filter:none;-webkit-backdrop-filter:none}
+.nextcard{box-shadow:0 6px 18px rgba(7,12,18,.14),0 1px 0 rgba(255,255,255,.35) inset}
+.act{box-shadow:0 6px 18px rgba(201,48,42,.24)}
+.dpad button{box-shadow:0 3px 10px rgba(7,12,18,.10)}
+@media (prefers-reduced-motion:no-preference){
+  .nextcard,.act,.choice,.dpad button{transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease}
+  .act:active,.dpad button:active{transform:translateY(1px) scale(.985)}
+  .choice:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(7,12,18,.07)}
+}
 </style>
 </head><body>
 <div id="stage" aria-label="補習班樓層"></div>
@@ -544,7 +555,7 @@ function buildWorld(){
   // 主任室
   furn([2,1.8,5,2.8],.78,C.desk,C.deskTop);furn([.3,.3,1.8,.8],1.7,C.shelf);furn([6.5,3.9,8.7,4.7],.5,0x5d6b7a);
   wallSign("本期續班目標 85%",5,1.7,.22,0,2.6,.5,"#c9302a","#ffffff",48);
-  box(.5,.32,.04,0x1c2633,3.5,1.0,2.1);
+  // artOfficeDetails supplies the supported laptop; the old screen floated above this desk.
 
   // 講師休息室
   furn([2,6.2,5,7.4],.74,0xcfc6b5,0xe9e2d4);furn([.3,5.3,1.1,6.3],1.7,0xe6e9ec);furn([6.6,5.3,8.7,5.9],.9,0xbfb6a6);box(.5,.3,.36,0x333a44,7.2,1.05,5.6);
@@ -823,6 +834,964 @@ let rain=null;
 function startRain(sec=10){if(rain)return;const n=500,geo=new THREE.BufferGeometry(),pos=new Float32Array(n*3);for(let i=0;i<n;i++){pos[i*3]=Math.random()*40-6;pos[i*3+1]=Math.random()*8;pos[i*3+2]=Math.random()*30-4;}
   geo.setAttribute("position",new THREE.BufferAttribute(pos,3));const pts=new THREE.Points(geo,new THREE.PointsMaterial({color:0x9fb4d8,size:.06,transparent:true,opacity:.7}));scene.add(pts);rain={pts,until:clockT.elapsedTime+sec};rainSound(sec);}
 function tickRain(dt){if(!rain)return;const p=rain.pts.geometry.attributes.position;for(let i=0;i<p.count;i++){let y=p.getY(i)-dt*14;if(y<0)y=8;p.setY(i,y);}p.needsUpdate=true;if(clockT.elapsedTime>rain.until){scene.remove(rain.pts);rain=null;}}
+
+/* ================= 美術實驗層 v2：實體場景與角色細節 =================
+   原則：不靠全螢幕濾鏡改觀感。保留原版清楚的色調，只增加真正的 3D 物件、材質分層與角色辨識度。 */
+
+/* ---------- 小型美術工具 ---------- */
+const ART_MATERIAL_CACHE=new Map();
+function artMat(color,rough=.78,metal=.02){
+  const key=`${color}|${rough}|${metal}`;
+  if(ART_MATERIAL_CACHE.has(key))return ART_MATERIAL_CACHE.get(key);
+  const m=new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+  ART_MATERIAL_CACHE.set(key,m);return m;
+}
+function artBox(w,h,d,color,x,y,z,parent,rough=.78,metal=.02){
+  const m=new THREE.Mesh(bgeo(w,h,d),artMat(color,rough,metal));
+  m.position.set(x,y,z);(parent||scene).add(m);return m;
+}
+function artCyl(rt,rb,h,color,x,y,z,parent,segments=16){
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,segments),artMat(color));
+  m.position.set(x,y,z);(parent||scene).add(m);return m;
+}
+function artPaper(w,d,x,y,z,color=0xf7f3e8,ry=0){
+  const p=artBox(w,.018,d,color,x,y,z,null,.92,0);p.rotation.y=ry;return p;
+}
+function artBook(w,d,x,y,z,color,ry=0){
+  const b=artBox(w,.055,d,color,x,y,z,null,.82,0);b.rotation.y=ry;
+  artBox(w*.93,.008,d*.92,0xf5f0e5,x,y+.032,z,null,.95,0).rotation.y=ry;return b;
+}
+function artCup(x,y,z,color=0xf4f4f0){
+  const c=artCyl(.09,.075,.18,color,x,y,z,null,14);artCyl(.065,.065,.008,0x49392d,x,y+.094,z,null,14);return c;
+}
+
+/* ---------- 人物：直接增加輪廓細節 ---------- */
+const ART_BASE_PERSON=person;
+person=function(color,opts={}){
+  const p=ART_BASE_PERSON(color,opts),u=p.userData;
+  // 鞋子：原版腿部末端沒有鞋，近距離看像兩根柱子。
+  [u.legL,u.legR].forEach((leg,i)=>{
+    const shoe=new THREE.Mesh(bgeo(.17,.085,.24),artMat(i?0x20252d:0x242a31,.72,.03));
+    shoe.position.set(0,-.43,.035);leg.add(shoe);
+  });
+  // 衣領 / 胸前分層，讓上半身不再是一整塊方盒。
+  const collarL=new THREE.Mesh(bgeo(.13,.055,.285),artMat(0xf1eee6,.9,0));
+  collarL.position.set(-.085,.43,.005);collarL.rotation.z=-.24;u.torso.add(collarL);
+  const collarR=collarL.clone();collarR.position.x=.085;collarR.rotation.z=.24;u.torso.add(collarR);
+  // 小朋友加書包。
+  if(opts.kid){
+    const bag=new THREE.Mesh(bgeo(.34,.38,.14),artMat(0x445d78,.78,0));bag.position.set(0,.26,-.20);u.torso.add(bag);
+    const flap=new THREE.Mesh(bgeo(.30,.10,.025),artMat(0x32485f,.78,0));flap.position.set(0,.36,-.278);u.torso.add(flap);
+  }
+  // 有名字的工作人員 / 玩家加簡單識別證。家長與試聽生不加。
+  const nm=opts.name||"";
+  if(nm && !/媽媽|爸爸|家長|試聽生/.test(nm)){
+    const strap=new THREE.Mesh(bgeo(.018,.28,.012),artMat(0x59616c,.7,0));strap.position.set(0,.28,.151);u.torso.add(strap);
+    const badge=new THREE.Mesh(bgeo(.15,.105,.018),artMat(0xf1f3f5,.85,0));badge.position.set(0,.13,.158);u.torso.add(badge);
+  }
+  return p;
+};
+
+/* ---------- 建築收邊 ---------- */
+function artAddBaseboards(){
+  const col=0x98a0a8;
+  WALLS.forEach(r=>{
+    const w=r[2]-r[0],d=r[3]-r[1];
+    if(w>d) artBox(w,.07,Math.max(.05,d+.035),col,(r[0]+r[2])/2,.045,(r[1]+r[3])/2,null,.88,0);
+    else artBox(Math.max(.05,w+.035),.07,d,col,(r[0]+r[2])/2,.045,(r[1]+r[3])/2,null,.88,0);
+  });
+}
+function artThreshold(x,z,w,d,color=0x77818b){artBox(w,.02,d,color,x,.012,z,null,.72,.04);}
+function artAddDoorThresholds(){
+  // 幾個最常經過的門口，直接用實體門檻增加空間分區感。
+  [[9,2.5,.30,1.7],[9,7,.30,1.7],[9,13.5,.30,2.5],[12,2,.30,1.8],[12,9,.30,1.8],[12,14,.30,1.8],[28,14,.30,1.8]].forEach(v=>artThreshold(...v));
+}
+
+/* ---------- 大廳 / 櫃台 ---------- */
+function artFrontDesk(){
+  // 櫃台正面分板與踢腳板
+  [2.15,3.75,5.35].forEach(x=>artBox(1.35,.56,.035,0x294763,x,.55,11.62,null,.58,.04));
+  artBox(4.55,.10,.10,0x1e3448,3.75,.12,11.65,null,.55,.05);
+  // 電腦螢幕、底座、鍵盤、電話
+  artBox(.62,.40,.055,0x252b32,2.65,1.38,11.32);artBox(.50,.29,.018,0x58758c,2.65,1.38,11.285);
+  artBox(.12,.18,.12,0x545d66,2.65,1.13,11.34);artBox(.62,.03,.20,0x333a42,2.65,1.075,11.12,null,.55,.08);
+  artBox(.38,.10,.22,0x2b3036,4.95,1.10,11.22);artBox(.09,.10,.11,0x454b52,4.78,1.19,11.21);
+  // 文件盤與講義
+  [0,1,2].forEach(i=>{artPaper(.55,.36,3.65+i*.07,1.08+i*.045,11.20-i*.015,i===1?0xfff2b2:0xf8f5ed,-.06);});
+  artBox(.07,.18,.07,0x315d88,5.55,1.17,11.14);artBox(.07,.16,.07,0xc84630,5.62,1.16,11.14);
+  // 壓克力立牌 / 試聽表。快取材質是共享的，透明設定要用獨立 clone，避免污染同參數物件。
+  const stand=artBox(.34,.42,.025,0xdde9ef,1.95,1.30,11.16,null,.2,.02);stand.material=stand.material.clone();stand.material.transparent=true;stand.material.opacity=.78;
+  artPaper(.26,.17,1.95,1.115,11.08,0xfff3c2,0);
+  // 等候區小桌與雜誌
+  // 等候區不放穿入沙發的茶几；雜誌移到櫃台旁的獨立矮桌。
+  artBox(.70,.055,.48,0x8a6b50,1.55,.48,15.45);artBox(.07,.45,.07,0x65717c,1.55,.23,15.45);
+  artBook(.38,.26,1.46,.52,15.39,0xe86b5b,.12);artBook(.34,.24,1.65,.54,15.49,0x4e88c7,-.10);
+  // 原本的綠球補上盆體，終於看起來是盆栽。
+  artCyl(.27,.20,.38,0x8b6549,.65,.20,9.60,null,14);
+  artCyl(.31,.31,.035,0x6e513b,.65,.40,9.60,null,14);
+  // 入口地墊
+  artBox(2.20,.018,1.00,0x5c6670,4.45,.012,16.95,null,.96,0);
+  artBox(1.55,.008,.045,0xd8b153,4.45,.024,16.95,null,.8,0);
+}
+
+/* ---------- 主任室 ---------- */
+function artOfficeDetails(){
+  // 桌燈
+  artCyl(.14,.18,.05,0x454b52,4.45,.86,2.15,null,16);artBox(.055,.48,.055,0x4b5259,4.45,1.10,2.15,null,.5,.18);
+  const shade=artCyl(.22,.12,.22,0xe3c184,4.45,1.37,2.15,null,18);shade.rotation.z=.12;
+  // 筆電、文件夾、名牌
+  artBox(.62,.035,.40,0x3e4751,3.10,.82,2.10,null,.45,.12);const scr=artBox(.58,.36,.025,0x313a44,3.10,1.02,1.93,null,.42,.08);scr.rotation.x=-.18;
+  artBook(.42,.30,2.50,.84,2.32,0x8d3c36,.05);artBook(.38,.28,2.56,.90,2.30,0x365f86,-.03);
+  artBox(.58,.14,.10,0x7e674f,3.80,.86,2.35); // 桌上名牌底
+  // 書櫃增加書脊色塊
+  const cols=[0x9d4b43,0x3f698d,0xc49b4b,0x4f7a5a,0x6c5a84];
+  for(let i=0;i<8;i++)artBox(.11,.42,.24,cols[i%cols.length],.48+i*.15,1.30,.82,null,.82,0);
+}
+
+/* ---------- 講師休息室 ---------- */
+function artLoungeDetails(){
+  artCup(2.75,.80,6.72,0xf3eee4);artCup(3.20,.80,6.84,0x5f7fa0);
+  artBook(.40,.28,4.20,.79,6.65,0xd88952,.10);
+  // 便當盒與筷子
+  artBox(.48,.12,.34,0xdbc8a4,3.55,.81,6.95,null,.9,0);artBox(.44,.025,.30,0xf2eadc,3.55,.885,6.95,null,.9,0);
+  artBox(.025,.025,.42,0x775c42,3.80,.91,6.96,null,.85,0).rotation.y=.15;
+  artBox(.025,.025,.42,0x775c42,3.84,.91,6.96,null,.85,0).rotation.y=.15;
+  // 冰箱把手由 Phase 2 冰箱模型本體繪製，避免舊把手浮在外面。
+}
+
+/* ---------- 教室桌面與白板細節 ---------- */
+function artClassroomDetails(){
+  // 白板托盤、板擦、色筆
+  artBox(5.4,.055,.13,0x9da5ad,20,.91,.38,null,.46,.13);
+  artBox(.34,.08,.10,0x44505a,18.55,.97,.33,null,.72,.02);
+  [19.25,19.40,19.55].forEach((x,i)=>artBox(.06,.06,.18,[0x3366aa,0xc84630,0x20252b][i],x,.98,.34,null,.60,.02));
+  // 講桌桌面加講義與粉筆盒
+  artBook(.46,.32,20.00,1.055,1.92,0x426d96,.04);artPaper(.40,.28,20.15,1.09,2.04,0xf8f5ed,-.08);
+  artBox(.28,.08,.16,0xe0c780,19.68,1.07,2.10,null,.84,0);
+  // 學生桌上放一些不規則講義 / 筆袋，避免 20 張桌子像複製貼上。
+  const props=[
+    [14.5,4,0x4f78a5,.10],[17,5.8,0xb95d55,-.08],[19.5,7.6,0x5b8a65,.04],[22,4,0xd3a444,-.12],
+    [24.5,5.8,0x7a64a5,.09],[14.5,7.6,0x3e8b8b,-.04],[19.5,9.4,0xa96a42,.13],[24.5,7.6,0x3f698d,-.10]
+  ];
+  props.forEach(([x,z,c,r],i)=>{
+    artBook(.42,.28,x-.12,.765,z,c,r);artPaper(.36,.25,x+.16,.79,z+.04,0xf9f6ee,-r*.7);
+    if(i%2===0){const pc=artBox(.34,.085,.12,0x464f58,x+.22,.80,z-.12,null,.70,.02);pc.rotation.y=-r;}
+  });
+}
+function artStudyDetails(){
+  [[15.2,13.35,0x53769a],[18.2,13.35,0x8a654f],[22.4,13.35,0x5f805c],[24.7,16.05,0x77649a],[16.0,16.05,0x9a744f]].forEach(([x,z,c],i)=>{
+    artBook(.40,.27,x,.78,z,c,(i%2?-.08:.07));
+    artBook(.36,.25,x+.08,.84,z+.04,0xc8a55a,(i%2?.05:-.04));
+  });
+}
+function artJuniorDetails(){
+  // C 班白板配件
+  artBox(3.9,.05,.12,0x9da5ad,32,.92,.38,null,.46,.13);artBox(.32,.08,.10,0x3d4a55,31.15,.98,.33);
+  // 國中桌面：更多彩色筆袋與課本
+  [[29.6,4,0x3f7fb7],[32,5.8,0xd0724d],[34.4,7.6,0x6f5bb0],[29.6,7.6,0x4c8b62]].forEach(([x,z,c],i)=>{
+    artBook(.39,.26,x-.10,.765,z,c,.06*(i-1));artBox(.32,.08,.12,0x555f69,x+.22,.80,z-.12,null,.72,.01).rotation.y=.10*(i%2?1:-1);
+  });
+  // 手機籃真正放入數支手機
+  for(let i=0;i<6;i++){
+    const ph=artBox(.10,.035,.19,[0x20242a,0x434b54,0x6a443e][i%3],29.70+(i%3)*.18,.94,16.86+Math.floor(i/3)*.18,null,.42,.08);
+    ph.rotation.y=(i%2?.14:-.10);
+  }
+}
+
+/* ---------- 走廊 / 門牌 ---------- */
+function artHallDetails(){
+  // 牆面門牌，比只有地板字更像真實補習班。
+  wallSign("主任室",9.13,1.38,3.65,Math.PI/2,.70,.28,"#ffffff","#425466",36);
+  wallSign("講師休息室",9.13,1.38,7.95,Math.PI/2,1.05,.28,"#ffffff","#425466",32);
+  wallSign("高三 B 班",12.08,1.42,2.95,-Math.PI/2,.90,.30,"#ffffff","#8a5c32",34);
+  wallSign("自習室",12.08,1.42,12.35,-Math.PI/2,.72,.30,"#ffffff","#4f6d62",34);
+  wallSign("國中 C 班",28.08,1.42,9.95,-Math.PI/2,.90,.30,"#ffffff","#4c6f8c",34);
+  // 公告夾與消防器材
+  artBox(.32,.62,.16,0xc93c31,10.82,.38,16.30,null,.58,.04);artBox(.18,.14,.18,0xe9e4d8,10.82,.74,16.30,null,.85,0);
+}
+
+function artDecorateWorld(){
+  artAddBaseboards();artAddDoorThresholds();artFrontDesk();artOfficeDetails();artLoungeDetails();
+  artClassroomDetails();artStudyDetails();artJuniorDetails();artHallDetails();
+}
+
+/* ---------- 建世界：保留原版色調，限制像素倍率並加入實體細節 ---------- */
+const ART_BASE_BUILD_WORLD=buildWorld;
+buildWorld=function(){
+  // 恢復 Claude 原版調色，讓比較只看「美術內容」本身。
+  C.floorLobby=0xd9d2c3;C.floorOffice=0xc6cec4;C.floorLounge=0xd3cbbd;C.floorHall=0xcdd2d6;
+  C.floorClass=0xdcd5c6;C.floorStudy=0xcfd6cf;C.wall=0xf2f0e9;C.wallTop=0x66717d;
+  C.desk=0xb08355;C.deskTop=0xd8b688;C.counter=0x34506a;C.copier=0x98a1a9;C.frame=0xa8afb5;
+  ART_BASE_BUILD_WORLD();
+  if(renderer){
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,innerWidth<600?1.5:2));
+    if(THREE.NoToneMapping!==undefined)renderer.toneMapping=THREE.NoToneMapping;
+  }
+  // 保留原本白光，不再加暖冷濾鏡或區域光霧。
+  if(hemi){hemi.color.setHex(0xffffff);hemi.groundColor.setHex(0x80868e);hemi.intensity=.9;}
+  if(sun){sun.color.setHex(0xffffff);sun.intensity=.5;}
+  artDecorateWorld();
+};
+
+/* 日夜切換完全交回原遊戲，不再覆寫曝光。 */
+/* =============== 美術實驗層 v3：櫃台區模型 + 紋理重製 ===============
+   這一層不做全螢幕濾鏡，只改物件本體。先用櫃台區當成 A/B 樣板。 */
+
+const FM={textures:{},materials:{}};
+function fmCanvasTex(key,w,h,draw,rx=1,ry=1){
+  if(FM.textures[key])return FM.textures[key];
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const g=c.getContext('2d');draw(g,w,h);
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);
+  const an=renderer&&renderer.capabilities&&renderer.capabilities.getMaxAnisotropy?renderer.capabilities.getMaxAnisotropy():4;
+  t.anisotropy=Math.min(8,an||4);FM.textures[key]=t;return t;
+}
+function fmRand(seed){let s=seed>>>0;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296);}
+function fmVinylTex(){
+  return fmCanvasTex('lobbyVinyl',512,512,(g,w,h)=>{
+    g.fillStyle='#d7d0c4';g.fillRect(0,0,w,h);
+    const rnd=fmRand(1701);
+    for(let i=0;i<1200;i++){
+      const v=155+Math.floor(rnd()*55),a=.035+rnd()*.055;
+      g.fillStyle=`rgba(${v},${v-4},${v-9},${a})`;
+      const r=.5+rnd()*1.5;g.fillRect(rnd()*w,rnd()*h,r,r);
+    }
+    g.strokeStyle='rgba(92,98,104,.16)';g.lineWidth=2;
+    for(let x=0;x<=w;x+=128){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
+    for(let y=0;y<=h;y+=128){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
+    g.strokeStyle='rgba(255,255,255,.34)';g.lineWidth=1;
+    for(let x=2;x<=w;x+=128){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
+    for(let y=2;y<=h;y+=128){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
+  },4.5,4.5);
+}
+function fmWoodTex(){
+  return fmCanvasTex('counterWood',512,256,(g,w,h)=>{
+    g.fillStyle='#b98d64';g.fillRect(0,0,w,h);
+    const rnd=fmRand(9663);
+    for(let i=0;i<95;i++){
+      const y=rnd()*h,amp=2+rnd()*7,phase=rnd()*6.28;
+      g.beginPath();
+      for(let x=0;x<=w;x+=8){const yy=y+Math.sin(x*.026+phase)*amp+Math.sin(x*.071+phase)*1.2;x?g.lineTo(x,yy):g.moveTo(x,yy);}
+      g.strokeStyle=`rgba(${70+Math.floor(rnd()*45)},${43+Math.floor(rnd()*35)},${24+Math.floor(rnd()*25)},${.05+rnd()*.10})`;
+      g.lineWidth=.6+rnd()*1.7;g.stroke();
+    }
+    const grad=g.createLinearGradient(0,0,0,h);grad.addColorStop(0,'rgba(255,255,255,.13)');grad.addColorStop(.5,'rgba(255,255,255,0)');grad.addColorStop(1,'rgba(71,43,25,.08)');g.fillStyle=grad;g.fillRect(0,0,w,h);
+  },3.2,1.2);
+}
+function fmPaintTex(){
+  return fmCanvasTex('blueLaminate',256,256,(g,w,h)=>{
+    g.fillStyle='#294c67';g.fillRect(0,0,w,h);const rnd=fmRand(4431);
+    for(let i=0;i<1500;i++){const a=.02+rnd()*.045;g.fillStyle=rnd()>.5?`rgba(255,255,255,${a})`:`rgba(0,0,0,${a})`;const s=.5+rnd();g.fillRect(rnd()*w,rnd()*h,s,s);}
+  },1,1);
+}
+function fmFabricTex(){
+  return fmCanvasTex('sofaFabric',256,256,(g,w,h)=>{
+    g.fillStyle='#98786d';g.fillRect(0,0,w,h);
+    g.strokeStyle='rgba(255,255,255,.08)';g.lineWidth=1;
+    for(let i=0;i<w;i+=4){g.beginPath();g.moveTo(i,0);g.lineTo(i,h);g.stroke();}
+    g.strokeStyle='rgba(40,24,20,.07)';
+    for(let i=0;i<h;i+=4){g.beginPath();g.moveTo(0,i);g.lineTo(w,i);g.stroke();}
+  },2,4);
+}
+function fmMat(key,opts={}){
+  if(FM.materials[key])return FM.materials[key];
+  const m=new THREE.MeshStandardMaterial({color:opts.color===undefined?0xffffff:opts.color,roughness:opts.rough===undefined?.78:opts.rough,metalness:opts.metal||0,map:opts.map||null});
+  if(opts.transparent){m.transparent=true;m.opacity=opts.opacity===undefined?.5:opts.opacity;m.depthWrite=opts.depthWrite!==false;}
+  FM.materials[key]=m;return m;
+}
+function fmBox(w,h,d,mat,x,y,z,parent){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m;}
+function fmCyl(rt,rb,h,mat,x,y,z,parent,seg=18){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m;}
+function fmChamferGeo(w,h,d,r=.06){
+  r=Math.min(r,w*.24,d*.24);const x=w/2,z=d/2,y=h/2;
+  const p=[[-x+r,-z],[x-r,-z],[x,-z+r],[x,z-r],[x-r,z],[-x+r,z],[-x,z-r],[-x,-z+r]];
+  const verts=[],uvs=[];
+  const add=v=>{verts.push(...v);uvs.push(v[0]/w+.5,v[2]/d+.5);};
+  const tri=(a,b,c)=>{add(a);add(b);add(c);};
+  for(let i=1;i<7;i++){
+    tri([p[0][0],-y,p[0][1]],[p[i][0],-y,p[i][1]],[p[i+1][0],-y,p[i+1][1]]);
+    tri([p[0][0],y,p[0][1]],[p[i+1][0],y,p[i+1][1]],[p[i][0],y,p[i][1]]);
+  }
+  for(let i=0;i<8;i++){
+    const j=(i+1)%8,a=p[i],b=p[j];
+    tri([a[0],-y,a[1]],[b[0],y,b[1]],[b[0],-y,b[1]]);
+    tri([a[0],-y,a[1]],[a[0],y,a[1]],[b[0],y,b[1]]);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  geo.computeVertexNormals();return geo;
+}
+function fmChamfer(w,h,d,r,mat,x,y,z,parent){const m=new THREE.Mesh(fmChamferGeo(w,h,d,r),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m;}
+function fmPlane(w,h,mat,x,y,z,rx=0,ry=0,rz=0,parent){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);m.position.set(x,y,z);m.rotation.set(rx,ry,rz);m.receiveShadow=true;(parent||scene).add(m);return m;}
+
+function fmHideLegacyPlant(){
+  scene.traverse(o=>{
+    if(!o.isMesh||!o.geometry||o.geometry.type!=='SphereGeometry')return;
+    if(Math.hypot(o.position.x-.65,o.position.z-9.6)<.12&&Math.abs(o.position.y-.65)<.18)o.visible=false;
+  });
+}
+function fmLobbyFloor(group){
+  const mat=fmMat('lobbyFloor',{map:fmVinylTex(),rough:.88,metal:0});
+  const p=fmPlane(8.92,8.92,mat,4.5,.004,13.5,-Math.PI/2,0,0,group);p.renderOrder=0;
+}
+function fmReceptionDesk(group){
+  const navy=fmMat('navyPaint',{map:fmPaintTex(),rough:.56,metal:.01});
+  const navyDark=fmMat('navyDark',{color:0x1d3548,rough:.48,metal:.04});
+  const wood=fmMat('counterWoodMat',{map:fmWoodTex(),rough:.48,metal:.01});
+  const metal=fmMat('deskMetal',{color:0x4e5964,rough:.34,metal:.55});
+  const black=fmMat('deviceBlack',{color:0x252b31,rough:.42,metal:.08});
+  const screen=fmMat('screen',{color:0x5f8ba5,rough:.18,metal:.06});
+  const paper=fmMat('paper',{color:0xf7f2e7,rough:.96,metal:0});
+  fmChamfer(4.66,.84,.67,.085,navy,3.75,.49,11.30,group);
+  [2.22,3.75,5.28].forEach(x=>fmBox(1.34,.59,.035,navy,x,.51,11.655,group));
+  [2.98,4.51].forEach(x=>fmBox(.025,.62,.052,navyDark,x,.51,11.674,group));
+  fmBox(4.70,.11,.12,navyDark,3.75,.135,11.62,group);
+  fmBox(4.82,.115,.79,wood,3.75,1.055,11.30,group);
+  fmChamfer(1.18,.08,.56,.055,wood,5.18,1.205,11.31,group);
+  fmBox(.055,.17,.48,metal,4.72,1.135,11.31,group);fmBox(.055,.17,.48,metal,5.64,1.135,11.31,group);
+  fmChamfer(.74,.47,.075,.055,black,2.58,1.43,11.27,group);
+  fmPlane(.62,.35,screen,2.58,1.43,11.312,0,0,0,group);
+  fmBox(.10,.22,.10,metal,2.58,1.17,11.29,group);fmChamfer(.42,.035,.24,.035,metal,2.58,1.075,11.29,group);
+  const kb=fmChamfer(.67,.035,.25,.035,black,2.58,1.105,11.05,group);kb.rotation.x=-.035;
+  for(let r=0;r<3;r++)for(let c=0;c<7;c++)fmBox(.065,.012,.038,fmMat('keys',{color:0x4c5660,rough:.55}),2.37+c*.071,1.128,10.985+r*.052,group);
+  fmChamfer(.42,.10,.27,.045,black,4.84,1.115,11.18,group);
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++)fmBox(.04,.012,.04,metal,4.74+c*.06,1.172,11.12+r*.05,group);
+  const handset=fmChamfer(.42,.075,.10,.04,fmMat('phoneHandset',{color:0x39424b,rough:.45}),4.84,1.22,11.19,group);handset.rotation.y=.06;
+  for(let i=0;i<3;i++){const p=fmBox(.48,.018,.34,paper,3.55+i*.045,1.125+i*.035,11.08-i*.02,group);p.rotation.y=-.05;}
+  const acrylic=fmMat('acrylic',{color:0xd6eef7,rough:.12,metal:0,transparent:true,opacity:.32,depthWrite:false});
+  fmBox(.48,.40,.018,acrylic,1.92,1.31,11.08,group);fmBox(.018,.40,.30,acrylic,1.69,1.31,11.20,group);fmBox(.018,.40,.30,acrylic,2.15,1.31,11.20,group);
+  const brochure1=fmBox(.34,.26,.012,fmMat('brochure1',{color:0xf2c85b,rough:.9}),1.92,1.28,11.065,group);brochure1.rotation.x=-.06;
+  fmBox(.07,.19,.07,fmMat('penBlue',{color:0x2e6f9e,rough:.5}),5.48,1.17,11.06,group);fmBox(.07,.17,.07,fmMat('penRed',{color:0xc94c3e,rough:.5}),5.57,1.16,11.06,group);
+  fmCyl(.075,.075,.012,fmMat('grommet',{color:0x30373d,rough:.35,metal:.25}),3.05,1.116,11.47,group,20);
+}
+function fmSofa(group){
+  const fab=fmMat('sofaFabricMat',{map:fmFabricTex(),rough:.92,metal:0});
+  const dark=fmMat('sofaSeam',{color:0x6f554e,rough:.88});
+  fmChamfer(.90,.25,3.18,.10,dark,.85,.29,15.70,group);
+  [14.63,15.70,16.77].forEach(z=>fmChamfer(.78,.18,.90,.10,fab,.88,.53,z,group));
+  [14.63,15.70,16.77].forEach(z=>{const b=fmChamfer(.17,.62,.90,.08,fab,.50,.76,z,group);b.rotation.z=-.035;});
+  fmChamfer(.78,.44,.18,.07,fab,.88,.55,14.13,group);fmChamfer(.78,.44,.18,.07,fab,.88,.55,17.27,group);
+  [14.30,17.10].forEach(z=>[.57,1.17].forEach(x=>fmBox(.09,.18,.09,fmMat('sofaLeg',{color:0x5b4535,rough:.68}),x,.09,z,group)));
+}
+function fmPlant(group){
+  fmHideLegacyPlant();
+  const pot=fmMat('pot',{color:0x8a6247,rough:.82});const soil=fmMat('soil',{color:0x3e3027,rough:1});const trunk=fmMat('trunk',{color:0x5d4936,rough:.9});
+  fmCyl(.27,.20,.36,pot,.65,.19,9.60,group,16);fmCyl(.285,.285,.045,fmMat('potRim',{color:0x6f4f3a,rough:.8}),.65,.39,9.60,group,16);fmCyl(.21,.21,.018,soil,.65,.415,9.60,group,18);
+  fmCyl(.055,.07,.46,trunk,.65,.64,9.60,group,10);
+  const leafMat=fmMat('leaf',{color:0x5f8a4f,rough:.82});const leaf2=fmMat('leaf2',{color:0x477442,rough:.82});
+  const pts=[[-.16,.83,-.05],[.14,.84,-.05],[-.05,1.00,.05],[.20,1.00,.07],[-.22,1.03,.09],[.02,1.16,-.02]];
+  pts.forEach((q,i)=>{const m=new THREE.Mesh(new THREE.DodecahedronGeometry(i===5?.20:.23,0),i%2?leaf2:leafMat);m.position.set(.65+q[0],q[1],9.60+q[2]);m.scale.set(1,.82,1);m.rotation.y=i*.7;m.castShadow=true;group.add(m);});
+}
+function fmWaitingTable(group){
+  const metal=fmMat('waitMetal',{color:0x69737d,rough:.38,metal:.55});const wood=fmMat('waitWood',{map:fmWoodTex(),rough:.56});
+  fmCyl(.32,.32,.065,wood,1.85,.49,15.38,group,24);fmCyl(.065,.09,.40,metal,1.85,.25,15.38,group,14);fmCyl(.24,.24,.025,metal,1.85,.035,15.38,group,18);
+  const mag=fmChamfer(.38,.045,.27,.025,fmMat('magazine',{color:0x4b83b7,rough:.82}),1.78,.545,15.33,group);mag.rotation.y=.12;
+  const mag2=fmChamfer(.34,.042,.25,.025,fmMat('magazine2',{color:0xdf7665,rough:.82}),1.94,.59,15.45,group);mag2.rotation.y=-.10;
+}
+function fmEntryMat(group){
+  const tex=fmCanvasTex('entryMat',256,128,(g,w,h)=>{g.fillStyle='#58636d';g.fillRect(0,0,w,h);g.strokeStyle='rgba(255,255,255,.08)';for(let y=2;y<h;y+=5){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}},2,2);
+  const mat=fmMat('entryMatMat',{map:tex,rough:.98});fmBox(2.25,.022,1.00,mat,4.45,.018,16.95,group);
+  fmBox(1.45,.008,.045,fmMat('entryGold',{color:0xd3ad55,rough:.58,metal:.12}),4.45,.034,16.95,group);
+}
+
+artFrontDesk=function(){
+  const group=new THREE.Group();group.name='art-v3-frontdesk';scene.add(group);
+  fmLobbyFloor(group);fmReceptionDesk(group);fmSofa(group);fmPlant(group);fmWaitingTable(group);fmEntryMat(group);
+};
+/* art_models.js 整併前修正：舊模型替換、UV、材質比例、效能與門牌定位。 */
+
+/* fmChamferGeo 原本只有頂/底面的 UV 有面積；側面上下頂點共用同一組 x/z UV，
+   會讓側面木紋/烤漆貼圖塌成一條線。改成頂/底用平面 UV、側面沿周長展開。
+   側面 U 依真實邊長比例累積，因此長邊、倒角與短邊不會各自被硬拉成一整張貼圖。
+   Phase 2 有大量同尺寸桌腳、椅架與板件，因此再以尺寸+r 做 BufferGeometry 快取。 */
+const FM_CHAMFER_CACHE=new Map();
+fmChamferGeo=function(w,h,d,r=.06){
+  r=Math.min(r,w*.24,d*.24);
+  const key=[w,h,d,r].map(v=>Number(v).toFixed(4)).join('|');
+  if(FM_CHAMFER_CACHE.has(key))return FM_CHAMFER_CACHE.get(key);
+  const x=w/2,z=d/2,y=h/2;
+  const p=[[-x+r,-z],[x-r,-z],[x,-z+r],[x,z-r],[x-r,z],[-x+r,z],[-x,z-r],[-x,-z+r]];
+  const verts=[],uvs=[];
+  const add=(v,uv)=>{verts.push(...v);uvs.push(...uv);};
+  const tri=(a,b,c,ua,ub,uc)=>{add(a,ua);add(b,ub);add(c,uc);};
+  const faceUV=v=>[v[0]/w+.5,v[2]/d+.5];
+  for(let i=1;i<7;i++){
+    const b0=[p[0][0],-y,p[0][1]],b1=[p[i][0],-y,p[i][1]],b2=[p[i+1][0],-y,p[i+1][1]];
+    const t0=[p[0][0],y,p[0][1]],t1=[p[i+1][0],y,p[i+1][1]],t2=[p[i][0],y,p[i][1]];
+    tri(b0,b1,b2,faceUV(b0),faceUV(b1),faceUV(b2));
+    tri(t0,t1,t2,faceUV(t0),faceUV(t1),faceUV(t2));
+  }
+  const edgeLen=p.map((a,i)=>{const b=p[(i+1)%8];return Math.hypot(b[0]-a[0],b[1]-a[1]);});
+  const perimeter=edgeLen.reduce((a,b)=>a+b,0);let run=0;
+  for(let i=0;i<8;i++){
+    const j=(i+1)%8,a=p[i],b=p[j],u0=run/perimeter,u1=(run+edgeLen[i])/perimeter;run+=edgeLen[i];
+    const a0=[a[0],-y,a[1]],b0=[b[0],-y,b[1]],b1=[b[0],y,b[1]],a1=[a[0],y,a[1]];
+    tri(a0,b1,b0,[u0,0],[u1,1],[u1,0]);
+    tri(a0,a1,b1,[u0,0],[u0,1],[u1,1]);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  geo.computeVertexNormals();FM_CHAMFER_CACHE.set(key,geo);return geo;
+};
+
+/* 同一張程序貼圖可以共用 Canvas，但不同尺寸家具不能共用同一組 repeat。
+   clone() 只複製 Texture 狀態、仍共用原 image，避免為每張桌子再建立 512px Canvas。
+   測試 stub 比真實 Three.js 精簡，center/rotation 若不存在就略過，不影響遊戲本體。 */
+function fmTextureView(key,base,rx,ry,rotation=0){
+  const k='view:'+key;if(FM.textures[k])return FM.textures[k];
+  const t=base.clone?base.clone():base;t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  if(t.repeat&&t.repeat.set)t.repeat.set(rx,ry);
+  if(t.center&&t.center.set)t.center.set(.5,.5);
+  if('rotation' in t)t.rotation=rotation;
+  t.needsUpdate=true;
+  FM.textures[k]=t;return t;
+}
+const FM_UV_BASE_MAT=fmMat;
+fmMat=function(key,opts={}){
+  if(FM.materials[key])return FM.materials[key];
+  let map=opts.map;
+  if(map){
+    // 以物件實際尺度分 profile，讓木紋/表面顆粒在不同房間維持接近的物理尺寸。
+    const profiles={
+      'counterWoodMat':[3.8,.95],
+      'p2:deskWood':[1.15,.55],
+      'p2:podiumWood':[1.20,.60],
+      'p2env:officeWood':[2.55,.82],
+      'p2env:counterWood':[1.75,.55],
+      'p2env:wallWood':[2.85,.46],
+      'navyPaint':[3.6,1.35],
+      'sofaFabricMat':[1.15,1.35]
+    };
+    const pf=profiles[key];if(pf)map=fmTextureView(key,map,pf[0],pf[1],pf[2]||0);
+  }
+  return FM_UV_BASE_MAT(key,{...opts,map});
+};
+
+/* 新櫃台 / 沙發是替換，不和舊方塊疊放。 */
+function fmHideLegacyFrontDesk(){
+  const targets=[
+    [3.75,.50,11.30,.08],[3.75,1.025,11.30,.08], // 舊櫃台本體與檯面
+    [5.40,1.12,11.30,.10],[2.40,1.25,11.15,.10], // 舊電話 / 螢幕
+    [.85,.225,15.70,.12],[.45,.425,15.70,.12]     // 舊沙發座面 / 椅背
+  ];
+  scene.children.forEach(o=>{
+    if(!o||!o.isMesh)return;
+    for(const [x,y,z,e] of targets){
+      if(Math.abs(o.position.x-x)<e&&Math.abs(o.position.y-y)<e&&Math.abs(o.position.z-z)<e){o.visible=false;break;}
+    }
+  });
+}
+const FM_FRONTDESK_REPLACEMENT=artFrontDesk;
+artFrontDesk=function(){fmHideLegacyFrontDesk();FM_FRONTDESK_REPLACEMENT();};
+
+/* 門牌改到真正門口旁的實牆，消防器材貼牆。 */
+artHallDetails=function(){
+  wallSign("主任室",9.13,1.38,3.65,Math.PI/2,.70,.28,"#ffffff","#425466",36);
+  wallSign("講師休息室",9.13,1.38,7.95,Math.PI/2,1.05,.28,"#ffffff","#425466",32);
+  // B 班牌掛在 z=3 之後的實牆，不跨門洞。
+  wallSign("高三 B 班",11.88,1.42,3.45,-Math.PI/2,.90,.30,"#ffffff","#8a5c32",34);
+  wallSign("自習室",11.88,1.42,12.35,-Math.PI/2,.72,.30,"#ffffff","#4f6d62",34);
+  // C 班門洞為 x=29.6~31.6；牌子貼在左側門柱實牆，正面朝置物區 (+z)。
+  wallSign("國中 C 班",29.24,1.42,11.12,0,.70,.30,"#ffffff","#4c6f8c",32);
+
+  // 走廊南端牆掛式滅火器，不佔通道。
+  artBox(.58,.92,.045,0xe9ecef,10.82,1.00,17.72,null,.88,.02);
+  artCyl(.105,.125,.55,0xc83a31,10.82,.84,17.64,null,18);
+  artCyl(.075,.075,.055,0x30363d,10.82,1.145,17.64,null,14);
+  artBox(.18,.055,.07,0x2b3036,10.82,1.20,17.64,null,.55,.12);
+  artBox(.035,.34,.035,0x333a40,10.95,.93,17.60,null,.55,.08);
+  wallSign("滅火器",10.82,1.55,17.69,Math.PI,.52,.20,"#ffffff","#c83a31",28);
+};
+/* ================= 美術重製 Phase 2：人物 + 教室家具 =================
+   目標：保留既有骨架、動畫、碰撞與事件邏輯，只替換真正看得到的模型本體。
+   不加入全螢幕濾鏡，不改 renderer 色彩流程。 */
+
+const P2_BASE_PERSON=person;
+const P2_BASE_FURN=furn;
+
+function p2Hash(s){let h=2166136261;for(let i=0;i<(s||'').length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function p2Std(key,color,rough=.76,metal=.02){return fmMat('p2:'+key,{color,rough,metal});}
+function p2Mesh(geo,material,parent,x=0,y=0,z=0){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m;}
+function p2HideFirstMesh(group){if(!group)return;const m=group.children&&group.children.find(o=>o&&o.isMesh);if(m)m.visible=false;}
+
+/* ---------- 人物：回歸原版方塊比例 ---------- */
+// 原版 person 已提供方塊頭、軀幹、四肢、鞋子、衣領與名牌。
+// 不再以球頭和圓柱四肢覆蓋它，避免不同造型語言混用。
+person=function(color,opts={}){
+  return P2_BASE_PERSON(color,opts);
+};
+
+/* ---------- 椅子：塑膠椅面 + 金屬骨架 ---------- */
+chair=function(x,z,ry){
+  CHAIRS.push([x,z]);
+  const g=new THREE.Group();
+  const zone=x>=28?'jh':(z>=11?'study':'class');
+  const plastic=zone==='jh'?p2Std('chairJh',0x668b8d,.72,.01):zone==='study'?p2Std('chairStudy',0x65736e,.75,.01):p2Std('chairClass',0x586878,.72,.01);
+  const metal=p2Std('chairMetal',0x49515a,.36,.52);
+  const seat=p2Mesh(fmChamferGeo(.46,.075,.43,.055),plastic,g,0,.43,0);
+  const back=p2Mesh(fmChamferGeo(.46,.42,.075,.055),plastic,g,0,.69,-.19);back.rotation.x=-.08;
+  // H 型金屬腳架，比四根方柱更像教室椅。
+  [-.17,.17].forEach(xx=>{
+    p2Mesh(fmChamferGeo(.045,.42,.045,.012),metal,g,xx,.21,-.14);
+    p2Mesh(fmChamferGeo(.045,.42,.045,.012),metal,g,xx,.21,.14);
+    p2Mesh(fmChamferGeo(.045,.12,.045,.012),metal,g,xx,.50,-.19);
+  });
+  p2Mesh(fmChamferGeo(.38,.035,.035,.010),metal,g,0,.19,.14);
+  g.position.set(x,0,z);g.rotation.y=ry;scene.add(g);
+};
+
+/* ---------- 教室桌：桌板 + 金屬框 + 書籃 ---------- */
+function p2StudentDesk(r,color,top){
+  solids.push(r);
+  const cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2;
+  const g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
+  const wood=p2Std('deskWoodSolid',0xc29d70,.70,0);
+  const metal=p2Std('deskFrame',0x59626b,.38,.48);
+  const basket=p2Std('deskBasket',0x747d85,.52,.30);
+  p2Mesh(new THREE.BoxGeometry(1.22,.09,.54),wood,g,0,.745,0);
+  [-.47,.47].forEach(xx=>[-.17,.17].forEach(zz=>p2Mesh(fmChamferGeo(.045,.66,.045,.012),metal,g,xx,.35,zz)));
+  p2Mesh(fmChamferGeo(.94,.035,.035,.010),metal,g,0,.29,-.16);
+  p2Mesh(fmChamferGeo(.94,.035,.035,.010),metal,g,0,.29,.16);
+  // 書籃用三根橫條表現，不增加大量細 mesh。
+  [-.12,0,.12].forEach(zz=>p2Mesh(fmChamferGeo(.76,.025,.025,.008),basket,g,0,.54,zz));
+  p2Mesh(fmChamferGeo(.025,.16,.30,.008),basket,g,-.38,.50,0);
+  p2Mesh(fmChamferGeo(.025,.16,.30,.008),basket,g,.38,.50,0);
+}
+function p2Podium(r){
+  solids.push(r);const cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
+  const wood=fmMat('p2:podiumWood',{map:fmWoodTex(),rough:.58,metal:0});
+  const dark=p2Std('podiumDark',0x5a4636,.70,.01);
+  p2Mesh(fmChamferGeo(1.18,.86,.56,.065),dark,g,0,.43,0);
+  p2Mesh(fmChamferGeo(1.28,.085,.64,.05),wood,g,0,.90,0);
+  p2Mesh(fmChamferGeo(.78,.48,.025,.025),wood,g,0,.46,.294);
+}
+function p2StudyTable(r){
+  solids.push(r);const cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,w=r[2]-r[0],g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
+  const top=p2Std('studyTopWood',0xb68b63,.78,0);
+  const metal=p2Std('studyFrame',0x667079,.40,.45);
+  p2Mesh(new THREE.BoxGeometry(w,.105,.92),top,g,0,.745,0);
+  [-w/2+.28,w/2-.28].forEach(xx=>[-.30,.30].forEach(zz=>p2Mesh(fmChamferGeo(.055,.66,.055,.014),metal,g,xx,.35,zz)));
+  p2Mesh(fmChamferGeo(w-.52,.04,.04,.012),metal,g,0,.30,0);
+}
+
+furn=function(r,h,color,top){
+  const w=r[2]-r[0],d=r[3]-r[1];
+  // B 班與 C 班學生桌。
+  if(Math.abs(w-1.2)<.03&&Math.abs(d-.5)<.03&&Math.abs(h-.72)<.03){p2StudentDesk(r,color,top);return;}
+  // 兩間教室的講桌。
+  if(Math.abs(w-1.2)<.03&&Math.abs(d-.6)<.03&&Math.abs(h-1.0)<.03){p2Podium(r);return;}
+  // 自習室長桌。
+  if(Math.abs(w-5.0)<.04&&Math.abs(d-.9)<.04&&Math.abs(h-.74)<.03){p2StudyTable(r);return;}
+  P2_BASE_FURN(r,h,color,top);
+};
+
+/* ================= Phase 2：全地圖材質 + 房間辨識度 =================
+   不改 renderer 色彩流程，不加全螢幕濾鏡。
+   只改善地板表面、房間大型家具與可辨識的空間元素。 */
+
+function p2EnvTex(key,base,line,grain,rx=4,ry=4){
+  return fmCanvasTex('p2env:'+key,512,512,(g,w,h)=>{
+    g.fillStyle=base;g.fillRect(0,0,w,h);
+    const rnd=fmRand(p2Hash(key));
+    for(let i=0;i<1300;i++){
+      const a=.018+rnd()*.035,s=.5+rnd()*1.3;
+      g.fillStyle=`rgba(${grain[0]},${grain[1]},${grain[2]},${a})`;
+      g.fillRect(rnd()*w,rnd()*h,s,s);
+    }
+    if(line){
+      g.strokeStyle=line;g.lineWidth=1;
+      for(let x=0;x<=w;x+=128){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
+      for(let y=0;y<=h;y+=128){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
+    }
+  },rx,ry);
+}
+function p2WoodPanelTex(){
+  return fmCanvasTex('p2env:woodPanel',512,256,(g,w,h)=>{
+    g.fillStyle='#9a7454';g.fillRect(0,0,w,h);const rnd=fmRand(47031);
+    for(let i=0;i<70;i++){
+      const y=rnd()*h,phase=rnd()*6.28;
+      g.beginPath();
+      for(let x=0;x<=w;x+=8){const yy=y+Math.sin(x*.03+phase)*(1+rnd()*3);x?g.lineTo(x,yy):g.moveTo(x,yy);}
+      g.strokeStyle=`rgba(67,39,22,${.035+rnd()*.07})`;g.lineWidth=.7+rnd()*1.1;g.stroke();
+    }
+  },2.5,1);
+}
+function p2Floor(w,d,x,z,texKey,base,line,grain,rx,ry){
+  const tex=p2EnvTex(texKey,base,line,grain,rx,ry);
+  const mat=fmMat('p2env:floor:'+texKey,{map:tex,rough:.90,metal:0});
+  const p=fmPlane(w,d,mat,x,.003,z,-Math.PI/2);p.renderOrder=0;return p;
+}
+function p2EnvFloors(){
+  // 大廳由 art_models.js 管理，這裡補齊其他區域。
+  p2Floor(8.96,4.96,4.5,2.5,'office','#c2c9c0','rgba(83,91,83,.10)',[95,101,94],4,2.2);
+  p2Floor(8.96,3.96,4.5,7.0,'lounge','#d1c8b9','rgba(105,92,76,.10)',[116,101,84],4,2);
+  p2Floor(2.94,17.96,10.5,9.0,'hall','#cbd0d3','rgba(78,88,98,.10)',[91,99,105],1.7,8);
+  p2Floor(15.96,10.96,20,5.5,'class','#ded7c9','rgba(123,107,88,.13)',[135,121,103],7.5,5);
+  p2Floor(15.96,6.96,20,14.5,'study','#ccd3cc','rgba(72,91,78,.10)',[90,105,94],7.5,3.2);
+  p2Floor(7.96,10.96,32,5.5,'jh','#d4dbc8','rgba(81,105,78,.12)',[98,116,94],4,5);
+  p2Floor(7.96,6.96,32,14.5,'jhStorage','#d8d1c6','rgba(100,88,76,.10)',[117,103,90],4,3.2);
+}
+
+function p2CabinetUnit(x,z,w,h,d,bodyMat,doorMat,parent){
+  const g=new THREE.Group();g.position.set(x,0,z);(parent||scene).add(g);
+  p2Mesh(fmChamferGeo(w,h,d,.045),bodyMat,g,0,h/2,0);
+  const gap=.035,doorW=(w-gap*3)/2;
+  [-1,1].forEach(s=>{
+    p2Mesh(fmChamferGeo(doorW,h-.12,.035,.018),doorMat,g,s*(doorW/2+gap/2),h/2,d/2+.022);
+    p2Mesh(fmChamferGeo(.035,.18,.025,.009),p2Std('cabHandle',0x606970,.34,.58),g,s*.075,h*.54,d/2+.055);
+  });
+  p2Mesh(fmChamferGeo(w+.05,.055,d+.04,.025),bodyMat,g,0,h+.028,0);
+  return g;
+}
+function p2ShelfBooks(parent,x,y,z,span,count=7){
+  const cols=[0x8b4b43,0x466b88,0xc09a4a,0x54755d,0x6d5b85,0xa96a42];
+  for(let i=0;i<count;i++){
+    const ww=span/count*.68,xx=x-span/2+(i+.5)*span/count;
+    p2Mesh(fmChamferGeo(ww,.32,.16,.012),p2Std('book:'+cols[i%cols.length],cols[i%cols.length],.84,0),parent,xx,y,z);
+  }
+}
+
+function p2OfficeDesk(r){
+  solids.push(r);const g=new THREE.Group(),cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2;g.position.set(cx,0,cz);scene.add(g);
+  const wood=fmMat('p2env:officeWood',{map:p2WoodPanelTex(),rough:.64,metal:0});
+  const dark=p2Std('officeDeskDark',0x5e5146,.72,.01),metal=p2Std('officeDeskMetal',0x555e66,.34,.55);
+  p2Mesh(new THREE.BoxGeometry(3.05,.11,1.03),wood,g,0,.79,0);
+  [-1.25,1.25].forEach(x=>p2Mesh(fmChamferGeo(.11,.70,.73,.028),dark,g,x,.38,0));
+  p2Mesh(fmChamferGeo(2.35,.06,.06,.018),metal,g,0,.33,.25);
+  // 桌前木質擋板，主任室輪廓和教室桌分開。
+  p2Mesh(fmChamferGeo(2.36,.43,.045,.018),wood,g,0,.48,.43);
+}
+function p2LoungeTable(r){
+  solids.push(r);const g=new THREE.Group(),cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2;g.position.set(cx,0,cz);scene.add(g);
+  const top=fmMat('p2env:loungeTop',{color:0xd8cec0,rough:.86,metal:0});const metal=p2Std('loungeMetal',0x667078,.38,.50);
+  p2Mesh(new THREE.BoxGeometry(3.02,.10,1.18),top,g,0,.75,0);
+  [-1.25,1.25].forEach(x=>[-.42,.42].forEach(z=>p2Mesh(fmChamferGeo(.055,.68,.055,.015),metal,g,x,.36,z)));
+  p2Mesh(fmChamferGeo(2.38,.04,.04,.012),metal,g,0,.31,0);
+}
+function p2Fridge(r){
+  solids.push(r);const cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
+  const body=p2Std('fridgeBody',0xe5e8e9,.55,.15),edge=p2Std('fridgeEdge',0xa1a8ae,.36,.46);
+  p2Mesh(fmChamferGeo(.78,1.68,.98,.07),body,g,0,.84,0);
+  p2Mesh(fmChamferGeo(.69,.018,.035,.009),edge,g,0,1.05,.505);
+  p2Mesh(fmChamferGeo(.035,.42,.035,.009),edge,g,.27,.86,.51);
+}
+function p2CounterCabinet(r,h){
+  solids.push(r);const w=r[2]-r[0],d=r[3]-r[1],cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
+  const wood=fmMat('p2env:counterWood',{map:p2WoodPanelTex(),rough:.66,metal:0});const door=p2Std('loungeDoor',0xc9c0b2,.82,0);
+  p2Mesh(fmChamferGeo(w,h,d,.045),door,g,0,h/2,0);p2Mesh(fmChamferGeo(w+.06,.07,d+.04,.03),wood,g,0,h+.035,0);
+  const n=Math.max(2,Math.round(w/.62));for(let i=1;i<n;i++)p2Mesh(fmChamferGeo(.025,h-.12,.035,.008),p2Std('cabSeam',0x9c9489,.78,0),g,-w/2+i*w/n,h/2,d/2+.025);
+}
+function p2JhLockers(r){
+  solids.push(r);const w=r[2]-r[0],d=r[3]-r[1],cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2,g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
+  const body=p2Std('lockerBody',0x71808e,.58,.12),door=p2Std('lockerDoor',0x8796a4,.62,.10),handle=p2Std('lockerHandle',0x444d55,.32,.55);
+  p2Mesh(fmChamferGeo(w,1.48,d,.035),body,g,0,.74,0);
+  const rows=4,cols=2;for(let r0=0;r0<rows;r0++)for(let c=0;c<cols;c++){
+    const yy=.20+r0*.35,xx=(c?1:-1)*.30;
+    p2Mesh(fmChamferGeo(.52,.31,.035,.015),door,g,xx,yy,d/2+.023);
+    p2Mesh(fmChamferGeo(.035,.08,.022,.007),handle,g,xx+(c?-.16:.16),yy,d/2+.055);
+  }
+}
+
+const P2_ENV_BASE_FURN=furn;
+furn=function(r,h,color,top){
+  const w=r[2]-r[0],d=r[3]-r[1];
+  // 主任桌
+  if(Math.abs(w-3)<.03&&Math.abs(d-1)<.03&&Math.abs(h-.78)<.03){p2OfficeDesk(r);return;}
+  // 休息室中央桌
+  if(Math.abs(w-3)<.03&&Math.abs(d-1.2)<.03&&Math.abs(h-.74)<.03){p2LoungeTable(r);return;}
+  // 休息室冰箱
+  if(Math.abs(w-.8)<.03&&Math.abs(d-1)<.03&&Math.abs(h-1.7)<.03){p2Fridge(r);return;}
+  // 休息室工作檯
+  if(Math.abs(w-2.1)<.03&&Math.abs(d-.6)<.03&&Math.abs(h-.9)<.03){p2CounterCabinet(r,h);return;}
+  // 國中部大型置物櫃
+  if(Math.abs(w-1.3)<.03&&Math.abs(d-5.2)<.03&&Math.abs(h-1.5)<.03){p2JhLockers(r);return;}
+  P2_ENV_BASE_FURN(r,h,color,top);
+};
+
+function p2RoomIdentity(){
+  // 主任室：木質矮牆、文件櫃與大型軟木板。
+  const wood=fmMat('p2env:wallWood',{map:p2WoodPanelTex(),rough:.74,metal:0});
+  fmBox(3.7,.42,.045,wood,6.65,.36,.225);
+  p2CabinetUnit(7.65,1.05,1.05,1.35,.42,p2Std('officeCab',0x6b7479,.62,.15),p2Std('officeCabDoor',0x81898e,.65,.10));
+  wallSign('續班追蹤\n本週待聯絡',6.25,1.48,.235,0,2.2,.72,'#3d3126','#d6ba8a',42);
+
+  // 講師休息室：上櫃、公告板，空間變成「工作休息區」而非另一間教室。
+  [2.1,3.35,4.60].forEach(x=>p2CabinetUnit(x,5.38,1.05,.72,.30,p2Std('loungeUpper',0xb7afa4,.82,0),p2Std('loungeUpperDoor',0xd3ccc1,.86,0)));
+  wallSign('代課・請假・影印提醒',5.75,1.45,5.13,0,2.2,.48,'#3d4b55','#f0e4c8',38);
+
+  // B 班：右側教材櫃 + 公告欄。
+  p2CabinetUnit(27.25,8.55,.75,1.18,.42,p2Std('classCab',0x7b858b,.60,.14),p2Std('classCabDoor',0x9da6aa,.66,.10));
+  wallSign('高三 B 班\n本週進度：空間向量',27.72,1.48,7.15,-Math.PI/2,2.0,.68,'#64462f','#f1dfb9',38);
+
+  // 自習室：安靜區書架與規則板。
+  const shelf=p2CabinetUnit(27.20,16.35,.82,1.25,.40,p2Std('studyShelf',0x66766c,.68,.06),p2Std('studyShelfDoor',0x87958a,.72,.04));
+  p2ShelfBooks(shelf,0,.98,.225,.55,6);
+  wallSign('自習室\n手機靜音・小聲討論',12.18,1.48,16.0,Math.PI/2,1.8,.68,'#36564a','#eef1e9',38);
+
+  // 國中 C 班：彩色教材櫃與會考公告，語彙和高中區分開。
+  p2CabinetUnit(35.35,8.65,.72,1.10,.42,p2Std('jhCab',0x678b88,.62,.08),p2Std('jhCabDoor',0x86aaa5,.70,.04));
+  wallSign('會考倒數\n單字・作文・複習考',35.72,1.48,7.20,-Math.PI/2,1.9,.72,'#2f6657','#e8f0df',38);
+
+  // 國中部置物區：手搖飲／書包提示板，和教室形成明顯切換。
+  wallSign('置物區\n書包靠牆・手機入籃',28.18,1.42,15.35,Math.PI/2,1.65,.68,'#604b3d','#efe3d4',36);
+}
+
+function p2EnvDecorate(){p2EnvFloors();p2RoomIdentity();}
+const P2_ENV_BASE_DECORATE=artDecorateWorld;
+artDecorateWorld=function(){P2_ENV_BASE_DECORATE();p2EnvDecorate();};
+
+/* Phase 2: inexpensive, time-aware classroom storytelling props.
+   Decorative only: no collision or NPC interactions. */
+const P2_STORY_PROPS=[];
+function p2StoryBox(group,w,h,d,x,y,z,mat){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+  m.position.set(x,y,z);group.add(m);return m;
+}
+function p2StoryMat(key,color){
+  return fmMat('p2story:'+key,{color,rough:.86,metal:0});
+}
+function p2StoryDesk(x,z,index){
+  const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
+  const paper=p2StoryMat('paper',0xe9e4d7),ink=p2StoryMat('ink',0x475a70);
+  const cover=p2StoryMat('cover'+index%3,[0x6c8d83,0x92755f,0x637b9b][index%3]);
+  const bottle=p2StoryMat('bottle'+index%3,[0x86a9ac,0xb4a18c,0x8b9cbd][index%3]);
+  // Unoccupied desks still have handouts. Student belongings arrive with the class.
+  p2StoryBox(g,.29,.014,.21,-.20,.797,-.06,paper);
+  p2StoryBox(g,.24,.018,.16,-.19,.813,-.06,cover);
+  const belongings=new THREE.Group();g.add(belongings);
+  p2StoryBox(belongings,.24,.045,.09,.20,.813,-.09,cover);
+  p2StoryBox(belongings,.035,.19,.035,.36,.878,.09,bottle);
+  p2StoryBox(belongings,.20,.010,.13,-.18,.825,-.055,paper);
+  p2StoryBox(belongings,.15,.009,.009,-.18,.833,-.04,ink);
+  P2_STORY_PROPS.push({belongings});
+}
+function p2StoryDecorate(){
+  DESK_COLS.forEach((x,i)=>DESK_ROWS.forEach((z,j)=>p2StoryDesk(x,z,i*DESK_ROWS.length+j)));
+}
+function p2StoryUpdate(){
+  // Match the established evening arrival clock; avoid spawning belongings
+  // during the afternoon care shift or before high-school students arrive.
+  const minutes=typeof G!=='undefined'&&G&&Number.isFinite(G.clock)?G.clock:null;
+  const present=minutes!==null&&minutes>=18*60&&minutes<22*60;
+  P2_STORY_PROPS.forEach(({belongings})=>{belongings.visible=present;});
+}
+const P2_STORY_BASE_DECORATE=artDecorateWorld;
+artDecorateWorld=function(){P2_STORY_BASE_DECORATE();p2StoryDecorate();p2StoryUpdate();};
+
+/* ================= Phase 2：局部燈具與實體光源 =================
+   只使用少量 PointLight + 可見燈具，不改 tone mapping / exposure / outputEncoding。
+   不開陰影，避免手機端額外負擔。 */
+
+const P2_LOCAL_LIGHTS=[];
+function p2LightFixture(x,y,z,w,d,color=0xf4f1e8,ry=0){
+  const mat=fmMat('p2light:fixture:'+color,{color,rough:.28,metal:.10});
+  const m=p2Mesh(fmChamferGeo(w,.045,d,.022),mat,null,x,y,z);m.rotation.y=ry;m.castShadow=false;m.receiveShadow=false;return m;
+}
+function p2Point(name,x,y,z,color,intensity,distance){
+  const l=new THREE.PointLight(color,intensity,distance,2);l.position.set(x,y,z);l.castShadow=false;
+  l.userData.p2Name=name;l.userData.nightIntensity=intensity;scene.add(l);P2_LOCAL_LIGHTS.push(l);return l;
+}
+function p2BuildLocalLighting(){
+  // 主任室：沿用既有桌燈造型，給它真正的暖色局部光。
+  p2Point('office',4.45,1.55,2.15,0xffd6a3,.34,4.4);
+
+  // 高三 B 班：兩支牆頂日光燈，實際只用一顆低強度光源照亮桌面區。
+  p2LightFixture(16.7,1.145,.26,2.1,.13,0xf6f4ed);
+  p2LightFixture(23.3,1.145,.26,2.1,.13,0xf6f4ed);
+  p2Point('classB',20,2.05,5.5,0xf1f6ff,.18,8.2);
+
+  // 自習室：稍微偏冷、強度較低，保留安靜區感覺。
+  p2LightFixture(20,1.145,11.16,2.4,.12,0xf2f4ee);
+  p2Point('study',20,2.0,14.5,0xe9f0ff,.13,7.0);
+
+  // 國中 C 班：色溫略中性，和高中部做很小的視覺區別。
+  p2LightFixture(30.3,1.145,.26,1.7,.13,0xf3f5ed);
+  p2LightFixture(33.8,1.145,.26,1.7,.13,0xf3f5ed);
+  p2Point('classC',32,2.0,5.5,0xf0f6ea,.16,7.0);
+
+  // 休息室只給一點暖光，不把整個區域染黃。
+  p2Point('lounge',4.2,1.8,7.0,0xffe2bd,.12,4.8);
+}
+function p2ApplyLocalLighting(day){
+  P2_LOCAL_LIGHTS.forEach(l=>{l.intensity=l.userData.nightIntensity*(day?.18:1);});
+}
+
+const P2_LIGHT_BASE_BUILDWORLD=buildWorld;
+buildWorld=function(){
+  P2_LIGHT_BASE_BUILDWORLD();
+  P2_LOCAL_LIGHTS.length=0;
+  p2BuildLocalLighting();
+  p2ApplyLocalLighting(!!MUSIC_DAY);
+};
+
+const P2_LIGHT_BASE_DAYLIGHT=setDaylight;
+setDaylight=function(on){
+  P2_LIGHT_BASE_DAYLIGHT(on);
+  p2ApplyLocalLighting(!!on);
+};
+
+/* ================= Phase 2：名牌與任務標記整理 =================
+   目標：多人同框時減少頭頂 UI 疊在一起。
+   玩家 / 主線 / 支線優先；遠處一般 NPC 名牌自動退場。
+   只改顯示邏輯，不碰事件、尋路或任務判定。 */
+
+const P2_UI_PROJ=new THREE.Vector3();
+let P2_UI_NEXT=0;
+
+function p2UiRememberScale(o){
+  if(!o||!o.scale)return null;
+  o.userData=o.userData||{};
+  if(!o.userData.p2BaseScale)o.userData.p2BaseScale=[o.scale.x,o.scale.y,o.scale.z];
+  return o.userData.p2BaseScale;
+}
+function p2UiScale(o,f){
+  const b=p2UiRememberScale(o);if(!b)return;
+  o.scale.set(b[0]*f,b[1]*f,b[2]*f);
+}
+function p2UiProject(actor,label){
+  if(!actor||!label||!camera)return null;
+  P2_UI_PROJ.set(actor.position.x,actor.position.y+(label.position?.y||1.45),actor.position.z).project(camera);
+  if(P2_UI_PROJ.z<-1||P2_UI_PROJ.z>1||Math.abs(P2_UI_PROJ.x)>1.16||Math.abs(P2_UI_PROJ.y)>1.16)return null;
+  return {x:(P2_UI_PROJ.x+1)*.5*innerWidth,y:(1-P2_UI_PROJ.y)*.5*innerHeight};
+}
+function p2UiRectsTouch(a,b,margin){
+  return !(a.r+margin<b.l||b.r+margin<a.l||a.b+margin<b.t||b.b+margin<a.t);
+}
+function p2UiLabelEntry(actor,id,priority,dist){
+  const label=actor&&actor.userData&&actor.userData.label;if(!label)return null;
+  const p=p2UiProject(actor,label);if(!p)return {actor,label,id,priority,dist,off:true};
+  const base=p2UiRememberScale(label)||[1,1,1];
+  const w=Math.max(72,Math.min(168,70+base[0]*58)),h=innerWidth<600?32:28;
+  return {actor,label,id,priority,dist,p,rect:{l:p.x-w/2,r:p.x+w/2,t:p.y-h/2,b:p.y+h/2}};
+}
+function p2UiResolvedTarget(t){return typeof t==='function'?t(G):t;}
+function p2UiTuneLabels(){
+  if(!G||!player||!camera||mode!=="walk")return;
+  const mobile=innerWidth<600,maxDist=mobile?5.4:7.2,maxLabels=mobile?4:7;
+  const cur=step&&step(),mainTarget=p2UiResolvedTarget(cur&&cur.target),mainId=mainTarget&&mainTarget.npc||null;
+  const sideIds=new Set(),chatIds=new Set();
+  try{activeSides().forEach(sd=>{const t=p2UiResolvedTarget(sd.target);if(t&&t.npc)sideIds.add(t.npc);});}catch(e){}
+  try{chatTargets().forEach(id=>chatIds.add(id));}catch(e){}
+  const pZone=zoneAt(player.position.x,player.position.z),pZoneName=pZone&&pZone[0],entries=[];
+
+  const add=(actor,id,isPlayer=false)=>{
+    if(!actor||!actor.visible||!actor.userData||!actor.userData.label)return;
+    const d=Math.hypot(actor.position.x-player.position.x,actor.position.z-player.position.z);
+    const z=zoneAt(actor.position.x,actor.position.z),same=!!(z&&pZoneName&&z[0]===pZoneName);
+    let pri=isPlayer?100:id===mainId?96:sideIds.has(id)?86:chatIds.has(id)?72:d<2.2?66:same?48:24;
+    const keep=isPlayer||id===mainId||sideIds.has(id)||d<=maxDist||(same&&d<=maxDist+1.8);
+    actor.userData.label.visible=keep;
+    if(!keep)return;
+    const e=p2UiLabelEntry(actor,id,pri,d);if(e)entries.push(e);
+  };
+  add(player,"__player",true);for(const id in npcs)add(npcs[id],id,false);
+
+  entries.sort((a,b)=>b.priority-a.priority||a.dist-b.dist);
+  const kept=[];let count=0;
+  for(const e of entries){
+    if(e.off){e.label.visible=false;continue;}
+    const overlap=kept.some(k=>p2UiRectsTouch(e.rect,k.rect,mobile?7:5));
+    const forced=e.id==="__player"||e.id===mainId;
+    const show=(forced||!overlap)&&count<maxLabels;
+    e.label.visible=show;
+    if(show){
+      const f=forced?1:(e.dist<2.8?.96:e.dist<5?.86:.76);
+      p2UiScale(e.label,f);kept.push(e);count++;
+    }
+  }
+}
+function p2UiTuneMarkers(){
+  if(!G||!player||mode!=="walk")return;
+  const mobile=innerWidth<600,pZone=zoneAt(player.position.x,player.position.z),pName=pZone&&pZone[0];
+  const dist=(x,z)=>Math.hypot(x-player.position.x,z-player.position.z);
+
+  // 主線驚嘆號一直保留，但遠距離略縮小；畫面外仍由 edgeArrow 導航。
+  if(marker&&marker.visible){
+    const d=dist(marker.position.x,marker.position.z);p2UiScale(marker,d<3?1:d<7?.88:.76);
+  }
+
+  // 支線問號只在附近或同區域顯示，避免隔牆整排問號浮在畫面上。
+  let active=[];try{active=activeSides();}catch(e){}
+  active.forEach(sd=>{
+    const mk=sideMarks[sd.id],tg=targetOf(sd.target);if(!mk||!tg)return;
+    const d=dist(tg.x,tg.z),z=zoneAt(tg.x,tg.z),same=!!(z&&pName&&z[0]===pName);
+    const show=d<(mobile?6.2:8.0)||(same&&d<11.5);
+    mk.visible=mk.visible&&show;
+    if(mk.visible)p2UiScale(mk,d<3?1:d<6?.86:.72);
+  });
+
+  // 資訊點是低優先級，只留同區域 / 近距離的，任務與收集物不受影響。
+  for(const id in infoMarks){
+    const mk=infoMarks[id];if(!mk)continue;
+    const d=dist(mk.position.x,mk.position.z),z=zoneAt(mk.position.x,mk.position.z),same=!!(z&&pName&&z[0]===pName);
+    mk.visible=d<(mobile?4.8:6.2)||(same&&d<8.5);
+    if(mk.visible)p2UiScale(mk,d<3?.9:.76);
+  }
+}
+function p2UiTick(){
+  const now=performance.now();if(now<P2_UI_NEXT)return;P2_UI_NEXT=now+110;
+  p2UiTuneLabels();p2UiTuneMarkers();
+}
+
+/* tickEdge 每幀本來就會被主迴圈呼叫；在它後面做低頻 UI 排版，不另開 RAF。 */
+const P2_UI_BASE_TICK_EDGE=tickEdge;
+tickEdge=function(){P2_UI_BASE_TICK_EDGE();p2UiTick();};
+
+/* ================= Phase 2：重複幾何快取 + 場景 profiler =================
+   目標：降低人物與圓形家具重複建立 BufferGeometry 的成本，並量化 mesh 熱點。
+   只共用幾何資料，不改 Mesh、Material、動畫骨架或 transform。 */
+
+const P2_PERF_GEO_CACHE=new Map();
+function p2PerfKey(type,args){return type+'|'+args.map(v=>typeof v==='number'?Number(v).toFixed(5):String(v)).join('|');}
+function p2PerfCachedCtor(type,Base){
+  function Cached(...args){
+    const k=p2PerfKey(type,args);
+    let g=P2_PERF_GEO_CACHE.get(k);
+    if(!g){g=new Base(...args);P2_PERF_GEO_CACHE.set(k,g);}
+    return g;
+  }
+  Cached.prototype=Base.prototype;
+  return Cached;
+}
+
+/* 這些幾何在目前場景中都只透過 Mesh transform 改形，不直接 mutate geometry。 */
+if(THREE.SphereGeometry&&!THREE.SphereGeometry.__p2Cached){
+  const Base=THREE.SphereGeometry,C=p2PerfCachedCtor('sphere',Base);C.__p2Cached=true;C.__p2Base=Base;THREE.SphereGeometry=C;
+}
+if(THREE.CylinderGeometry&&!THREE.CylinderGeometry.__p2Cached){
+  const Base=THREE.CylinderGeometry,C=p2PerfCachedCtor('cylinder',Base);C.__p2Cached=true;C.__p2Base=Base;THREE.CylinderGeometry=C;
+}
+if(THREE.CircleGeometry&&!THREE.CircleGeometry.__p2Cached){
+  const Base=THREE.CircleGeometry,C=p2PerfCachedCtor('circle',Base);C.__p2Cached=true;C.__p2Base=Base;THREE.CircleGeometry=C;
+}
+
+/* 場景 profiler：不改渲染，只盤點 draw-call 候選熱點。
+   會在 CI screenshot artifact 留下 teacher / care / jh 三組 JSON。 */
+function p2PerfAudit(){
+  if(!scene||!scene.traverse)return null;
+  const geoCount=new Map(),matCount=new Map();
+  let meshes=0,visibleMeshes=0;
+  scene.traverse(o=>{
+    if(!o||!o.isMesh)return;
+    meshes++;if(o.visible!==false)visibleMeshes++;
+    if(o.geometry)geoCount.set(o.geometry,(geoCount.get(o.geometry)||0)+1);
+    const mats=Array.isArray(o.material)?o.material:[o.material];
+    mats.forEach(m=>{if(m)matCount.set(m,(matCount.get(m)||0)+1);});
+  });
+  const names=new Map();
+  if(typeof FM_CHAMFER_CACHE!=='undefined')for(const [k,g] of FM_CHAMFER_CACHE)names.set(g,'chamfer:'+k);
+  for(const [k,g] of P2_PERF_GEO_CACHE)names.set(g,k);
+  const top=[...geoCount.entries()].sort((a,b)=>b[1]-a[1]).slice(0,16).map(([g,count])=>({
+    count,
+    key:names.get(g)||g.type||g.constructor&&g.constructor.name||'geometry',
+    vertices:g.attributes&&g.attributes.position&&g.attributes.position.count||null
+  }));
+  const summary={meshes,visibleMeshes,uniqueGeometries:geoCount.size,uniqueMaterials:matCount.size,cachedRoundGeometries:P2_PERF_GEO_CACHE.size,cachedChamferGeometries:typeof FM_CHAMFER_CACHE!=='undefined'?FM_CHAMFER_CACHE.size:null,topGeometries:top};
+  window.__artPerf=summary;
+  return summary;
+}
+window.__p2PerfAudit=p2PerfAudit;
 
 /* ================= 小遊戲 ================= */
 MINIS.jam={
@@ -2854,7 +3823,7 @@ function renderNext(){
 }
 function renderDock(){
   const d=$("dock");if(mode!=="walk"){d.hidden=true;return;}d.hidden=false;
-  const touch=matchMedia("(pointer:coarse)").matches;
+  const touch=matchMedia("(pointer:coarse)").matches||innerWidth<600;
   $("dpad").hidden=!touch;$("keys").hidden=touch;
   const a=$("actBtn");a.hidden=!near;if(near){a.textContent=near.label;a.className="act"+(near.type==="info"?" info":near.type==="chat"||near.type==="greet"?" chat":"");}
 }
@@ -3191,7 +4160,7 @@ function tick(){
     if(mode==="walk"){const z=zoneAt(player.position.x,player.position.z);if(z&&z[0]!==G.zone){G.zone=z[0];if(!G.zonesSeen)G.zonesSeen={};if(!G.zonesSeen[z[0]]){G.zonesSeen[z[0]]=1;showBanner(z[0],(G.line.zoneText&&G.line.zoneText[z[0]])||z[5]);}}}
     const m=targetOf(step()?.target);marker.visible=mode==="walk"&&!!m;if(m)marker.position.set(m.x,m.h+Math.sin(t*3)*.12,m.z);
     tickItemMarks(t);tickEdge();tickTips();
-    tickClock(dt);tickNight(dt);tickRain(dt);moveNPCs(dt);tickCrowd();if(mode!=="title")tickAmbient(dt);tickFX(dt);
+    tickClock(dt);p2StoryUpdate();tickNight(dt);tickRain(dt);moveNPCs(dt);tickCrowd();if(mode!=="title")tickAmbient(dt);tickFX(dt);
     const spk=mode==="dialog"&&D?D.pages[D.i][0]:null,now=performance.now()/1000;
     animPerson(player,dt,t,{walk:mode==="walk"&&G.moving,talk:spk==="me"});tickEmote(player,now);
     for(const id in npcs){const n=npcs[id];if(!n.visible)continue;animPerson(n,dt,t,{walk:n.userData.moving,talk:spk===id,act:npcAct(id,n,t),raise:id==="parent"&&G.line.id==="teacher"&&step()?.id==="ask"&&mode==="walk"});tickEmote(n,now);}
@@ -3204,6 +4173,374 @@ function tick(){
     extras.forEach(e=>{if(e.p.visible){animPerson(e.p,dt,t,{});tickEmote(e.p,now);}});for(const id in npcs)if(npcs[id].visible)animPerson(npcs[id],dt,t,{act:npcAct(id,npcs[id],t)});}
   camera.lookAt(camLook);renderer.render(scene,camera);requestAnimationFrame(tick);
 }
+
+/* ================= 劇情／場景一致性修正 =================
+   讓「角色已到場」「畫面看得到」「可互動」「劇情文字」使用同一套狀態。
+   先集中在這裡驗證，Phase 2 穩定後再併回各主檔。 */
+
+/* ---------- 資料層：已確認的文字／人數矛盾 ---------- */
+if(LINES.care){
+  // 15:52 就要出發接人，不是四點。
+  const open=LINES.care.steps.find(s=>s.id==='c_open');
+  if(open&&open.chapter&&open.chapter.rush)open.chapter.rush=open.chapter.rush.map(t=>t==='四點要去國小接小朋友。'?'三點五十分要去國小接小朋友。':t);
+
+  // 小芸實際在 17:12 的交接段落進場，訊息改成和場景接近的時間。
+  LINES.care.msgs=LINES.care.msgs.map(m=>m[1]==='小芸'&&/五點到/.test(m[2])?[m[0],m[1],m[2].replace('我五點到！','我五點十分左右到！')]:m);
+
+  // 高三學生從六點後陸續進場，六點半時已經坐進教室。
+  LINES.care.coda='六點半，高三的學生已經坐上小朋友剛剛坐過的椅子。補習班的一天還沒結束。';
+  const late=LINES.care.steps.find(s=>s.id==='c_late');
+  if(late){
+    // 小米還在時，真正走到小米旁邊才能觸發；若已被接走才以門口為目標。
+    late.target=G=>G.f.handedMi?{spot:'door'}:{npc:'mi'};
+    const oldPages=late.pages;
+    late.pages=G=>{
+      const p=oldPages(G);
+      if(!G.f.handedMi&&p&&p[0])p[0]=[null,'六點二十。安親班只剩小米還沒被接走。B 班的高三學生已經陸續進教室。'];
+      return p;
+    };
+  }
+}
+
+if(LINES.jh){
+  // 17:30 的章節明說六點後才陸續到班，子晴不能一開場就坐在教室。
+  LINES.jh.npcs.qing=null;
+  const xiang=LINES.jh.steps.find(s=>s.id==='j_xiang');
+  if(xiang){
+    xiang.npc=xiang.npc||{};
+    xiang.npc.qing=[PJ.qingSeat[0],PJ.qingSeat[1],PJ.qingSeat[2],PJ.door];
+  }
+  // C 班物理座位是 9 席：7 個背景學生 + 阿翔 + 子晴。
+  const cls=LINES.jh.steps.find(s=>s.id==='j_class');
+  if(cls&&cls.pages){
+    const oldPages=cls.pages;
+    cls.pages=G=>oldPages(G).map(row=>[row[0],typeof row[1]==='string'?row[1].replace('C 班十個人。','C 班九個人。'):row[1]]);
+  }
+}
+
+if(LINES.boss){
+  const first=LINES.boss.steps&&LINES.boss.steps[0];
+  if(first&&first.chapter&&first.chapter.title==='開門前')first.chapter.title='晚班開始前';
+  if(first&&first.chapter&&first.chapter.rush)first.chapter.rush=first.chapter.rush.map(t=>t==='老師們在休息室等你。'?'許老師在休息室等你。':t);
+}
+
+if(LINES.yun){
+  // 點名時場景固定呈現 18/20；若文字保證「柏翰十分鐘後到」，之後畫面卻永遠仍是 18 人會矛盾。
+  // 改成家長回報「會晚很多，先記遲到」，保留這條劇情但不虛構畫面上不存在的第 19 人。
+  const roll=LINES.yun.steps.find(s=>s.id==='yroll');
+  if(roll&&roll.choices){
+    const oldChoices=roll.choices;
+    roll.choices=G=>oldChoices(G).map(c=>c.label==='打給兩個缺席的家長'?{...c,res:[[null,'柏翰塞在路上，媽媽說今天會晚很多，先幫他記遲到。'],[null,'小安的媽媽支支吾吾：「我們……已經報了對面了。」'],[null,'你在名單上，把小安的名字畫了一條線。']]}:c);
+  }
+}
+
+/* ---------- 下午 crowd：8 個小朋友，18:00 後高三開始進場 ---------- */
+setKidCrowd=function(ph,instant,now,kids){
+  // 劇情明定接 8 個：3 個有名字 + 5 個背景小朋友。多出的背景模型不參與本線。
+  const activeKids=kids.slice(0,5),overflowKids=kids.slice(5);
+  const hs=extras.filter(e=>e.kind==='class');
+  const hide=e=>{e.p.visible=false;e.state='gone';e.p.userData.path=null;e.p.userData.act=null;};
+  overflowKids.forEach(hide);
+  extras.filter(e=>e.kind!=='kid'&&e.kind!=='class').forEach(hide);
+
+  // 接送前，高三生不該提早坐在 B 班。
+  if(ph!=='leave'&&ph!=='close')hs.forEach(hide);
+
+  if(ph==='pre'){
+    activeKids.forEach(hide);return;
+  }
+  if(ph==='class'){
+    activeKids.forEach((e,i)=>{
+      e.p.userData.act=null;
+      if(e.p.visible||instant){e.p.visible=true;agentPlace(e.p,...e.home);e.state='seat';}
+      else{e.state='toArrive';e.at=now+.5+i*1.2;}
+    });return;
+  }
+  if(ph==='break'){
+    let k=0;activeKids.forEach((e,i)=>{const u=e.p.userData;if(!e.p.visible)return;
+      if(i%2===0){const sp=[[13.6,8.5],[15,9.6],[11,7.2],[10.6,4],[16.5,9.8]][k++%5];e.state='out';u.act=null;agentGo(e.p,sp[0],sp[1],Math.random()*6,()=>{u.act=pick(['cheer','wave','cup']);});}
+      else u.act='cup';
+    });return;
+  }
+  if(ph==='leave'||ph==='close'){
+    activeKids.forEach((e,i)=>{
+      if(e.state==='gone'||e.state==='exiting'||e.state==='leaving')return;
+      if(!e.p.visible){e.state='gone';return;}
+      e.state='leaving';e.p.userData.act=null;e.leaveAt=now+(ph==='close'?.3+i*.4:2+i*4);
+    });
+
+    // B 班晚課 18:30 開始。18:00 後讓高中生從門口逐批進來，而不是結尾只靠文字描述。
+    hs.forEach((e,i)=>{
+      if(instant){e.p.visible=true;agentPlace(e.p,...e.home);e.state='seat';return;}
+      if(e.state==='seat'||e.state==='arriving'||e.state==='toArrive')return;
+      e.p.visible=false;e.p.userData.path=null;e.p.userData.act=null;e.state='toArrive';
+      const namedKidSeat=[PC.yuSeat,PC.ananSeat,PC.miSeat].some(s=>Math.hypot(e.home[0]-s[0],e.home[1]-s[1])<.35);
+      e.at=now+1+i*.85+(namedKidSeat?10:0);
+    });
+  }
+};
+
+/* ---------- 晚間 pre：國中生六點後才陸續到，不在 17:20 就坐滿 ---------- */
+// 原本 placeJuniorHigh() 會在老師／班導／主任線一開場就把 Amy、阿翔、子晴瞬移進 C 班。
+// 先隱藏，之後由時鐘在 17:55–18:06 依序從大門走進來。
+placeJuniorHigh=function(L){
+  if(!['teacher','yun','boss'].includes(L.id))return;
+  setNPC('amy',null,true);setNPC('xiang',null,true);setNPC('qing',null,true);
+};
+
+const CONS_BASE_SET_CROWD=setCrowd;
+setCrowd=function(ph,instant){
+  CONS_BASE_SET_CROWD(ph,instant);
+  if(!G||G.line.crowd==='kids'||ph!=='pre')return;
+  const now=clockT.elapsedTime;
+  extras.filter(e=>e.kind==='jh').forEach((e,i)=>{
+    const at=18*60+i*1.4;
+    if(G.clock<at){
+      e.p.visible=false;e.p.userData.path=null;e.p.userData.act=null;e.state='clockWait';e.arriveClock=at;
+    }else if(e.state==='clockWait'){
+      e.state='toArrive';e.at=now+i*.10;
+    }
+  });
+};
+const CONS_BASE_TICK_CROWD=tickCrowd;
+tickCrowd=function(){
+  if(G&&G.line.crowd!=='kids'){
+    const now=clockT.elapsedTime;
+    extras.forEach((e,i)=>{
+      if(e.state==='clockWait'&&G.clock>=(e.arriveClock||Infinity)){e.state='toArrive';e.at=now+(i%4)*.12;}
+    });
+    // 其他晚間職業線也要看得到國中部的人「真的走進來」，而不是 17:20 就憑空坐好。
+    if(['teacher','yun','boss'].includes(G.line.id)){
+      const arrivals=[
+        ['amy',17*60+55,PJ.amyPodium],
+        ['qing',18*60+2,PJ.qingSeat],
+        ['xiang',18*60+6,PJ.xiangSeat]
+      ];
+      arrivals.forEach(([id,at,pos])=>{
+        const n=npcs[id];
+        if(G.clock>=at&&n&&!n.visible)setNPC(id,[pos[0],pos[1],pos[2],PJ.door]);
+      });
+    }
+  }
+  CONS_BASE_TICK_CROWD();
+};
+
+/* ---------- 目標層：到定點以前不可搶跑；離場後不再殘留互動 ---------- */
+function consTarget(t){return val(t,G);}
+function consNpcReady(n){return !!(n&&n.visible&&!n.userData.path&&!n.userData.moving);}
+
+targetOf=function(t){
+  t=consTarget(t);if(!t)return null;
+  if(t.npc){const n=npcs[t.npc];if(!n||!n.visible)return null;return{x:n.position.x,z:n.position.z,h:n.userData.top+.8,name:CHARS[t.npc].name,kind:'npc',id:t.npc};}
+  const s=SPOTS[t.spot];if(!s)return null;return{x:s.pos[0],z:s.pos[1],h:s.h+.5,name:s.name,kind:'spot'};
+};
+guideTarget=function(t){
+  t=consTarget(t);const m=targetOf(t);if(!m)return null;
+  if(t&&t.npc){const u=npcs[t.npc].userData;if((u.path||u.moving)&&u.anchor)return{...m,x:u.anchor[0],z:u.anchor[1]};}
+  return m;
+};
+activeSides=function(){
+  const list=SIDES[G.line.id]||[],ids=G.steps.map(s=>s.id),mt=consTarget(G.steps[G.idx]&&G.steps[G.idx].target),mainNpc=mt&&mt.npc;
+  return list.filter(sd=>{
+    const st=consTarget(sd.target),n=st&&st.npc?npcs[st.npc]:null;
+    return !G.sidesDone[sd.id]&&!(mainNpc&&st&&st.npc===mainNpc)&&G.idx>=ids.indexOf(sd.from)&&G.idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G))&&(!st||!st.npc||consNpcReady(n));
+  });
+};
+nearest=function(){
+  const px=player.position.x,pz=player.position.z,d=(x,z)=>Math.hypot(x-px,z-pz),c=[],st=step(),mt=consTarget(st&&st.target),m=targetOf(mt);
+  if(m&&(m.kind!=='npc'||consNpcReady(npcs[m.id]))){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:'main',label:st.action||(m.kind==='npc'?`找${CHARS[m.id].name}`:`到${m.name}`)});}
+  for(const sd of activeSides()){const t=targetOf(sd.target);if(t){const ds=d(t.x,t.z);if(ds<1.9)c.push({dist:ds,type:'side',sd,label:sd.action||`找${t.name}`});}}
+  for(const it of ITEMS){if(itemMarks[it.id]&&!G.items.includes(it.id)){const di=d(it.pos[0],it.pos[1]);if(di<1.3)c.push({dist:di-.3,type:'item',it,label:'撿起來'});}}
+  for(const id of chatTargets()){const n=npcs[id];if(!consNpcReady(n))continue;const dc=d(n.position.x,n.position.z);if(dc<1.5)c.push({dist:dc+.8,type:'chat',id,label:`聊聊・${CHARS[id].name}`});}
+  const chatIds=new Set(chatTargets()),mainId=m&&m.kind==='npc'?m.id:null;
+  for(const id in npcs){const n=npcs[id];if(!consNpcReady(n)||id===mainId||chatIds.has(id)||id===G.line.id)continue;const dn=d(n.position.x,n.position.z);if(dn<1.4)c.push({dist:dn+1.2,type:'greet',p:n,id,label:'打招呼'});}
+  for(const e of extras){if(!e.p.visible||e.p.userData.path||e.p.userData.moving)continue;const de=d(e.p.position.x,e.p.position.z);if(de<1.1)c.push({dist:de+1.2,type:'greet',p:e.p,kind:e.kind,label:'打招呼'});}
+  if(c.length){c.sort((a,b)=>a.dist-b.dist);return c[0];}
+  for(const inf of INFO){if(d(inf.pos[0],inf.pos[1])<1.6)return{type:'info',inf,label:'看說明'};}
+  return null;
+};
+
+/* 測試／人工驗收可直接看目前一致性狀態。 */
+window.__consistencyAudit=()=>({
+  line:G&&G.line&&G.line.id,step:G&&G.steps[G.idx]&&G.steps[G.idx].id,
+  visibleKids:extras.filter(e=>e.kind==='kid'&&e.p.visible).length,
+  visibleHigh:extras.filter(e=>e.kind==='class'&&e.p.visible).length,
+  visibleJh:extras.filter(e=>e.kind==='jh'&&e.p.visible).length,
+  namedJh:['amy','qing','xiang'].filter(id=>npcs[id]&&npcs[id].visible),
+  movingNpcs:Object.keys(npcs).filter(id=>npcs[id].visible&&(npcs[id].userData.path||npcs[id].userData.moving))
+});
+
+/* ================= 一致性：補齊場景中的第二位試聽生 =================
+   試聽結果、主任報表與數學線原本都以 2 位試聽生計算，但畫面只有王媽媽與一位試聽生。
+   加一位不參與互動的安靜試聽生，讓人數、報表、結局一致。 */
+let CONS_TRIAL2=null;
+const CONS_VIS_BASE_BUILD_WORLD=buildWorld;
+buildWorld=function(){
+  CONS_VIS_BASE_BUILD_WORLD();
+  // 王媽媽與第一位試聽生使用右側臨時座位；再補一張臨時椅給第二位試聽生。
+  chair(26.9,7.92,-Math.PI/2);solids.push([26.62,7.64,27.18,8.20]);
+  CONS_TRIAL2=person(0x687b91,{hair:0x302822});
+  CONS_TRIAL2.userData.rig.scale.setScalar(.97);CONS_TRIAL2.visible=false;
+};
+function consSyncTrial2(){
+  if(!CONS_TRIAL2)return;
+  const ok=G&&['teacher','yun','boss'].includes(G.line.id),ref=ok?npcs.parent2:null;
+  if(!ref||!ref.visible){CONS_TRIAL2.visible=false;return;}
+  CONS_TRIAL2.visible=true;
+  // 第一位試聽生還在大廳時，第二位也跟著等；進教室後坐在旁邊的臨時椅。
+  const inClass=ref.position.x>20;
+  if(inClass){CONS_TRIAL2.position.set(26.9,0,7.92);CONS_TRIAL2.rotation.y=-Math.PI/2;setPose(CONS_TRIAL2,true);}
+  else{CONS_TRIAL2.position.set(6.85,0,15.15);CONS_TRIAL2.rotation.y=Math.PI;setPose(CONS_TRIAL2,false);}
+}
+const CONS_VIS_BASE_SET_CROWD=setCrowd;
+setCrowd=function(ph,instant){CONS_VIS_BASE_SET_CROWD(ph,instant);consSyncTrial2();};
+const CONS_VIS_BASE_TICK_CROWD=tickCrowd;
+tickCrowd=function(){CONS_VIS_BASE_TICK_CROWD();consSyncTrial2();};
+
+if(LINES.teacher){
+  const erase=LINES.teacher.steps.find(s=>s.id==='erase');
+  if(erase&&erase.pages){const old=erase.pages;erase.pages=G=>old(G).map((r,i)=>i===1?[null,'B 班原班 18 個學生，加上兩位試聽生都看著你。王媽媽打開了筆記本。']:r);}
+}
+
+// 擴充專項驗收資料。
+const CONS_VIS_BASE_AUDIT=window.__consistencyAudit;
+window.__consistencyAudit=()=>{
+  const b=CONS_VIS_BASE_AUDIT?CONS_VIS_BASE_AUDIT():{};
+  const namedKids=['yu','anan','mi'].filter(id=>npcs[id]&&npcs[id].visible).length;
+  return {...b,visibleNamedKids:namedKids,totalCareKids:(b.visibleKids||0)+namedKids,trial2Visible:!!(CONS_TRIAL2&&CONS_TRIAL2.visible)};
+};
+
+/* ================= 一致性：跨職業線共用到班時間 =================
+   高三、國中、自習室不應因玩家選了不同職業就提早一小時坐滿。
+   這層只調整背景 crowd 的到場時鐘與幾段相互矛盾的文字。 */
+
+/* 17:20–18:00 高三背景學生尚未到班；18:00 後開始陸續進來。
+   自習室課表 19:00 開始，背景自習生 18:50 起才陸續進場。 */
+const CONS_TIME_BASE_SET_CROWD=setCrowd;
+setCrowd=function(ph,instant){
+  CONS_TIME_BASE_SET_CROWD(ph,instant);
+  if(!G||G.line.crowd==='kids'||ph!=='pre')return;
+  const now=clockT.elapsedTime;
+  const hold=(list,start,spacing)=>list.forEach((e,i)=>{
+    const at=start+i*spacing;
+    if(G.clock<at){e.p.visible=false;e.p.userData.path=null;e.p.userData.act=null;e.state='clockWait';e.arriveClock=at;}
+    else if(e.state==='clockWait'){e.state='toArrive';e.at=now+(i%4)*.12;}
+  });
+  hold(extras.filter(e=>e.kind==='class'),18*60,1.15);
+  hold(extras.filter(e=>e.kind==='study'),18*60+50,1.5);
+};
+
+/* 安親線：主任 14:35 說 17:30 會回分校，就讓他真的在點心時間從門口回主任室。 */
+if(LINES.care){
+  const snack=LINES.care.steps.find(s=>s.id==='c_snack');
+  if(snack){snack.npc=snack.npc||{};snack.npc.boss=[P.bossOffice[0],P.bossOffice[1],P.bossOffice[2]||0,PC.door];}
+}
+
+/* C 班共 9 人，阿翔尚未交手機時籃子應該是其他 8 支，不是 12 支。 */
+if(LINES.jh){
+  const x=LINES.jh.steps.find(s=>s.id==='j_xiang');
+  if(x&&x.pages){const old=x.pages;x.pages=G=>old(G).map(r=>[r[0],typeof r[1]==='string'?r[1].replace('籃子裡已經有十二支手機了。只差他一支。','籃子裡已經有八支手機了。只差他一支。'):r[1]]);}
+}
+
+/* 自習室實際以少量代表性模型呈現，不再寫成畫面上看不到的「十幾雙眼睛」。 */
+if(LINES.yun){
+  const seat=LINES.yun.steps.find(s=>s.id==='yseat');
+  if(seat&&seat.pages){const old=seat.pages;seat.pages=G=>old(G).map(r=>[r[0],typeof r[1]==='string'?r[1].replace('自習室裡十幾雙眼睛都在看。','自習室裡好幾雙眼睛都在看。'):r[1]]);}
+}
+
+/* 第二天阿哲原本 17:22 已在場，文字卻說 17:30 才到；改成與當下場景一致。 */
+if(typeof LINES2!=='undefined'&&LINES2.teacher){
+  const note=LINES2.teacher.steps.find(s=>s.id==='t2note');
+  if(note&&note.pages){const old=note.pages;note.pages=G=>old(G).map(r=>{
+    if(typeof r[1]!=='string')return r;
+    let t=r[1]
+      .replace('阿哲五點半就到了，坐在走廊。他說是你昨天跟他約好的。','阿哲已經到了，坐在走廊。他說是你昨天跟他約好的。')
+      .replace('還有……林媽媽說，阿哲昨天回家把講義撕了。今天會不會來，她也不知道。','還有……阿哲剛剛還是來了，坐在走廊一句話都沒說。林媽媽說他昨天回家把講義撕了。');
+    return [r[0],t];
+  });}
+}
+
+const CONS_TIME_BASE_AUDIT=window.__consistencyAudit;
+window.__consistencyAudit=()=>{
+  const b=CONS_TIME_BASE_AUDIT?CONS_TIME_BASE_AUDIT():{};
+  return {...b,visibleStudy:extras.filter(e=>e.kind==='study'&&e.p.visible).length};
+};
+
+/* ================= 一致性：劇情時間跳轉的人群補進度 =================
+   劇情一步可一次跳過十幾個遊戲分鐘，但 agentGo 走路使用真實秒數。
+   因此不能只用「visible」判斷到場，必須按遊戲內 G.clock 把人群狀態補到正確時間點。 */
+
+function consCareClockSync(){
+  if(!G||G.line.id!=='care')return;
+  const ph=phaseOf();if(ph!=='leave'&&ph!=='close')return;
+  const kids=extras.filter(e=>e.kind==='kid').slice(0,5);
+  const hs=extras.filter(e=>e.kind==='class');
+
+  // 未具名小朋友自 18:00 起陸續被接走。劇情走到 18:20 時不應還有背景小朋友滯留在場景其他角落。
+  kids.forEach((e,i)=>{
+    const leaveAt=18*60+i*1.35;
+    if(G.clock>=leaveAt){
+      e.p.visible=false;e.p.userData.path=null;e.p.userData.moving=false;e.p.userData.act=null;e.state='gone';
+    }
+  });
+
+  // B 班 18:30 上課。18:00 起陸續進場，最晚約 18:15 已坐定。
+  // 若劇情時鐘已越過某人的到班時間，就直接補到座位，避免畫面仍停留在二十個劇情分鐘以前。
+  hs.forEach((e,i)=>{
+    const arriveAt=18*60+i*.92; // 16 位背景生約在 18:14 前到齊
+    if(G.clock>=arriveAt){
+      if(e.state!=='seat'||!e.p.visible||e.p.userData.path){
+        e.p.visible=true;e.p.userData.path=null;e.p.userData.moving=false;e.p.userData.act=null;
+        agentPlace(e.p,...e.home);e.state='seat';
+      }
+    }else if(e.state==='gone'){
+      e.p.visible=false;e.p.userData.path=null;e.p.userData.moving=false;e.p.userData.act=null;e.state='clockWait';
+    }
+  });
+}
+
+/* C 班 18:30 開始上課時，阿翔與子晴必須已經真正坐定位。
+   j_xiang 18:10 會讓阿翔從置物區進場；若玩家很快完成事件，劇情時鐘可直接跳到 18:30，
+   但真人走路動畫只過幾秒，因此需要在 j_class 入口把場景追上劇情時間。 */
+function consJhClassSync(){
+  if(!G||G.line.id!=='jh')return;
+  const st=step&&step();if(!st||st.id!=='j_class'||G.clock<18*60+30)return;
+  const place=(id,pos)=>{
+    const n=npcs[id];if(!n)return;
+    n.visible=true;n.userData.path=null;n.userData.moving=false;n.userData.act=null;
+    agentPlace(n,pos[0],pos[1],pos[2]);
+  };
+  place('xiang',PJ.xiangSeat);place('qing',PJ.qingSeat);
+  extras.filter(e=>e.kind==='jh').forEach(e=>{
+    if(e.state!=='seat'||!e.p.visible||e.p.userData.path){
+      e.p.visible=true;e.p.userData.path=null;e.p.userData.moving=false;e.p.userData.act=null;
+      agentPlace(e.p,...e.home);e.state='seat';
+    }
+  });
+}
+
+const CONS_CLOCK_BASE_SET_KID_CROWD=setKidCrowd;
+setKidCrowd=function(ph,instant,now,kids){
+  CONS_CLOCK_BASE_SET_KID_CROWD(ph,instant,now,kids);
+  consCareClockSync();
+};
+
+const CONS_CLOCK_BASE_TICK_CROWD=tickCrowd;
+tickCrowd=function(){
+  CONS_CLOCK_BASE_TICK_CROWD();
+  consCareClockSync();consJhClassSync();
+};
+
+const CONS_CLOCK_BASE_AUDIT=window.__consistencyAudit;
+window.__consistencyAudit=()=>{
+  const b=CONS_CLOCK_BASE_AUDIT?CONS_CLOCK_BASE_AUDIT():{};
+  const seatedHigh=extras.filter(e=>e.kind==='class'&&e.p.visible&&e.state==='seat'&&!e.p.userData.path).length;
+  const visibleBackgroundKids=extras.filter(e=>e.kind==='kid'&&e.p.visible).length;
+  const near=(id,pos)=>{const n=npcs[id];return !!(n&&n.visible&&!n.userData.path&&!n.userData.moving&&Math.hypot(n.position.x-pos[0],n.position.z-pos[1])<.18);};
+  const seatedJh=extras.filter(e=>e.kind==='jh'&&e.p.visible&&e.state==='seat'&&!e.p.userData.path).length;
+  const jhClassReady=G&&G.line.id==='jh'&&step&&step()&&step().id==='j_class'?seatedJh===7&&near('xiang',PJ.xiangSeat)&&near('qing',PJ.qingSeat):null;
+  return {...b,seatedHigh,visibleBackgroundKids,seatedJh,jhClassReady};
+};
 
 /* ================= 設定：音量、時間流速、視角、字體 ================= */
 const SET_DEF={music:.7,amb:.7,sfx:.8,speed:1,rot:1,font:1};
@@ -3293,7 +4630,7 @@ if(document.querySelector('link[rel="manifest"]')&&"serviceWorker" in navigator&
 try{buildWorld();buildNight();const L=LINES.teacher;for(const id in L.npcs)if(CHARS[id]&&CHARS[id].body!==undefined)setNPC(id,typeof L.npcs[id]==="function"?null:L.npcs[id],true);showTitle();tick();}
 catch(err){const c=$("cover");c.hidden=false;c.innerHTML=`<div class="card"><h2>3D 場景載入失敗</h2><p>你的瀏覽器可能不支援 WebGL，或 3D 函式庫沒有載入。請換一個瀏覽器，或重新整理頁面再試一次。</p></div>`;console.error(err);}
 /* HUD 高度一變，就把「下一步」卡片跟著往下推 */
-try{const h=document.querySelector(".hud"),fit=()=>{$("next").style.top=h.offsetHeight+8+"px";};if(window.ResizeObserver)new ResizeObserver(fit).observe(h);addEventListener("resize",fit);}catch(e){}
+try{const h=document.querySelector(".hud"),fit=()=>{$("next").style.top=h.offsetHeight+8+"px";};if(window.ResizeObserver)new ResizeObserver(fit).observe(h);addEventListener("resize",()=>{fit();renderDock();});}catch(e){}
 
 })();
 </script>
