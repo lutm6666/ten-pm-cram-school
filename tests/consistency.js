@@ -46,11 +46,12 @@ const {chromium}=require('playwright');
   a=await audit();
   assert(a.movingNpcs.includes('boss'),'17:30 左右主任真的回到分校',JSON.stringify(a));
 
-  // 3) 最後一個孩子等待接送時，高三生必須真的逐批進 B 班。
+  // 3) 18:20 只剩小米，高三背景生已實際坐進 B 班，而不是只在 elsewhere visible。
   await p.evaluate(()=>__dbg.jump('c_late'));
-  await p.waitForTimeout(5200);
+  await p.waitForTimeout(350);
   a=await audit();
-  assert(a.visibleHigh>0,'18:20 劇情提到高三到班時，場景已有高三生進場',JSON.stringify(a));
+  assert(a.visibleBackgroundKids===0&&a.totalCareKids===1,'18:20 安親班只剩最後一位小朋友',JSON.stringify(a));
+  assert(a.seatedHigh===16,'18:20 高三背景學生已坐進 B 班等待 18:30 上課',JSON.stringify(a));
 
   // 4) 國中部 17:30 尚未到班，18:30 則應是 9 人，而不是文字／畫面各說各話。
   await start('jh');
