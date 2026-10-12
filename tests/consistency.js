@@ -53,13 +53,14 @@ const {chromium}=require('playwright');
   assert(a.visibleBackgroundKids===0&&a.totalCareKids===1,'18:20 安親班只剩最後一位小朋友',JSON.stringify(a));
   assert(a.seatedHigh===16,'18:20 高三背景學生已坐進 B 班等待 18:30 上課',JSON.stringify(a));
 
-  // 4) 國中部 17:30 尚未到班，18:30 則應是 9 人，而不是文字／畫面各說各話。
+  // 4) 國中部 17:30 尚未到班，18:30 則應是 9 人且都已坐定。
   await start('jh');
   a=await audit();
   assert(a.visibleJh===0&&a.namedJh.length===0,'17:30 國中生不會提早坐滿 C 班',JSON.stringify(a));
   await p.evaluate(()=>__dbg.jump('j_class'));await p.waitForTimeout(250);
   a=await audit();
   assert(a.visibleJh+a.namedJh.length===9,'18:30 C 班畫面與「九個人」一致',JSON.stringify(a));
+  assert(a.jhClassReady===true&&!a.movingNpcs.includes('xiang')&&!a.movingNpcs.includes('qing'),'18:30 阿翔、子晴與背景學生都已坐定再開始上課',JSON.stringify(a));
 
   // 5) 晚間共用時間線：17:20 高三背景生與自習生都尚未到，之後依課表出現。
   await start('teacher');
