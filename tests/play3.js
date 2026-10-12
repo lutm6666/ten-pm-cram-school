@@ -34,7 +34,7 @@ let guard=0;
 while(guard++<60){
   if(await vis('.report'))break;await drain();if(await vis('.report'))break;
   const sides=await p.evaluate(()=>__dbg.activeSides().map(s=>s.id));
-  if(sides.length){const [id]=sides[0];let ok=false;for(let r=0;r<12&&!ok;r++){const target=await p.evaluate(id=>{const s=__dbg.activeSides().find(s=>s.id===id);if(!s||!s.target)return null;const t=__dbg.targetOf(s.target);return t&&Number.isFinite(t.x)&&Number.isFinite(t.z)?[t.x,t.z]:null},id);
+  if(sides.length){const id=sides[0];let ok=false;for(let r=0;r<12&&!ok;r++){const target=await p.evaluate(id=>{const s=__dbg.activeSides().find(s=>s.id===id);if(!s||!s.target)return null;const t=__dbg.targetOf(s.target);return t&&Number.isFinite(t.x)&&Number.isFinite(t.z)?[t.x,t.z]:null},id);
       if(!target){console.log('  side target unavailable',id,await p.evaluate(()=>({idx:__dbg.G&&__dbg.G.idx,active:__dbg.activeSides().map(s=>({id:s.id,target:s.target||null}))})));break;}
       const [x,z]=target;
       await p.evaluate(([x,z])=>__dbg.go(x,z),[x,z]);for(let k=0;k<25;k++){await p.waitForTimeout(60);if(await p.evaluate(`(()=>{const n=__dbg.near();return n&&n.type==='side'&&n.sd.id==='${id}'})()`)){ok=true;break;}}}
