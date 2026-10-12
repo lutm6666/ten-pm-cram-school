@@ -29,8 +29,8 @@ function p2StoryDecorate(){
 function p2StoryUpdate(){
   // Match the established evening arrival clock; avoid spawning belongings
   // during the afternoon care shift or before high-school students arrive.
-  const minutes=typeof G!=='undefined'&&G&&Number.isFinite(G.time)?G.time:null;
-  const present=minutes===null?false:minutes>=18*60;
+  const minutes=typeof G!=='undefined'&&G&&Number.isFinite(G.clock)?G.clock:null;
+  const present=minutes!==null&&minutes>=18*60&&minutes<22*60;
   P2_STORY_PROPS.forEach(({belongings})=>{belongings.visible=present;});
 }
 const P2_STORY_BASE_DECORATE=artDecorateWorld;
