@@ -68,7 +68,7 @@ function p2OfficeDesk(r){
   solids.push(r);const g=new THREE.Group(),cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2;g.position.set(cx,0,cz);scene.add(g);
   const wood=fmMat('p2env:officeWood',{map:p2WoodPanelTex(),rough:.64,metal:0});
   const dark=p2Std('officeDeskDark',0x5e5146,.72,.01),metal=p2Std('officeDeskMetal',0x555e66,.34,.55);
-  p2Mesh(fmChamferGeo(3.05,.11,1.03,.055),wood,g,0,.79,0);
+  p2Mesh(new THREE.BoxGeometry(3.05,.11,1.03),wood,g,0,.79,0);
   [-1.25,1.25].forEach(x=>p2Mesh(fmChamferGeo(.11,.70,.73,.028),dark,g,x,.38,0));
   p2Mesh(fmChamferGeo(2.35,.06,.06,.018),metal,g,0,.33,.25);
   // 桌前木質擋板，主任室輪廓和教室桌分開。
@@ -77,7 +77,7 @@ function p2OfficeDesk(r){
 function p2LoungeTable(r){
   solids.push(r);const g=new THREE.Group(),cx=(r[0]+r[2])/2,cz=(r[1]+r[3])/2;g.position.set(cx,0,cz);scene.add(g);
   const top=fmMat('p2env:loungeTop',{color:0xd8cec0,rough:.86,metal:0});const metal=p2Std('loungeMetal',0x667078,.38,.50);
-  p2Mesh(fmChamferGeo(3.02,.08,1.18,.06),top,g,0,.75,0);
+  p2Mesh(new THREE.BoxGeometry(3.02,.10,1.18),top,g,0,.75,0);
   [-1.25,1.25].forEach(x=>[-.42,.42].forEach(z=>p2Mesh(fmChamferGeo(.055,.68,.055,.015),metal,g,x,.36,z)));
   p2Mesh(fmChamferGeo(2.38,.04,.04,.012),metal,g,0,.31,0);
 }
