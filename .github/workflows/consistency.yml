@@ -1,7 +1,15 @@
 name: Narrative consistency
 on:
   push:
-    branches: [art-overhaul-phase2]
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/consistency.js'
+      - 'build.py'
+      - 'package.json'
+      - '.github/workflows/consistency.yml'
+  pull_request:
+    branches: [main]
     paths:
       - 'src/**'
       - 'tests/consistency.js'
