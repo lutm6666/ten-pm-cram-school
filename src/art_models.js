@@ -110,7 +110,7 @@ function fmReceptionDesk(group){
   [2.22,3.75,5.28].forEach(x=>fmBox(1.34,.59,.035,navy,x,.51,11.655,group));
   [2.98,4.51].forEach(x=>fmBox(.025,.62,.052,navyDark,x,.51,11.674,group));
   fmBox(4.70,.11,.12,navyDark,3.75,.135,11.62,group);
-  fmChamfer(4.82,.105,.79,.07,wood,3.75,1.055,11.30,group);
+  fmBox(4.82,.115,.79,wood,3.75,1.055,11.30,group);
   fmChamfer(1.18,.08,.56,.055,wood,5.18,1.205,11.31,group);
   fmBox(.055,.17,.48,metal,4.72,1.135,11.31,group);fmBox(.055,.17,.48,metal,5.64,1.135,11.31,group);
   fmChamfer(.74,.47,.075,.055,black,2.58,1.43,11.27,group);
