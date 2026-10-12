@@ -1,7 +1,7 @@
 name: Art preview static site
 on:
   push:
-    branches: [art-overhaul-prototype]
+    branches: [art-overhaul-phase2]
     paths:
       - 'src/**'
       - 'assets/**'
@@ -32,7 +32,7 @@ jobs:
         run: OUT=art-preview-shots node tests/shots.js
       - uses: actions/upload-artifact@v4
         with:
-          name: art-preview-screenshots
+          name: art-phase2-screenshots
           path: art-preview-shots/
           retention-days: 3
       - name: Build preview
@@ -45,13 +45,13 @@ jobs:
           cp manifest.webmanifest preview-out/
           cp sw.js preview-out/
           cp -R assets preview-out/
-          printf '%s\n' 'Art prototype preview for ${GITHUB_SHA}' > preview-out/README.txt
+          printf '%s\n' 'Art phase 2 preview for ${GITHUB_SHA}' > preview-out/README.txt
       - name: Publish preview branch
         run: |
           cd preview-out
-          git init -q -b art-preview-site
+          git init -q -b art-preview-phase2
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -qm "art preview for ${GITHUB_SHA}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" art-preview-site
+          git commit -qm "art phase 2 preview for ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" art-preview-phase2
