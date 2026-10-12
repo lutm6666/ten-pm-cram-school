@@ -148,9 +148,9 @@ function fmPlant(group){
 }
 function fmWaitingTable(group){
   const metal=fmMat('waitMetal',{color:0x69737d,rough:.38,metal:.55});const wood=fmMat('waitWood',{map:fmWoodTex(),rough:.56});
-  fmCyl(.39,.39,.065,wood,1.02,.49,15.38,group,24);fmCyl(.065,.09,.40,metal,1.02,.25,15.38,group,14);fmCyl(.24,.24,.025,metal,1.02,.035,15.38,group,18);
-  const mag=fmChamfer(.38,.045,.27,.025,fmMat('magazine',{color:0x4b83b7,rough:.82}),.95,.545,15.33,group);mag.rotation.y=.12;
-  const mag2=fmChamfer(.34,.042,.25,.025,fmMat('magazine2',{color:0xdf7665,rough:.82}),1.10,.59,15.45,group);mag2.rotation.y=-.10;
+  fmCyl(.32,.32,.065,wood,1.85,.49,15.38,group,24);fmCyl(.065,.09,.40,metal,1.85,.25,15.38,group,14);fmCyl(.24,.24,.025,metal,1.85,.035,15.38,group,18);
+  const mag=fmChamfer(.38,.045,.27,.025,fmMat('magazine',{color:0x4b83b7,rough:.82}),1.78,.545,15.33,group);mag.rotation.y=.12;
+  const mag2=fmChamfer(.34,.042,.25,.025,fmMat('magazine2',{color:0xdf7665,rough:.82}),1.94,.59,15.45,group);mag2.rotation.y=-.10;
 }
 function fmEntryMat(group){
   const tex=fmCanvasTex('entryMat',256,128,(g,w,h)=>{g.fillStyle='#58636d';g.fillRect(0,0,w,h);g.strokeStyle='rgba(255,255,255,.08)';for(let y=2;y<h;y+=5){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}},2,2);
