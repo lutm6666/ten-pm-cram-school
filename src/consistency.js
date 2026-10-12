@@ -45,6 +45,17 @@ if(LINES.jh){
 if(LINES.boss){
   const first=LINES.boss.steps&&LINES.boss.steps[0];
   if(first&&first.chapter&&first.chapter.title==='開門前')first.chapter.title='晚班開始前';
+  if(first&&first.chapter&&first.chapter.rush)first.chapter.rush=first.chapter.rush.map(t=>t==='老師們在休息室等你。'?'許老師在休息室等你。':t);
+}
+
+if(LINES.yun){
+  // 點名時場景固定呈現 18/20；若文字保證「柏翰十分鐘後到」，之後畫面卻永遠仍是 18 人會矛盾。
+  // 改成家長回報「會晚很多，先記遲到」，保留這條劇情但不虛構畫面上不存在的第 19 人。
+  const roll=LINES.yun.steps.find(s=>s.id==='yroll');
+  if(roll&&roll.choices){
+    const oldChoices=roll.choices;
+    roll.choices=G=>oldChoices(G).map(c=>c.label==='打給兩個缺席的家長'?{...c,res:[[null,'柏翰塞在路上，媽媽說今天會晚很多，先幫他記遲到。'],[null,'小安的媽媽支支吾吾：「我們……已經報了對面了。」'],[null,'你在名單上，把小安的名字畫了一條線。']]}:c);
+  }
 }
 
 /* ---------- 下午 crowd：8 個小朋友，18:00 後高三開始進場 ---------- */
@@ -94,6 +105,13 @@ setKidCrowd=function(ph,instant,now,kids){
 };
 
 /* ---------- 晚間 pre：國中生六點後才陸續到，不在 17:20 就坐滿 ---------- */
+// 原本 placeJuniorHigh() 會在老師／班導／主任線一開場就把 Amy、阿翔、子晴瞬移進 C 班。
+// 先隱藏，之後由時鐘在 17:55–18:06 依序從大門走進來。
+placeJuniorHigh=function(L){
+  if(!['teacher','yun','boss'].includes(L.id))return;
+  setNPC('amy',null,true);setNPC('xiang',null,true);setNPC('qing',null,true);
+};
+
 const CONS_BASE_SET_CROWD=setCrowd;
 setCrowd=function(ph,instant){
   CONS_BASE_SET_CROWD(ph,instant);
@@ -115,6 +133,18 @@ tickCrowd=function(){
     extras.forEach((e,i)=>{
       if(e.state==='clockWait'&&G.clock>=(e.arriveClock||Infinity)){e.state='toArrive';e.at=now+(i%4)*.12;}
     });
+    // 其他晚間職業線也要看得到國中部的人「真的走進來」，而不是 17:20 就憑空坐好。
+    if(['teacher','yun','boss'].includes(G.line.id)){
+      const arrivals=[
+        ['amy',17*60+55,PJ.amyPodium],
+        ['qing',18*60+2,PJ.qingSeat],
+        ['xiang',18*60+6,PJ.xiangSeat]
+      ];
+      arrivals.forEach(([id,at,pos])=>{
+        const n=npcs[id];
+        if(G.clock>=at&&n&&!n.visible)setNPC(id,[pos[0],pos[1],pos[2],PJ.door]);
+      });
+    }
   }
   CONS_BASE_TICK_CROWD();
 };
@@ -160,5 +190,6 @@ window.__consistencyAudit=()=>({
   visibleKids:extras.filter(e=>e.kind==='kid'&&e.p.visible).length,
   visibleHigh:extras.filter(e=>e.kind==='class'&&e.p.visible).length,
   visibleJh:extras.filter(e=>e.kind==='jh'&&e.p.visible).length,
+  namedJh:['amy','qing','xiang'].filter(id=>npcs[id]&&npcs[id].visible),
   movingNpcs:Object.keys(npcs).filter(id=>npcs[id].visible&&(npcs[id].userData.path||npcs[id].userData.moving))
 });
