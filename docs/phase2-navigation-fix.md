@@ -15,6 +15,16 @@ out of it while retaining body collision checks. Furniture and room walls remain
 collidable. Guidance follows the NPC anchor for the whole active trip, including
 yield frames, rather than switching targets with the per-frame moving flag.
 
+Hosted testing exposed an additional forward/back oscillation: stationary
+obstacles never cleared, but each forward frame reset the delay before replanning.
+Stationary NPCs now trigger an immediate detour. Furniture recovery retains the
+traffic plan instead of replacing it with a static path through the same actor.
+Standing story destinations are reserved while their NPCs are still moving;
+story position changes replan active routes. Moving students yield through body
+collision checks rather than masking the entire queue as a stationary obstacle.
+The regression includes four time steps, three recorded podium positions and
+the full classroom departure with the parent starting in her actual chair.
+
 `tests/navigation.js` reproduces the podium jam at three time steps; the base
 version fails and the fix passes arrival, wall and body separation assertions.
 The test is part of `npm test`. No timeout was increased or test skipped.

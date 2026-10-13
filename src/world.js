@@ -200,11 +200,21 @@ function buildWorld(){
 function makeNPC(id){const c=CHARS[id];const p=person(c.body,{name:`${c.name}｜${c.short}`,tagBg:c.color,hair:c.hair,kid:c.kid});npcs[id]=p;p.visible=false;return p;}
 function makePlayer(line){if(player)scene.remove(player);player=person(line.body,{name:`你｜${line.short}`,tagBg:"#d9a21b",hair:0x2a2421});return player;}
 /* 走到某處：坐著的人先站起來；到了如果是椅子就坐下 */
+function trafficAvoid(p){
+  // Reserve standing story destinations, including NPCs still en route.
+  // Moving students yield physically instead of turning the whole queue into
+  // an impassable temporary wall in the planning grid.
+  const avoid=[];for(const n of Object.values(npcs)){if(n===p||!n.visible)continue;const u=n.userData,a=u.anchor;
+    if(u.path&&a&&!isChair(a[0],a[1]))avoid.push([a[0],a[1]]);
+    else if(!u.seated&&!u.path)avoid.push([n.position.x,n.position.z]);
+  }return avoid;
+}
+function replanTraffic(){for(const n of Object.values(npcs).concat(extras.map(e=>e.p))){const u=n.userData;if(!n.visible||!u.path?.length)continue;const end=u.path[u.path.length-1],route=findPathFrom(n.position.x,n.position.z,end[0],end[1],trafficAvoid(n));if(route){route.push(end);u.path=route;}}}
 function agentGo(p,x,z,rot,onArrive){const u=p.userData;
   // Ambient offsets and story targets can fall inside a desk. Finish on a free
   // cell instead of appending an unchecked segment through furniture.
   if(!isChair(x,z)&&blockedAt(x,z)){const cell=nearestFree(...cellOf(x,z));if(!cell){u.path=null;u.moving=false;u.routeFailed=true;return;}const [i,j]=cell;x=(i+.5)*CELL;z=(j+.5)*CELL;}
-  const pth=findPathFrom(p.position.x,p.position.z,x,z);if(!pth){u.path=null;u.moving=false;u.routeFailed=true;return;}
+  const pth=findPathFrom(p.position.x,p.position.z,x,z,trafficAvoid(p));if(!pth){u.path=null;u.moving=false;u.routeFailed=true;return;}
   u.routeFailed=false;
   if(u.seated){u.departSeat=[p.position.x,p.position.z];setPose(p,false);}pth.push([x,z]);u.path=pth;u.endRot=rot;u.onArrive=onArrive||null;}
 function agentPlace(p,x,z,rot){const u=p.userData;u.path=null;u.moving=false;u.stepDistance=0;u.onArrive=null;p.position.set(x,0,z);p.rotation.y=rot??Math.PI;setPose(p,isChair(x,z));}
@@ -236,8 +246,11 @@ function moveAgent(n,dt,speed=2.6){const u=n.userData;u.stepDistance=0;u.moving=
   const obstacle=actors.find(p=>p!==n&&p.visible&&!p.userData.seated&&Math.hypot(nx-p.position.x,nz-p.position.z)<.66&&Math.hypot(nx-p.position.x,nz-p.position.z)<Math.hypot(n.position.x-p.position.x,n.position.z-p.position.z));
   if(obstacle){
     u.yieldTime=(u.yieldTime||0)+dt;
-    if(u.yieldTime>.6){
-      const end=u.path[u.path.length-1],avoid=actors.filter(p=>p!==n&&p.visible&&!p.userData.seated).map(p=>[p.position.x,p.position.z]);
+    // A stationary actor will never clear the lane. Replan immediately:
+    // alternating forward/back steps otherwise reset the yield timer forever.
+    if(!obstacle.userData.path||u.yieldTime>.6){
+      const end=u.path[u.path.length-1],avoid=trafficAvoid(n);
+      if(obstacle.userData.path)avoid.push([obstacle.position.x,obstacle.position.z]);
       const detour=findPathFrom(n.position.x,n.position.z,end[0],end[1],avoid);
       if(detour){detour.push(end);u.path=detour;u.yieldTime=0;return;}u.yieldTime=0;
     }
@@ -266,7 +279,10 @@ function moveAgent(n,dt,speed=2.6){const u=n.userData;u.stepDistance=0;u.moving=
         setPose(n,false);n.rotation.y=Math.atan2(ax-n.position.x,az-n.position.z);n.position.x=ax;n.position.z=az;u.stepDistance=travel;u.moving=true;return;
       }
     }
-    u.blockTime=(u.blockTime||0)+dt;if(u.blockTime>.2){const end=u.path[u.path.length-1],reroute=findPathFrom(n.position.x,n.position.z,end[0],end[1]);if(reroute){reroute.push(end);u.path=reroute;}u.blockTime=0;}return;
+    // Preserve traffic avoidance when recovering from a furniture corner.
+    // A static-only replan here erased the detour and sent actors straight
+    // back through the teacher at the podium on the following frame.
+    u.blockTime=(u.blockTime||0)+dt;if(u.blockTime>.2){const end=u.path[u.path.length-1],reroute=findPathFrom(n.position.x,n.position.z,end[0],end[1],trafficAvoid(n));if(reroute){reroute.push(end);u.path=reroute;}u.blockTime=0;}return;
   }
   u.blockTime=0;
   setPose(n,false);n.position.x=nx;n.position.z=nz;n.rotation.y=Math.atan2(vx,vz);u.stepDistance=sp;u.moving=true;}

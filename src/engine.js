@@ -43,6 +43,7 @@ const step=()=>G.steps[G.idx];
 function enterStep(){
   const st=step();if(!st)return finish();
   if(st.npc)for(const id in st.npc)setNPC(id,val(st.npc[id],G));
+  if(st.npc)replanTraffic();
   G.clock=Math.max(G.clock,toMin(st.t));G.due=null;
   if(!st.auto){let nx=G.idx+1;while(G.steps[nx]&&G.steps[nx].auto)nx++;const nt=G.steps[nx]?toMin(G.steps[nx].t):endMin();G.due=Math.max(nt,G.clock+8);}
   if(st.chapter){G.chapterTitle=st.chapter.title;}G.status=statusOf();

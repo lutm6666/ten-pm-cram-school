@@ -54,5 +54,5 @@ if DBG:
     out=out.replace('window.__dbg={', 'window.__dbg={npcState:()=>Object.entries(npcs).concat(extras.map((e,i)=>["extra"+i,e.p])).filter(([id,n])=>n.visible).map(([id,n])=>({id,x:n.position.x,z:n.position.z,path:n.userData.path,anchor:n.userData.anchor,moving:n.userData.moving,seated:n.userData.seated,act:n.userData.act,routeFailed:n.userData.routeFailed,yieldTime:n.userData.yieldTime,blockTime:n.userData.blockTime})),')
 if three=='stub.js':
     out=re.sub(r'<link[^>]*href="https://fonts\.[^"]*"[^>]*>', '', out)
-open(sys.argv[2] if len(sys.argv)>2 else 'index.html','w',encoding='utf8').write(out)
+open(sys.argv[2] if len(sys.argv)>2 else 'index.html','w',encoding='utf8',newline='\n').write(out)
 print(order)
