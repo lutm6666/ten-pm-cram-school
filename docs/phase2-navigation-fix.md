@@ -25,6 +25,12 @@ collision checks rather than masking the entire queue as a stationary obstacle.
 The regression includes four time steps, three recorded podium positions and
 the full classroom departure with the parent starting in her actual chair.
 
+Side targets no longer start new ambient roaming when the approaching player is
+near them. The playthrough runner follows an existing side target through its
+temporary moving/unavailable state, within the original retry budget. It now
+fails on unreached sides or absent ending reports instead of returning success
+after abandoning a route.
+
 `tests/navigation.js` reproduces the podium jam at three time steps; the base
 version fails and the fix passes arrival, wall and body separation assertions.
 The test is part of `npm test`. No timeout was increased or test skipped.

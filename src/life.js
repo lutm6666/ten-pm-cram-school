@@ -75,7 +75,8 @@ function tickAmbient(dt){
   npcAmbT-=dt;if(npcAmbT<=0&&mode==="walk"){npcAmbT=4+Math.random()*4;
     const roam={boss:[[0,0],[2.2,.4],[-.8,.5]],hong:[[0,0],[-3.6,0],[3.6,0],[0,0]]};
     for(const id in roam){const n=npcs[id];if(!n||!n.visible||n.userData.path||!n.userData.anchor)continue;
-      if(step()&&step().target&&step().target.npc===id&&Math.hypot(player.position.x-n.position.x,player.position.z-n.position.z)<3)continue;
+      const wanted=step()?.target?.npc===id||(typeof activeSides==='function'&&activeSides().some(sd=>sd.target?.npc===id));
+      if(wanted&&Math.hypot(player.position.x-n.position.x,player.position.z-n.position.z)<3)continue;
       const a=n.userData.anchor;if(Math.hypot(n.position.x-a[0],n.position.z-a[1])>5)continue;
       const o=pick(roam[id]);agentGo(n,a[0]+o[0],a[1]+o[1],a[2]);
       if(Math.random()<.4)emote(n,id==="boss"?pick(["總部又來信了…","72%…","嗯……"]):pick(["這題我看看","安靜一點喔","誰還有問題？"]),2.2);}

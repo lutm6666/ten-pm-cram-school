@@ -39,9 +39,9 @@ while(guard++<60){
   if(process.env.GRAB==='all'){const ms=await p.evaluate(()=>__dbg.marks);for(const id of ms){const pos=await p.evaluate(id=>__dbg.ITEMS.find(i=>i.id===id).pos,id);
       const ok=await walkUntil(pos[0],pos[1],`(()=>{const n=__dbg.near();return n&&n.type==='item'&&n.it.id==='${id}'})()`);console.log('  item',id,ok?'picked':'NOT REACHED');if(ok){await p.click('#actBtn');await drain();}}}
   const sides=await p.evaluate(()=>__dbg.activeSides().map(s=>[s.id,(()=>{const t=__dbg.targetOf(s.target);return t?[t.x,t.z]:[null,null]})()]));
-  if(sides.length){const [id]=sides[0];let ok=false;for(let r=0;r<12&&!ok;r++){const pos=await p.evaluate(id=>{const s=__dbg.activeSides().find(s=>s.id===id);const t=s&&__dbg.targetOf(s.target);return t?[t.x,t.z]:null},id);if(!pos)break;const [x,z]=pos;
+  if(sides.length){const [id]=sides[0];let ok=false;for(let r=0;r<12&&!ok;r++){const pos=await p.evaluate(id=>{const s=__dbg.SIDES[__dbg.G.line.id].find(s=>s.id===id);const t=s&&__dbg.guideTarget(s.target);return t?[t.x,t.z]:null},id);if(!pos){await p.waitForTimeout(60);continue;}const [x,z]=pos;
       await p.evaluate(([x,z])=>__dbg.go(x,z),[x,z]);for(let k=0;k<25;k++){await p.waitForTimeout(60);if(await p.evaluate(`(()=>{const n=__dbg.near();return n&&n.type==='side'&&n.sd.id==='${id}'})()`)){ok=true;break;}}}
-    console.log('  side',id,ok?'done':'NOT REACHED');if(ok){await p.click('#actBtn');await drain();continue;}else break;}
+    console.log('  side',id,ok?'done':'NOT REACHED');if(ok){await p.click('#actBtn');await drain();continue;}else{flowFailed=true;errs.push(`side target not reached: ${id}`);console.log('SIDESTATE',JSON.stringify(await p.evaluate(()=>({pos:__dbg.pos(),path:__dbg.path,near:__dbg.near(),npcs:__dbg.npcState()}))));break;}}
   const state=await p.evaluate(()=>{const d=__dbg,st=d.G&&d.G.steps[d.G.idx];return{mode:d.mode,idx:d.G&&d.G.idx,len:d.G&&d.G.steps.length,stepId:st&&st.id,goal:st&&st.goal,target:st&&st.target,report:!!document.querySelector('.report')};});
   if(!state.stepId){
     if(state.report||state.mode==='end')break;
@@ -59,5 +59,5 @@ while(guard++<60){
 }
 await drain();
 if(await vis('[data-act=shareCard]')){await p.click('[data-act=shareCard]');const ok=await p.evaluate(()=>{const i=document.querySelector('#sheet img');return !!(i&&i.src.startsWith('data:image/png')&&i.src.length>20000)});console.log('share card',ok?'ok':'FAIL');if(!ok)errs.push('share card failed');await p.click('#sheet [data-act=closeSheet]');}
-const report=await p.textContent('.report h2').catch(()=>'NONE');console.log('report:',report,'| log:',await p.evaluate(()=>__dbg.G&&__dbg.G.log.map(l=>l[1]).join(' / ')),'| errors',errs);
+const ended=await vis('.report');if(!ended)errs.push('ending not reached');const report=ended?await p.textContent('.report h2'):'NONE';console.log('report:',report,'| log:',await p.evaluate(()=>__dbg.G&&__dbg.G.log.map(l=>l[1]).join(' / ')),'| errors',errs);
 await b.close();if(flowFailed||errs.length){console.error('PLAYTHROUGH FAILED',errs);process.exit(1);}})();
