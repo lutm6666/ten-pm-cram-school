@@ -17,7 +17,7 @@ LINES.care={
  bells:{class:["小朋友回來了","洗手、吃點心、寫作業。"],leave:["放學時間","家長陸續來接了。櫃台會廣播誰的家長到了。"]},
  events:["kidfall","schoolcall","pudding"],
  eventSlots:[{after:"c_grade",t:"12:30",phase:"pre"},{after:"c_homework",t:"16:45",phase:"class"},{after:"c_book",t:"17:08",phase:"leave"}],
- chats:["yu","anan","mi","lin","wu","yun","ama","zhangma","boss"],
+ chats:["yu","anan","mi","lin","wu","yun","ama","zhangma","boss","xiangma","mima","anma"],
  start:[FLX(0,4.5),16.6],dead:G=>G.s.hp<=0||G.s.pat<=0,
  me:G=>({name:"你",title:`${G.pName}・二年級安親`,abbr:"安",color:"#e8590c"}),
  npcs:{yun:null,boss:null,teacher:null,hr:null,lin:PC.lin,wu:PC.wu,amy:null,hong:null,yu:null,anan:null,mi:null,zhangma:null,ama:null,xiangma:null,mima:null,cai:null},

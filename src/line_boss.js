@@ -15,13 +15,13 @@ LINES.boss={
  phaseStatus:{pre:"營業中",class:"國中上課中",break:"國中下課",leave:"放學中",close:"收拾中"},
  events:["quake","blackout","rain","roach"],
  eventSlots:[{after:"b_ac",t:"15:40",phase:"pre"},{after:"b_patrol",t:"19:00",phase:"class"},{after:"b_hr",t:"20:40",phase:"class"}],
- chats:["yun","cai","hr","teacher","lin","wu","amy","hong","parent","zhangma"],
+ chats:["yun","cai","hr","teacher","lin","wu","amy","hong","parent","zhangma","xiangma"],
  start:[FLX(0,4.5),16.6],
  me:G=>({name:"你",title:`${G.pName}・補習班主任`,abbr:"主",color:"#c2457f"}),
  npcs:{boss:null,yun:null,hr:null,teacher:null,cai:AT("g2podium",0,0,0),lin:PC.lin,wu:PC.wu,amy:null,hong:null,zhangma:null,parent:null,trial:null,xiangma:null},
  steps:[
   {id:"b_arrive",chapter:{t:"13:00",title:"到班",sub:"總部的週報，今晚十點前要交。",status:"營業中",rush:["本期續班率 74%，總部的目標是 85%。","影印機昨天又卡了三次。"]},
-   t:"13:02",target:{spot:"bossdesk"},goal:"打開總部的信",action:"看信",
+   t:"13:00",target:{spot:"bossdesk"},goal:"打開總部的信",action:"看信",
    pages:G=>[[null,"信件匣最上面：「各分校本季請控制支出。另，續班率未達 85% 之分校，下季將進行輔導。」"],[null,"桌上是這個月的支出單：影印機維修 3 次、安親冷氣保養、九年級便當代墊。"]],
    choices:G=>[
     {label:"先排今天要打的續班電話",mini:"renew",fx:r=>({sales:r.v*2-4,calm:-4,ret:r.v>=7?6:r.v>=4?3:0}),log:r=>`打續班電話，效果 ${r.v>=7?"很好":r.v>=4?"還可以":"不太好"}`,

@@ -82,15 +82,15 @@ function floorCost(via,from,to){if(!G)return;const n=Math.abs(to-from);let m=via
 onFloorChange=floorCost;
 
 /* ---------- 目標與附近的東西 ---------- */
-function guideTarget(t){const m=targetOf(t);if(t&&t.npc){const u=npcs[t.npc].userData;if(u.path&&u.anchor)return{...m,x:u.anchor[0],z:u.anchor[1]};}return m;}
-function targetOf(t){if(!t)return null;if(t.npc){const n=npcs[t.npc];return{x:n.position.x,z:n.position.z,h:n.userData.top+.8,name:CHARS[t.npc].name,kind:"npc",id:t.npc};}
+function guideTarget(t){if(typeof t==="function")t=t(G);const m=targetOf(t);if(t&&t.npc){const u=npcs[t.npc].userData;if(u.path&&u.anchor)return{...m,x:u.anchor[0],z:u.anchor[1]};}return m;}
+function targetOf(t){if(typeof t==="function")t=t(G);if(!t)return null;if(t.npc){const n=npcs[t.npc];return{x:n.position.x,z:n.position.z,h:n.userData.top+.8,name:CHARS[t.npc].name,kind:"npc",id:t.npc};}
   const s=SPOTS[t.spot];return{x:s.pos[0],z:s.pos[1],h:s.h+.5,name:s.name,kind:"spot"};}
 function activeSides(){const list=SIDES[G.line.id]||[],ids=G.steps.map(s=>s.id);
-  const mainNpc=stepReady()&&G.steps[G.idx].target&&G.steps[G.idx].target.npc,idx=sideStepIndex();
+  const mainNpc=stepReady()&&val(G.steps[G.idx].target,G)?.npc,idx=sideStepIndex();
   return list.filter(sd=>!G.sidesDone[sd.id]&&!(mainNpc&&sd.target.npc===mainNpc)&&idx>=ids.indexOf(sd.from)&&idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G)));}
 function nearest(){
   const px=player.position.x,pz=player.position.z,d=(x,z)=>Math.hypot(x-px,z-pz),c=[];
-  const m=stepReady()?targetOf(step().target):null;if(m){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:"main",label:step().action||(m.kind==="npc"?`找${CHARS[m.id].name}`:`到${m.name}`)});}
+  const m=stepReady()?targetOf(step().target):null;if(m){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:"main",label:val(step().action,G)||(m.kind==="npc"?`找${CHARS[m.id].name}`:`到${m.name}`)});}
   for(const sd of activeSides()){const t=targetOf(sd.target);if(t){const ds=d(t.x,t.z);if(ds<1.9)c.push({dist:ds,type:"side",sd,label:sd.action||`找${t.name}`});}}
   for(const it of ITEMS){if(itemMarks[it.id]&&!G.items.includes(it.id)){const di=d(it.pos[0],it.pos[1]);if(di<1.3)c.push({dist:di-.3,type:"item",it,label:"撿起來"});}}
   for(const id of chatTargets()){const n=npcs[id],dc=d(n.position.x,n.position.z);if(dc<1.5)c.push({dist:dc+.8,type:"chat",id,label:`聊聊・${CHARS[id].name}`});}
@@ -109,13 +109,13 @@ function interact(){if(mode!=="walk"||!near)return;
 
 /* 打招呼：不花時間，對方回一句 */
 const GREET={kid:["老師好！","你看我的恐龍！","我寫完了！（沒有）","老師你好高","可以去玩了嗎？"],class:["老師好","好累……","明天要考試","（點頭）","今天好熱"],jh:["Hi～","我手機有交喔","老師好","段考好難","（拔下耳機）蛤？"],study:["噓……","我在算題目","嗯？","（揮揮手）"]};
-const GREET_NPC={teacher:"你好～辛苦了。",yun:"嗨！等我一下喔～",boss:"嗯，辛苦了。",hong:"嗨～自習室這邊還好。",parent2:"（有點害羞地點頭）",deliv:"您好，外送～",amy:"Hi～國中部這邊比較吵，不好意思。",chenba:"你好。",zhangma:"你好～",ama:"老師好～"};
+const GREET_NPC={teacher:"你好～辛苦了。",yun:"嗨！等我一下喔～",boss:"嗯，辛苦了。",hong:"嗨～課輔室這邊還好。",parent2:"（有點害羞地點頭）",deliv:"您好，外送～",amy:"Hi～美語班剛下課，有點吵，不好意思。",chenba:"你好。",zhangma:"你好～",ama:"老師好～"};
 function greet(n){const t=n.id?(GREET_NPC[n.id]||"（點點頭）"):pick(GREET[n.kind]||["（點點頭）"]);
   emote(player,pick(["嗨！","你好～","辛苦了"]),1.6);setTimeout(()=>emote(n.p,t,2.6),350);beep("blip");}
 /* ---------- HUD ---------- */
 function renderAll(){renderHud();renderNext();renderDock();}
 function renderHud(){
-  if(!G){$("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock">17:20</div><div class="clocksub">高三數學 B 班</div></div><span class="spacer"></span><button class="hbtn" data-act="settings" aria-label="設定">設定</button><button class="hbtn" data-act="codex">圖鑑</button></div>`;return;}
+  if(!G){$("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock">11:30</div><div class="clocksub">國小安親・國中部</div></div><span class="spacer"></span><button class="hbtn" data-act="settings" aria-label="設定">設定</button><button class="hbtn" data-act="codex">圖鑑</button></div>`;return;}
   const L=G.line,low=k=>G.s[k]<25?"low":"";
   const st=statusOf(),cls=/上課/.test(st)?"ok":/下課|收拾/.test(st)?"":"bad";
   $("hud").innerHTML=`<div class="bar-row"><div class="clockbox"><div class="clock" id="clk">${mode==="end"?fmt(Math.max(G.clock,endMin())):G.time}</div><div class="clocksub" id="clksub">${dueText()}</div></div>
@@ -202,7 +202,7 @@ function openStep(){
   const st=step();if(st.effect)startEffect(st.effect);const carry=G.idx===0&&G.line.carry&&G.day!==2?G.line.carry(G):[];if(st.id==="ev_rain")startRain(12);if(/phone|calls|ymom|bmom|ycalls|ot_group/.test(st.id))ring(2);let pages=val(st.pages,G);const choices=st.choices?val(st.choices,G):null;
   if(carry.length)pages=[...carry,...pages];
   if(G.due!=null&&G.clock>G.due+.5&&!st.auto){const late=Math.floor(G.clock-G.due),k=Math.min(3,Math.ceil(late/5));G.lates++;G.lateMin+=late;const lf=G.line.late||{};const fx={};for(const a in lf.fx||{})fx[a]=lf.fx[a]*k;const d=applyFx(fx);G.log.push([G.time,`遲到 ${late} 分鐘`]);pages=[[null,`你晚了 ${late} 分鐘。${lf.text||""}`],...pages];if(d)G.lateDeltas=d;renderHud();}
-  spend(2);G.chatNpc=st.target&&st.target.npc;
+  spend(2);G.chatNpc=val(st.target,G)?.npc;
   runDialog({pages,choices,chatId:choices?null:G.chatNpc,endLabel:st.endLabel,onEnd:choices?null:()=>{if(st.fx)applyFx(val(st.fx,G));if(st.set)Object.assign(G.f,st.set);nextStep();},
     onChoice:c=>{if(c.mini)runMini(c.mini,r=>resolveChoice(c,nextStep,r));else resolveChoice(c,nextStep);}});
 }
@@ -267,19 +267,19 @@ function showTitle(){
   const c=$("cover");c.className="cover";c.hidden=false;const lines=Object.values(LINES);
   if(!LINES[pickedLine])pickedLine="teacher";
   const L=LINES[pickedLine];
-  c.innerHTML=`<div class="card fade"><div class="ticker"><span class="r">●</span><span>17:20</span><span>高三B 試聽 2 位</span><span>ON-DUTY ▸ 你</span></div>
-   <h1>晚上<em>十點</em>下課</h1><p class="lede">補習班打工人的一個晚上</p>
+  c.innerHTML=`<div class="card fade"><div class="ticker"><span class="r">●</span><span>11:30</span><span>安親 8 位・九年級試聽 1 位</span><span>ON-DUTY ▸ 你</span></div>
+   <h1>晚上<em>十點</em>下課</h1><p class="lede">國小安親＋國中部，補習班打工人的一天</p>
    <div class="lbl">你的名字</div><input id="nameIn" maxlength="8" placeholder="許（可以不填）" value="${esc(store.get("name",""))}" style="width:100%;font:inherit;padding:10px 12px;border:1px solid var(--rule);border-radius:4px;background:var(--tray);color:var(--ink)">
-   <div class="lbl">今天你是</div><div class="roles">${["teacher","yun","boss","care","jh"].map(id=>{const l=LINES[id];return l?`<button class="role" data-role="${id}" aria-pressed="${id===pickedLine}"><b>${esc(l.role)}${doneLines.has(id)?" ✓":""}</b><small style="display:block;font-family:var(--mono);color:var(--muted)">${l.shift||"晚上 17:20–22:00"}</small><small>${esc(l.pick)}</small></button>`:`<button class="role" disabled><b>${{yun:"櫃台班導",boss:"補習班主任"}[id]}</b><small>製作中</small></button>`;}).join("")}</div>
+   <div class="lbl">今天你是</div><div class="roles">${["care","jh","teacher","yun","boss"].map(id=>{const l=LINES[id];return l?`<button class="role" data-role="${id}" aria-pressed="${id===pickedLine}"><b>${esc(l.role)}${doneLines.has(id)?" ✓":""}</b><small style="display:block;font-family:var(--mono);color:var(--muted)">${l.shift||""}</small><small>${esc(l.pick)}</small></button>`:`<button class="role" disabled><b>${{yun:"櫃台班導",boss:"補習班主任"}[id]}</b><small>製作中</small></button>`;}).join("")}</div>
    <div class="lbl">哪一天</div><div class="seg" role="radiogroup" aria-label="哪一天" style="grid-template-columns:1fr 1fr">${[1,2].map(d=>{const ok=d===1||(doneLines.has(pickedLine)&&!!LINES2[pickedLine]);return `<button role="radio" data-day="${d}" aria-checked="${(pickedDay===d||(d===1&&!(doneLines.has(pickedLine)&&LINES2[pickedLine])))&&ok}" ${ok?"":"disabled"}>${d===1?"第一天・週二":"第二天・週三"}${d===2&&doneLines.has(pickedLine+"@2")?" ✓":""}${ok?"":`<small style="display:block;font-size:.75rem;opacity:.8">${LINES2[pickedLine]?"先玩完第一天":"之後推出"}</small>`}</button>`;}).join("")}</div>
    ${pickedDay===2&&doneLines.has(pickedLine)&&LINES2[pickedLine]?`<p class="hint" style="margin-top:6px">${esc(LINES2[pickedLine].pick)}</p>`:""}
    <div class="lbl">今天會遇到的人</div><div class="cast">${(L.cast||["yun","boss","pinyu","zhe","parent","mom"]).map(id=>{const ch=CHARS[id];return `<div><i style="background:${ch.color}"></i><b>${esc(ch.name)}</b><span>${esc(ch.title)}</span></div>`;}).join("")}</div>
    ${(()=>{const sv=store.get("save",null);return sv&&LINES[sv.line]?`<button class="ghost" data-act="resume" style="width:100%;margin-top:16px;padding:12px;border-color:var(--ink)">繼續上次：${sv.day===2?"第二天・":""}${esc(LINES[sv.line].role)}・${fmt(sv.clock)}</button>`:"";})()}
    <button class="big-go" data-act="start">上班</button>
-   ${(()=>{const ALL=["teacher","yun","boss","care","jh"],n=ALL.filter(i=>doneLines.has(i)).length,eve=["teacher","yun","boss"].every(i=>doneLines.has(i));
+   ${(()=>{const ALL=["care","jh","teacher","yun","boss"],n=ALL.filter(i=>doneLines.has(i)).length,eve=n>=3;
      const prog=`<div class="prog5" aria-label="完成 ${n} / 5">${ALL.map(i=>`<span class="${doneLines.has(i)?"on":""}">${esc(LINES[i].short)}</span>`).join("")}</div>`;
      return (eve?`<button class="ghost" data-act="epilogue" style="width:100%;margin-top:8px;padding:12px">一個月後 ▸${n===5?"　（五個位子都玩過了）":""}</button>`:"")+prog+
-      `<p class="hint">${!eve?`晚上三個位子（數學、班導、主任）都玩過，會解鎖「一個月後」。`:n<5?`再玩過${ALL.filter(i=>!doneLines.has(i)).map(i=>LINES[i].role).join("、")}，「一個月後」會多一段只有五個位子都玩過才看得到的結尾。`:`五個位子都玩過了。「一個月後」的最後，多了一段。`}目前完成 ${n} / 5。</p>`;})()}
+      `<p class="hint">${!eve?`任意三個位子玩過，會解鎖「一個月後」。`:n<5?`再玩過${ALL.filter(i=>!doneLines.has(i)).map(i=>LINES[i].role).join("、")}，「一個月後」會多一段只有五個位子都玩過才看得到的結尾。`:`五個位子都玩過了。「一個月後」的最後，多了一段。`}目前完成 ${n} / 5。</p>`;})()}
    <p class="hint">系統會告訴你下一步。跟著頭上有紅色「！」的人或地方走，或按「帶我去」。頭上有「i」的地方可以看說明，地上一閃一閃發光的地方有東西可以撿。</p>
    <div class="links"><button data-act="codex">圖鑑</button><button data-act="settings">設定</button><button data-act="about">關於</button></div>
    <p class="hint">人物、補習班、數字與情節都是虛構的遊戲設定。</p></div>`;
@@ -287,50 +287,47 @@ function showTitle(){
 }
 function remember(r){
   const f=G.f,add=k=>knowSet.add(k);
-  if(f.zheOpen||f.zheTalk||f.baseClass)add("zheBasics");if(f.knowBo)add("boSeven");if(G.day!==2&&G.line.id==="boss"&&G.idx>=G.steps.findIndex(s=>s.id==="byun"))add("yunTired");if(G.items.includes("notebook"))add("momNotes");
+  if(f.zheOpen||f.zheTalk||f.baseClass)add("zheBasics");if(f.knowBo)add("boSeven");if(G.day!==2&&G.line.id==="boss"&&G.idx>=G.steps.findIndex(s=>s.id==="b_yun"))add("yunTired");if(f.askedXiang||f.metXiangma||f.xiangmaTalk)add("xiangNet");if(f.knowMi)add("miBunny");if(G.items.includes("notebook"))add("momNotes");
   store.set("know",[...knowSet]);
   const key=G.day===2?"out2":"out",out=store.get(key,{});out[G.line.id]={f:{...f},title:r.title,s:{...G.s},h:{...G.h},enrolled:f.enrolled??0};store.set(key,out);
 }
-function allFive(CA,JH){CA=CA||{};JH=JH||{};
-  return "晚上十點。蔡老師六點半就下班了，安親班併起來的桌子，被高三坐過一輪，又被小芸一張一張推回原位。"
-   +(JH.roomPlan?"國中部的燈先熄。Amy 老師經過 B 班門口，跟許老師說：「明天影印機你先。」":"國中部的燈先熄。C 班的白板上，還留著今天的五個單字。")
-   +"主任鎖上主任室的門，回頭看了走廊一眼。小芸拉下鐵門，門口的機車一台一台騎走。"
-   +(CA.extraPudding?"冰箱裡最後一個布丁，是主任吃掉的。":"");}
+function allFive(o){const f=id=>((o[id]||{}).f)||{},CA=f("care"),JH=f("jh"),B=f("boss");
+  return "那個週二。十一點半，蔡老師在二樓擦桌子；一點半，鄭老師在三樓打開班務本；一點，主任在一樓讀總部的信；小芸在櫃台撕掉第一張便利貼；五點半，許老師的機車停在門口。"
+   +(CA.toldXiangma||JH.metXiangma||B.xiangmaTalk?"那天下午和晚上，阿翔媽媽分別跟三個人說了話。每個人都只聽到一部分。":"那天，阿翔媽媽在大廳講了很久的電話。沒有人知道她在跟誰說。")
+   +"九點半，三樓的燈先熄，二樓早就暗了。小芸拉下鐵門，門口的機車一台一台騎走。"
+   +(CA.extraPudding?"冰箱裡最後一個安親多的布丁，是主任吃掉的。":"");}
 function epilogue(){
   unlockAch("epi");
-  const o=store.get("out",{}),T=o.teacher||{f:{}},Y=o.yun||{f:{}},B=o.boss||{f:{}},any=k=>T.f[k]||Y.f[k]||B.f[k];
+  const o=store.get("out",{}),o2=store.get("out2",{}),F=id=>((o[id]||{}).f)||{},F2=id=>((o2[id]||{}).f)||{};
+  const CA=F("care"),JH=F("jh"),T=F("teacher"),Y=F("yun"),B=F("boss"),C2=F2("care"),J2=F2("jh"),T2=F2("teacher"),Y2=F2("yun"),B2=F2("boss");
+  const any=k=>CA[k]||JH[k]||T[k]||Y[k]||B[k]||C2[k]||J2[k]||T2[k]||Y2[k]||B2[k];
   const P=[];
-  P.push(["阿哲",any("zheOpen")||any("baseClass")||any("zheTalk")?"阿哲每週二提早半小時來，寒假去上了高一的基礎班。上次模考，數學從 3 級分到 6 級分。他說：「至少現在聽得懂一半了。」":T.f.shamedZhe||Y.f.refundForm?"阿哲沒有再來了。林媽媽辦了退費。有一次在捷運站遇到他，他戴著耳機，沒有看到你。":"阿哲還坐在最後一排。有時候睡覺，有時候畫畫。沒有人知道他聽懂了多少。"]);
-  P.push(["品妤",T.f.stayedPinyu||T.f.used14?"下一次模考，向量那一大題她全對。12 級分，回來了。她在講台上留了一張紙條：「謝謝老師那天留下來。」":"她還是每天念到兩點。模考 10 級分，比上次好一點，黑眼圈比上次深一點。"]);
-  P.push(["小芸",B.f.yunStay?"小芸留下來了。櫃台多了一個便利貼架，上面寫：「待辦，不是待命。」":B.f.yunLeave?"小芸在月底離職了。新來的工讀生第一天就被影印機卡紙卡到哭。大家才發現，以前那些事是誰在做。":B.f.hongPhones?"電話分了一半給阿宏。阿宏接電話的開場白是：「您好，這裡是……呃，補習班。」小芸笑了一個月。":"小芸還在櫃台。便利貼越貼越多，她說再撐一期就好。"]);
-  const enr=Math.max(T.enrolled||0,Y.enrolled||0,B.enrolled||0);
-  P.push(["王媽媽",enr?"王媽媽的兒子坐在第二排。上週，他第一次舉手問問題。":"王媽媽最後報了對面。聽說對面也打八折。"]);
-  P.push(["榜單牆",B.f.rankWords?"榜單牆換成了學生寫的小卡。最多人寫的一句是：「這裡有人記得我的名字。」":"榜單牆還是那張褪色的紅紙。主任說，今年一定要換。"]);
-  P.push(["週報",B.f.lied?"總部打電話來問：為什麼上週 85%，這週 74%？主任在電話那頭沉默了很久。":B.f.explained?"總部的回信只有一行：「下季目標維持 85%，請加油。」但附件裡，多了一台新影印機的採購單。":"續班率最後停在 78%。沒有達標，也沒有很難看。"]);
-  /* 下午場、國中部、第二天：玩過才會多出這幾段 */
-  const CA=(o.care||{}).f,JH=(o.jh||{}).f,o2=store.get("out2",{}),T2=(o2.teacher||{}).f||{},Y2=(o2.yun||{}).f||{},B2=(o2.boss||{}).f||{};
-  if(CA){
-    P.push(["小米",CA.handedMi?(CA.lesson?"接送名單最上面多了一行紅字：「名單外的人，一律先打電話。」小米每天都會念一次給新來的小朋友聽。":"小米媽媽換了另一間安親班。離開那天，小米把兔子娃娃的照片貼在了布告欄上。"):CA.waitMi||CA.miCalm?"小米現在每天會把布丁的蓋子留給蔡老師。她說那是「獎牌」。":"小米已經不哭了。她現在是點心時間最大聲的那一個。"]);
-    P.push(["安親班",CA.ananNote?"安安媽媽出差回來那天，在聯絡簿上寫了一整頁的謝謝。":CA.yuChecked?"小宇的數習，進位再也沒錯過。他說是哥哥教的。（其實是安親老師。）":"下午的補習班還是很安靜。四點十分之後，就不安靜了。"]);
-    if(CA.trialKid)P.push(["張媽媽","張媽媽的兒子試讀一週後報名了。應用題，他現在會先把題目在問什麼圈起來。"]);
+  /* 國中部 */
+  P.push(["阿哲",any("linSign")||any("baseClass")||any("baseWinter")?"阿哲每週二、四去上分數的基礎班。段考數學從 C 變成 B。他在講義角落畫了一個機器人，手上拿著一個「½」。":any("refunded")?"阿哲沒有再來了。林媽媽辦了退費。有一次在公車站遇到他，他戴著耳機，在畫畫。":any("zheOpen")||any("zheTalk")?"阿哲還坐在後排，但他開始在計算紙上寫題目了。分數的那種。":"阿哲還坐在最後一排。有時候睡覺，有時候畫機器人。沒有人知道他聽懂了多少。"]);
+  P.push(["品妤",any("toldPinyuMa")||any("pinyuMa")?"段考她第五名，比上次退一名。媽媽沒有說話，帶她去吃了一碗牛肉麵。她說那是這學期最好吃的一餐。":any("stayedPinyu")||any("pinyuBoard")?"段考她考進前三。她在講台上留了一張紙條：「謝謝老師那天留下來。」":"她還是每天念到一點多。段考第三名，黑眼圈比上次深一點。"]);
+  P.push(["阿翔",any("heardXiangma")||any("askedXiang")?"阿翔現在每天五點半到，手機自己放進籃子。他跟鄭老師說，會考完想去念汽修。他媽媽說：「好。」":any("metXiangma")||any("calledXiang")?"阿翔沒有再去網咖了，至少週二沒有。他媽媽每天傳訊息問：「到了嗎？」":"阿翔的手機還是常常沒交。不過他開始在籃子旁邊背單字卡了。"]);
+  if(Object.keys(JH).length||Object.keys(J2).length)P.push(["子晴",any("heardSpeech")||JH.speech?"子晴的英文演講拿了第二名。題目是「我最想改變的一件事」，她講的是成績單上的排名。":JH.talkMom||J2.callQingMa?"子晴媽媽來補習班找了鄭老師一次。之後，子晴的週四晚上空出來了。":"子晴的報名表沒有交出去。段考英文 99，排第二。"]);
+  /* 安親 */
+  if(Object.keys(CA).length||Object.keys(C2).length){
+    P.push(["小米",any("leftMi")&&!any("apologyMi")?"小米媽媽換了另一間安親班。離開那天，小米把兔子布丁的照片貼在布告欄上。":any("knowMi")||any("foundBunny")||any("waitMi")?"小米現在每天會把布丁的蓋子留給蔡老師。她說那是「獎牌」。":"小米已經不哭了。她現在是點心時間最大聲的那一個。"]);
+    P.push(["小宇",any("yuCarry")||any("yuChecked")?"小宇的數習，進位再也沒錯過。他跟同學說是哥哥教的。（其實是安親老師，不過哥哥後來也真的教了。）":"小宇的進位還是常常忘記。他的聯絡簿封面貼滿了恐龍。"]);
+    P.push(["安安",any("toldAnma")||any("ananNote")?"安安媽媽在聯絡簿上寫了一整頁的謝謝。那支有星星的鉛筆，現在放在安安的鉛筆盒最上面。":"安安媽媽回來之後，安安就不太說話了。不是難過，是終於不用一直等了。"]);
+    if(any("trialKid")||any("trialWeek")||any("zhangForm"))P.push(["張媽媽","張媽媽的兒子試讀一週後報名了。應用題，他現在會先把題目在問什麼圈起來。"]);
   }
-  if(JH){
-    P.push(["子晴",JH.speech?"子晴的英文演講拿了第二名。題目是「我最想改變的一件事」，她講的是成績單上的排名。":JH.talkMom?"子晴媽媽來補習班找了國中部老師一次。之後，子晴的週四晚上空出來了。":"子晴還是每週四來補習。段考英文 99，排第二。"]);
-    P.push(["阿翔",JH.deal?"阿翔的手機現在每天自己放進籃子。模擬考英文，他第一次拿到 B。":"阿翔的手機還是常常沒交。不過他開始在籃子旁邊背單字卡了。"]);
-    P.push(["走廊盡頭",JH.roomPlan?"走廊上貼了一張「教室設備使用表」。影印機那一格每天都有人搶，但有一格寫著「國中部」。":JH.talkback?"B 班和 C 班之間的走廊，下課的時候還是有點尷尬。":"C 班的投影機還是常常被借走。國中部的老師已經習慣用白板了。"]);
-  }
-  if(T2.baseWinter||B2.teacherBase||B2.basePlan||B2.baseClass2)P.push(["寒假",`寒假的高一基礎班開了。第一排坐的是阿哲${T2.zheSolved?"，他的講義角落畫了一個小小的圈":""}。`]);
-  const C2=(o2.care||{}).f||{},J2=(o2.jh||{}).f||{};
-  if(C2.medal)P.push(["布丁蓋","蔡老師的名牌上，到現在還貼著那個布丁蓋。新來的小朋友都以為那是真的獎牌。"]);
-  if(J2.bridge)P.push(["單字搶答","月底，B 班和 C 班一起比了一次單字搶答。高三輸了兩分。品妤說是故意的。"]);
-  else if(J2.newClass)P.push(["國中部","下學期國中部開了 D 班。這次，教室和投影機都寫在申請的第一行。"]);
-  if(Y2.askedHelp)P.push(["櫃台","櫃台來了第二個人。小芸終於在六點吃到晚餐，便利貼「記得吃晚餐」退休了。"]);
-  if(B2.confessed)P.push(["總部","總部開始相信這間分校報上去的數字。下一季的目標，第一次沒有往上加。"]);
+  /* 櫃台與主任 */
+  P.push(["小芸",any("hirePT")?"週三中午多了一個兼職老師。小芸終於在六點吃到晚餐，便利貼「記得吃晚餐」退休了。":B.yunLeave||any("yunGone")?"小芸在月底離職了。新來的工讀生第一天就被影印機卡紙卡到哭。大家才發現，以前那些事是誰在做。":B.yunStay?"小芸留下來了。櫃台多了一個便利貼架，上面寫：「待辦，不是待命。」":"小芸還在櫃台。便利貼越貼越多，她說再撐一期就好。"]);
+  const enr=Math.max(...["teacher","yun","boss"].map(id=>(o[id]||{}).enrolled||0));
+  P.push(["王媽媽",enr?"王媽媽的兒子坐在第三排。上週，他第一次舉手問問題。":"王媽媽最後報了對面。聽說對面也打八折。"]);
+  P.push(["影印機",any("newCopier")||any("explained")?"新的影印機到了。舊的「阿卡」被搬到倉庫，鄭老師在它身上貼了一張便利貼：「謝謝你這八年。」":any("splitCopy")?"影印機旁邊的排班表一直貼著。安親、國中、美語，大家都學會了等。":"影印機還是會卡紙。小芸已經可以閉著眼睛把紙拉出來了。"]);
+  P.push(["總部",any("confess")?"區經理來訪那天，看的是真的名單。下一季的目標，第一次沒有往上加。":B.lied?"總部打電話來問：為什麼上週 85%，這週 74%？主任在電話那頭沉默了很久。":B.explained?"總部的回信只有一行：「下季目標維持 85%，請加油。」但附件裡多了一張安親人力的核准單。":"續班率最後停在 78%。沒有達標，也沒有很難看。"]);
+  if(any("rankWords"))P.push(["榜單牆","榜單牆換成了學生寫的小卡。最多人寫的一句是：「這裡有人記得我的名字。」旁邊是一張安親小朋友畫的恐龍。"]);
+  if(any("boHook")||any("boFound")||any("boCall"))P.push(["小柏","小柏下課不再溜去 7-11 了。他說他爸週末帶他去工地，用繩子量了一個直角。"]);
+  if(any("brothers"))P.push(["課輔室","每週三晚上，課輔室角落有一張矮一點的桌子。小宇在那裡寫作業，等哥哥下課。"]);
   const c=$("cover");c.className="cover";c.hidden=false;
   c.innerHTML=`<div class="card report fade"><div class="kick">十一月・同一間補習班</div><h2>一個月後</h2>
    <dl class="list">${P.map(([a,b])=>`<dt>${esc(a)}</dt><dd style="color:var(--ink)">${esc(b)}</dd>`).join("")}</dl>
-   ${["teacher","yun","boss","care","jh"].every(i=>doneLines.has(i))?`<div class="lbl" style="margin-top:20px">回到那天晚上十點</div>
-   <p style="margin:0 0 8px">${esc(allFive(CA,JH))}</p><p style="margin:0;font-family:var(--display);color:var(--muted)">五個人，同一間補習班，同一天。每個人只看見其中一段。現在，你看過全部了。</p>`:""}
+   ${["teacher","yun","boss","care","jh"].every(i=>doneLines.has(i))?`<div class="lbl" style="margin-top:20px">回到那個週二</div>
+   <p style="margin:0 0 8px">${esc(allFive(o))}</p><p style="margin:0;font-family:var(--display);color:var(--muted)">五個人，同一間補習班，同一天。每個人只看見其中一段。現在，你看過全部了。</p>`:""}
    <p class="hint" style="font-size:.95rem;margin-top:16px">數字會回來，也可能不會。但這一個月裡，有一些人被記得了名字。</p>
    <p class="hint">換個選擇再玩一次，一個月後的樣子也會跟著改變。</p>
    <div class="actions"><button class="primary" data-act="title">回主頁</button></div></div>`;
@@ -475,7 +472,7 @@ function lessonSkip(){
   const st=step();if(!st)return false;let to=toMin(st.t);
   for(const [at,ph] of (G.line.schedule||SCHEDULE)){const m=toMin(at);if(m>G.clock&&ph!=="class"){to=Math.min(to,m);break;}}
   if(to<=G.clock)return false;
-  const sp=SPOTS[TEACHING[G.line.id]];player.position.set(sp.pos[0],0,sp.pos[1]);player.rotation.y=0; // 講台後方的空位，面向學生（講桌本身有碰撞）
+  const sp=SPOTS[(G.line.teachAt&&G.line.teachAt(G))||TEACHING[G.line.id]];player.position.set(sp.pos[0],0,sp.pos[1]);player.rotation.y=0; // 講台後方的空位，面向學生（講桌本身有碰撞）
   const from=fmt(G.clock);skipTo(to);showBanner("上課中",`${from}–${fmt(to)}　你在講台上把這一段課上完。`);return true;
 }
 function skipTo(to){

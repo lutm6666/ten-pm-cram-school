@@ -4,8 +4,8 @@ const OT_EVENTS=[
  {id:"lockup",lines:["jh","boss"],make:L=>({target:{spot:L==="jh"?"c9door":"door"},goal:L==="jh"?"最後巡一圈三樓，關燈關冷氣":"最後巡一圈，關燈關冷氣",action:"開始巡",
   pages:G=>[[null,"人差不多都走了。走廊的燈還亮著，冷氣還在轉。"],[null,G.line.id==="boss"?"上個月電費單上那個數字，你到現在還記得。":"三樓是國中部的。最後一個走的班導關燈，這是規定，也是習慣。"]],
   choices:G=>[
-   {label:"一間一間巡",mini:"lockup",min:4,fx:r=>{const b=byLine(G,{jh:{hp:-3},boss:{calm:-2,rep:2}});if(r&&r.trap){b.par=(b.par||0)-3;b.rep=(b.rep||0)-2;}return b;},log:r=>r&&r.left?`巡樓漏了 ${r.left} 個開關`:r&&r.trap?"巡樓時關了自習室的燈":"巡樓關燈關冷氣",
-    res:r=>r&&r.trap?[[null,"自習室傳來一聲：「欸——我還在！」"],[null,"你趕快把燈打開，跟角落那個學生道歉。"]]:r&&r.left?[[null,"走到樓下才想起來，好像有東西沒關。算了，明天中午第一個到的人會看到。"]]:[[null,"整層樓暗下來，只剩緊急出口的綠燈。"]]},
+   {label:"一間一間巡",mini:"lockup",min:4,fx:r=>{const b=byLine(G,{jh:{hp:-3},boss:{calm:-2,rep:2}});if(r&&r.trap){b.par=(b.par||0)-3;b.rep=(b.rep||0)-2;}return b;},log:r=>r&&r.left?`巡樓漏了 ${r.left} 個開關`:r&&r.trap?"巡樓時關了課輔室的燈":"巡樓關燈關冷氣",
+    res:r=>r&&r.trap?[[null,"課輔室傳來一聲：「欸——我還在！」"],[null,"你趕快把燈打開，跟角落那個學生道歉。"]]:r&&r.left?[[null,"走到樓下才想起來，好像有東西沒關。算了，明天中午第一個到的人會看到。"]]:[[null,"整層樓暗下來，只剩緊急出口的綠燈。"]]},
    {label:"留給明天第一個到的人",fx:G=>byLine(G,{jh:{hp:3,par:-2},boss:{calm:3,rep:-3}}),log:"沒巡樓就走",res:[[null,"你按下電梯。走廊的燈還亮著，在玻璃門上反光。"]]}]})},
  {id:"pickup",lines:["yun","boss"],make:L=>({target:{npc:"pinyu"},goal:"門口還有學生沒人接",npc:{pinyu:[4.6,16.3,Math.PI]},after:{pinyu:null},
   pages:G=>[[null,"鐵門拉下一半了。品妤還坐在門口的台階上，書包抱在胸前。"],["pinyu","我媽說她會議還沒開完，會晚一點……她說十點。"],[null,"外面的機車一台一台騎走。"]],
@@ -41,7 +41,7 @@ const OT_EVENTS=[
  {id:"reprint",lines:["care","jh","yun"],make:L=>({target:{spot:"copier"},goal:L==="care"?"明天的評量還沒印":"明天的考卷還沒印",action:"去印",
   pages:G=>[[null,G.line.id==="care"?"你突然想起來：明天二年級的國語評量還沒印。":"你突然想起來：明天九年級的理化小考卷還沒印。"],[null,"影印機發出「嗶——」的一聲。卡紙燈又亮了。"]],
   choices:G=>[
-   {label:"把卡紙拉出來，印完再走",mini:"jam",min:8,fx:r=>byLine(G,{care:{hp:-4,ord:4},jh:{hp:-4,stu:4},yun:{hp:-4,ord:6}}),log:"加班把明天的考卷印完",res:[[null,"最後一張印出來時，機器是溫的。你把紙疊好，壓上一本講義。"]]},
+   {label:"把卡紙拉出來，印完再走",mini:"jam",min:8,fx:r=>byLine(G,{care:{hp:-4,ord:4},jh:{hp:-4,stu:4},yun:{hp:-4,ord:6}}),log:r=>G.line.id==="care"?"加班把明天的評量印完":"加班把明天的考卷印完",res:[[null,"最後一張印出來時，機器是溫的。你把紙疊好，壓上一本講義。"]]},
    {label:"明天早點來印",fx:G=>byLine(G,{care:{hp:3,ord:-3},jh:{hp:3,stu:-2},yun:{hp:3,ord:-3}}),set:{otEarly:1},log:"考卷明天再印",res:[[null,`你在便利貼寫上：「明天 ${G.line.id==="care"?"11:15":"13:15"} 印考卷」，貼在影印機上。`]]}]})}
 ];
 function otSteps(L){
@@ -52,13 +52,13 @@ function otSteps(L){
 function otRestore(id,t,L){const e=OT_EVENTS.find(x=>"ot_"+x.id===id);return e?{...e.make(L.id),id,t,isEvent:true,ot:true}:null;}
 
 /* ---------- 加班小遊戲 ---------- */
-/* 巡樓：把還開著的關掉；自習室還有人，不能關 */
+/* 巡樓：把還開著的關掉；課輔室還有人，不能關 */
 MINIS.lockup={
   head:"巡樓・關燈",zone:"整層樓",title:"關掉還開著的東西",cost:4,
-  intro:"點一下就會關掉。全部巡完按「鎖門」。小心：自習室角落還有學生在念書，那盞燈不能關。",
+  intro:"點一下就會關掉。全部巡完按「鎖門」。小心：課輔室角落還有學生在念書，那盞燈不能關。",
   mount(el,done){
-    const all=G.line.id==="jh"?[["九年級冷氣","❄️",1],["九年級投影機","📽️",1],["八年級冷氣","❄️",1],["七年級冷氣","❄️",0],["國中休息室熱水壺","♨️",1],["班導桌電腦","🖥️",1],["三樓走廊燈","💡",1],["置物櫃區的燈","💡",1],["飲水機","🚰",0],["自習室角落的燈","📚",2],["九年級電風扇","🌀",1],["七年級投影機","📽️",0]]
-      :[["大廳燈","💡",1],["招牌燈","🪧",1],["九年級冷氣","❄️",1],["美語教室投影機","📽️",1],["影印機","🖨️",1],["休息室熱水壺","♨️",1],["主任室電腦","🖥️",0],["走廊燈","💡",1],["二年級冷氣","❄️",0],["自習室角落的燈","📚",2],["飲水機","🚰",0],["櫃台電腦","🖥️",1]];
+    const all=G.line.id==="jh"?[["九年級冷氣","❄️",1],["九年級投影機","📽️",1],["八年級冷氣","❄️",1],["七年級冷氣","❄️",0],["國中休息室熱水壺","♨️",1],["班導桌電腦","🖥️",1],["三樓走廊燈","💡",1],["置物櫃區的燈","💡",1],["飲水機","🚰",0],["課輔室角落的燈","📚",2],["九年級電風扇","🌀",1],["七年級投影機","📽️",0]]
+      :[["大廳燈","💡",1],["招牌燈","🪧",1],["九年級冷氣","❄️",1],["美語教室投影機","📽️",1],["影印機","🖨️",1],["休息室熱水壺","♨️",1],["主任室電腦","🖥️",0],["走廊燈","💡",1],["二年級冷氣","❄️",0],["課輔室角落的燈","📚",2],["飲水機","🚰",0],["櫃台電腦","🖥️",1]];
     const items=all.map(a=>({n:a[0],ic:a[1],k:a[2],on:a[2]>0||Math.random()<.3})).sort(()=>Math.random()-.5);
     let trap=false;
     el.innerHTML=`<div class="lock">${items.map((it,i)=>it.on?`<button class="lk on" data-n="${i}" aria-pressed="true"><span>${it.ic}</span>${it.n}</button>`:`<div class="lk off"><span>${it.ic}</span>${it.n}</div>`).join("")}</div>
@@ -68,7 +68,7 @@ MINIS.lockup={
       if(it.k===2){trap=true;feed.textContent="「欸——我還在！」角落有人喊了一聲。";}else feed.textContent=`${it.n}：關了。`;}));
     el.querySelector("[data-next]").addEventListener("click",function(){if(this.disabled)return;this.disabled=true;el.querySelectorAll("[data-n]").forEach(x=>x.disabled=true);
       const left=items.filter(it=>it.on&&it.k===1).length;
-      feed.textContent=left?`鎖門了。還有 ${left} 樣忘了關。`:trap?"都關了，包括不該關的那盞。":"全部關好，自習室的燈也留著。完美。";done({left,trap});});
+      feed.textContent=left?`鎖門了。還有 ${left} 樣忘了關。`:trap?"都關了，包括不該關的那盞。":"全部關好，課輔室的燈也留著。完美。";done({left,trap});});
   }
 };
 /* 深夜群組：挑一句最得體的回覆 */

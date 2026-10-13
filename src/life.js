@@ -4,7 +4,7 @@ let crowdPhase=null,ambT=2,npcAmbT=3;
 const DOOR=[4.5,17.2];
 const T=s=>{const [h,m]=s.split(":").map(Number);return h*60+m;};
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-function phaseOf(){if(!G)return"pre";if(G.done||(G.idx>=G.steps.length-1&&stepReady()))return"close";let ph="pre";for(const [at,p] of (G.line.schedule||SCHEDULE)){if(G.clock>=T(at))ph=p;}return ph;}
+function phaseOf(){if(!G)return"pre";let last=G.steps.length-1;while(last>0&&G.steps[last].ot)last--;if(G.done||G.idx>last||(G.idx===last&&stepReady()))return"close";let ph="pre";for(const [at,p] of (G.line.schedule||SCHEDULE)){if(G.clock>=T(at))ph=p;}return ph;}
 const PHASE_STATUS={class:"上課中",break:"下課",leave:"放學",close:"收拾中"};
 function statusOf(){const ph=phaseOf();return (G&&G.line.phaseStatus&&G.line.phaseStatus[ph])||PHASE_STATUS[ph]||(G&&G.line.preStatus)||"準備中";}
 

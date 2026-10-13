@@ -246,3 +246,11 @@ button.lk{font-family:inherit;cursor:pointer}
 .prog5{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:12px}
 .prog5 span{text-align:center;font-size:.78rem;padding:4px 0;border:1px solid var(--rule);border-radius:4px;color:var(--muted)}
 .prog5 span.on{background:var(--ink);color:var(--board);border-color:var(--ink);font-weight:700}
+/* 放學高峰多工佇列 */
+.rushhead{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:.8rem;color:var(--muted);margin-bottom:8px}
+.rushq{display:flex;flex-direction:column;gap:8px}
+.rushc{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;min-height:56px}
+.rushc .rushi{font-size:1.4rem;grid-row:span 2}
+.rushc b{display:block;font-size:.95rem}
+.rushc .track{grid-column:2;height:6px}
+.rushsel .track{height:6px;margin-top:8px}

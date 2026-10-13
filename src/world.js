@@ -141,7 +141,7 @@ function furnishRoom(r){
     const b=wallSign({g1:"今日作業\n國習 p.12・生字一行",g2:"今日作業\n數習 p.32・國習 p.18",g34:"今日作業\n數學評量 第三回",c7:"段考範圍\n數學 1-1～2-2",c8:"段考範圍\n理化 第一章～第三章",c9:"會考倒數 210 天\n段考：下週二、三",english:"Unit 3\nWhat's your name?"}[r.id]||"",o+cx,1.6,top?bz+.07:bz-.07,ry,Math.min(4.2,bw-.6),.9,"#1d4fc4","#ffffff",56);
     b.userData={w:Math.min(4.2,bw-.6),h:.9};BOARDS[r.id]=b;
     const pz=top?1.6:16.4;furn([o+cx-.6,pz-.3,o+cx+.6,pz+.3],1.0,0x6b4f39);
-    seatsOf(r.id).forEach(([x,z,rot])=>{const dz=rot===Math.PI?-.62:.62;furn([x-.6,z+dz-.25,x+.6,z+dz+.25],kid?.62:.72,C.desk,C.deskTop);chair(x,z,rot);solids.push([x-.28,z-.25,x+.28,z+.25]);});
+    seatsOf(r.id).forEach(([x,z,rot])=>{const dz=rot===Math.PI?-.62:.62;furn([x-.5,z+dz-.25,x+.5,z+dz+.25],kid?.62:.72,C.desk,C.deskTop);chair(x,z,rot);solids.push([x-.28,z-.25,x+.28,z+.25]);});
   };
   switch(r.id){
    case"office":furn(R4(2,2,5.5,3),.78,C.desk,C.deskTop);furn(R4(.3,.3,1.8,.8),1.7,C.shelf);furn(R4(6.3,.3,7.7,.8),1.3,0x6b7479);
@@ -346,20 +346,24 @@ function findPathFrom(fx,fz,tx,tz,avoid=[]){
     avoid.forEach(([px,pz])=>{const [ci,cj]=cellOf(px,pz);for(let dj=-rr;dj<=rr;dj++)for(let di=-rr;di<=rr;di++){const i=ci+di,j=cj+dj;if(i<0||j<0||i>=GW||j>=GH)continue;if(Math.hypot((i+.5)*CELL-px,(j+.5)*CELL-pz)<.72)routeGrid[j*GW+i]=1;}});}
   // A passing step can leave the current cell inside another actor's planning
   // margin. Select a reachable start in the SAME temporary grid.
-  const starts=[],end=nearestFree(...cellOf(tx,tz),routeGrid);
+  // 終點在家具裡（例如椅子）時，附近 1 公尺內所有空格都算終點，避免挑到被桌子圍住的小角落。
+  const starts=[],tc=cellOf(tx,tz),goals=new Set();
+  if(!routeGrid[tc[1]*GW+tc[0]])goals.add(tc[1]*GW+tc[0]);
+  else{const rr=Math.ceil(1/CELL),tf=floorOf(tx);for(let dj=-rr;dj<=rr;dj++)for(let di=-rr;di<=rr;di++){const i=tc[0]+di,j=tc[1]+dj;if(i<0||j<0||i>=GW||j>=GH||routeGrid[j*GW+i])continue;const x=(i+.5)*CELL,z=(j+.5)*CELL;if(floorOf(x)===tf&&Math.hypot(x-tx,z-tz)<=1)goals.add(j*GW+i);}}
+  const end=goals.size?tc:nearestFree(...tc,routeGrid);if(!goals.size&&end)goals.add(end[1]*GW+end[0]);
   if(blockedAt(fx,fz)&&isChair(fx,fz)){
     const ownSeat=solids.filter(s=>fx>s[0]&&fx<s[2]&&fz>s[1]&&fz<s[3]),[ci,cj]=cellOf(fx,fz);
     for(let dj=-4;dj<=4;dj++)for(let di=-4;di<=4;di++){const i=ci+di,j=cj+dj,x=(i+.5)*CELL,z=(j+.5)*CELL;if(i>=0&&j>=0&&i<GW&&j<GH&&!routeGrid[j*GW+i]&&Math.hypot(x-fx,z-fz)<=.9&&los(fx,fz,x,z,avoid,R,ownSeat))starts.push([i,j]);}
   }else{const start=nearestFree(...cellOf(fx,fz),routeGrid,(x,z)=>los(fx,fz,x,z,avoid,R));if(start)starts.push(start);}
   if(!starts.length||!end)return null;
-  const [gi,gj]=end,N=GW*GH,goal=gj*GW+gi,gf=floorOf((gi+.5)*CELL);
+  const [gi,gj]=end,N=GW*GH,gf=floorOf((gi+.5)*CELL);let goal=-1;
   if(!_pathBuf||_pathBuf.g.length!==N)_pathBuf={g:new Float32Array(N),prev:new Int32Array(N),closed:new Uint8Array(N),via:new Int16Array(N)};
   const {g,prev,closed,via}=_pathBuf;g.fill(1e9);prev.fill(-1);closed.fill(0);via.fill(-1);
   // 啟發值：同樓層用直線距離；不同樓層先算到電梯廳再加最低換層成本，保持可採納。
   const coreX=CORE.elev[0]/CELL,coreZ=CORE.elev[1]/CELL,gl=gi-gf*FLOOR_GAP/CELL;
   const h=k=>{const i=k%GW,j=(k/GW)|0,f=floorOf((i+.5)*CELL);if(f===gf)return Math.hypot(i-gi,j-gj);const li=i-f*FLOOR_GAP/CELL;return Math.hypot(li-coreX,j-coreZ)+Math.hypot(gl-coreX,gj-coreZ)+6/CELL*Math.abs(f-gf);};
   const open=[],fs=[];starts.forEach(([i,j])=>{const k=j*GW+i;g[k]=Math.hypot((i+.5)*CELL-fx,(j+.5)*CELL-fz)/CELL;heapPush(open,g[k]+h(k),k,fs);});let reached=false;
-  while(open.length){const cur=heapPop(open,fs);if(cur===goal){reached=true;break;}if(closed[cur])continue;closed[cur]=1;const ci=cur%GW,cj=(cur/GW)|0;
+  while(open.length){const cur=heapPop(open,fs);if(goals.has(cur)){goal=cur;reached=true;break;}if(closed[cur])continue;closed[cur]=1;const ci=cur%GW,cj=(cur/GW)|0;
     for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){if(!di&&!dj)continue;const a=ci+di,b=cj+dj;if(a<0||b<0||a>=GW||b>=GH)continue;const k=b*GW+a;
       if(routeGrid[k]||closed[k])continue;if(di&&dj&&(routeGrid[cj*GW+a]||routeGrid[b*GW+ci]))continue;const ng=g[cur]+(di&&dj?1.414:1);if(ng<g[k]){g[k]=ng;prev[k]=cur;via[k]=-1;heapPush(open,ng+h(k),k,fs);}}
     const links=PORTAL_LINKS.get(cur);if(links)links.forEach(([k,c,p])=>{if(closed[k]||routeGrid[k])return;const ng=g[cur]+c;if(ng<g[k]){g[k]=ng;prev[k]=cur;via[k]=PORTALS.indexOf(p);heapPush(open,ng+h(k),k,fs);}});}

@@ -1,67 +1,58 @@
-// Reproduce yenroll's podium traffic jam without random timing or longer waits.
+// 三層樓格局的尋路與人流：
+// 1. 從 1F 門口到每一個命名地點都有路；跨樓層的路會經過樓梯或電梯。
+// 2. 每一間教室的每一個座位，從教室門口都走得到。
+// 3. 國中生 17:20 起陸續到班、國小生週三 12:50 回來：全部走到座位，沒有人卡住。
+// 4. 玩家按「帶我去」從 1F 走到 3F 九年級講台，會換樓層並抵達。
+// 先建測試頁：python3 build.py stub.js tests/test.html
 const {chromium}=require('playwright');
 const fs=require('fs'),assert=require('assert');
 (async()=>{const b=await chromium.launch();try{
-  const p=await b.newPage();
-  await p.route('**/test.html',route=>{let h=fs.readFileSync(process.env.TEST_PAGE||__dirname+'/test.html','utf8');const at=h.lastIndexOf('})();');h=h.slice(0,at)+'window.__nav={npcs,extras,agentPlace,agentGo,moveAgent,moveNPCs,guideTarget,setCrowd,tickCrowd,clockT};'+h.slice(at);return route.fulfill({body:h,contentType:'text/html'});});
-  await p.goto('file://'+__dirname+'/test.html');await p.click('[data-role=yun]');await p.click('[data-act=start]');
-  const result=await p.evaluate(()=>{
-    const q=__nav;__dbg.jump('yenroll');Object.values(q.npcs).forEach(n=>n.visible=false);q.extras.forEach(e=>e.p.visible=false);
-    const n=q.npcs.parent,t=q.npcs.teacher;n.visible=t.visible=true;q.agentPlace(t,18.6,2.9,Math.PI);
-    return [.006,.016,.025,.05].flatMap(dt=>[[18.995004248215558,3.4392568647553245],[18.971953598247648,3.439789962439228],[19.02594244957587,3.4480274229685453]].map(start=>{
-      q.agentPlace(n,...start,0);n.userData.anchor=[5.2,15.3,Math.PI];q.agentGo(n,5.2,15.3,Math.PI);
-      let min=Infinity,wall=false;for(let i=0;i<Math.ceil(30/dt)&&n.userData.path;i++){q.moveAgent(n,dt);min=Math.min(min,Math.hypot(n.position.x-t.position.x,n.position.z-t.position.z));wall ||= __dbg.blockedAt(n.position.x,n.position.z);}
-      // Yielding is part of the trip, even on frames with no displacement.
-      q.agentGo(n,26,3.375,0);n.userData.moving=false;const guide=q.guideTarget({npc:'parent'});
-      return {dt,min,initial:Math.hypot(start[0]-t.position.x,start[1]-t.position.z),wall,arrived:Math.hypot(n.position.x-5.2,n.position.z-15.3)<.03,guide:[guide.x,guide.z]};
-    }));
-  });
-  for(const r of result){assert(r.arrived,`podium detour stalled at dt=${r.dt}`);assert(!r.wall,'detour crossed furniture/wall');assert(r.min>=Math.min(.66,r.initial)-.00001,'actor overlap increased');assert.deepStrictEqual(r.guide,[5.2,15.3],'guide changed during yield');}
-  console.log('yenroll podium detour / body separation / stable guide PASS',result);
+  const p=await b.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+  await p.route('**/test.html',route=>{let h=fs.readFileSync(__dirname+'/test.html','utf8');const at=h.lastIndexOf('})();');
+    h=h.slice(0,at)+'window.__nav={npcs,extras,agentPlace,agentGo,moveAgent,moveNPCs,tickCrowd,crowdSettle,crowdTimes,crowdWanted,findPathFrom,seatsOf,CLASS_SEATS,SPOTS,floorOf,blockedAt,get G(){return G},clockT,setG:g=>{G=g}};'+h.slice(at);
+    route.fulfill({contentType:'text/html',body:h});});
+  await p.goto('file://'+__dirname+'/test.html');await p.waitForTimeout(300);
+
+  const spots=await p.evaluate(()=>{const q=__nav,door=q.SPOTS.door.pos,bad=[],cross=[];
+    for(const k in q.SPOTS){const s=q.SPOTS[k].pos,path=q.findPathFrom(door[0],door[1],s[0],s[1]);
+      if(!path){bad.push(k);continue;}const end=path[path.length-1];if(Math.hypot(end[0]-s[0],end[1]-s[1])>1.6)bad.push(k+' 終點太遠');
+      if(q.floorOf(s[0])!==0&&!path.some(pt=>pt.via))bad.push(k+' 跨樓層沒有經過樓梯或電梯');if(q.floorOf(s[0])!==0)cross.push(k);}
+    return {bad,cross:cross.length,total:Object.keys(q.SPOTS).length};});
+  assert.deepStrictEqual(spots.bad,[],'每個地點都要走得到：'+spots.bad.join('、'));
+  console.log(`spots reachable from 1F door PASS (${spots.total} 個地點，${spots.cross} 個要換樓層)`);
+
+  const seats=await p.evaluate(()=>{const q=__nav,bad=[];let n=0;const a=q.extras.find(e=>e.kind==='jh').p,kid=q.extras.find(e=>e.kind==='kid').p;
+    q.extras.forEach(e=>e.p.visible=false);Object.values(q.npcs).forEach(x=>x.visible=false);
+    const doorOf={g1:'g1door',g2:'g2door',g34:'g34door',c7:'c7door',c8:'c8door',c9:'c9door',english:'engdoor'};
+    for(const room in q.CLASS_SEATS){const d=q.SPOTS[doorOf[room]].pos,who=q.CLASS_SEATS[room].kid||room==='english'?kid:a;who.visible=true;
+      q.seatsOf(room).forEach(([x,z,r],i)=>{n++;q.agentPlace(who,d[0],d[1],0);q.agentGo(who,x,z,r);let k=0;while(who.userData.path&&k++<4000)q.moveAgent(who,.05);
+        const dd=Math.hypot(who.position.x-x,who.position.z-z);if(who.userData.routeFailed||dd>.15)bad.push(`${room}#${i} 停在 ${dd.toFixed(2)}`);});
+      who.visible=false;}
+    return {bad,n};});
+  assert.deepStrictEqual(seats.bad,[],'每個座位都要坐得到：'+seats.bad.join('、'));
+  console.log(`every classroom seat: walk in from the door and sit down PASS (${seats.n} 個座位)`);
+
+  // 人流：用假的 G 驅動時間表，固定步長模擬
+  const crowd=await p.evaluate(()=>{const q=__nav,res={};
+    for(const [label,line,day,from,until,kinds] of [['國中生到班','jh',1,17*60+19,17*60+58,['jh']],['週三國小生回來','care',2,12*60+49,13*60+5,['kid']]]){
+      const G={line:{id:line,crowd:kinds},day,clock:from,done:false,idx:0,steps:[{t:"00:00"}],stepReady:false};q.setG(G);
+      q.extras.forEach(e=>{e.p.visible=false;e.state='away';e.p.userData.path=null;});
+      let t=0;const dt=.05;while(G.clock<until){G.clock+=dt*.25;q.clockT.elapsedTime+=dt;q.tickCrowd();q.moveNPCs(dt);t+=dt;}
+      // 再多走 40 秒讓最後到的人坐下
+      for(let i=0;i<800;i++){q.clockT.elapsedTime+=dt;q.tickCrowd();q.moveNPCs(dt);}
+      const mine=q.extras.filter(e=>kinds.includes(e.kind)&&q.crowdWanted(e));
+      res[label]={want:mine.length,here:mine.filter(e=>e.state==='here').length,stuck:mine.filter(e=>e.state!=='here').map(e=>[e.room,e.state,+e.p.position.x.toFixed(1),+e.p.position.z.toFixed(1)]),failed:mine.filter(e=>e.p.userData.routeFailed).length};}
+    q.setG(null);return res;});
+  for(const [label,r] of Object.entries(crowd)){assert(r.want>0,label+' 應該有人');assert.strictEqual(r.here,r.want,label+' 有人沒走到座位：'+JSON.stringify(r.stuck));}
+  console.log('crowd arrivals reach their seats PASS',JSON.stringify(Object.fromEntries(Object.entries(crowd).map(([k,v])=>[k,`${v.here}/${v.want}`]))));
+
+  // 玩家：1F 門口 → 3F 九年級講台
+  await p.reload();await p.waitForTimeout(300);await p.click('[data-act=start]');
   if(await p.isVisible('[data-act=chapterGo]'))await p.click('[data-act=chapterGo]');
-  await p.evaluate(()=>{window.__savedDelta=__nav.clockT.getDelta;__nav.clockT.getDelta=()=>.05;__dbg.tp(9.624773519383476,3.2078527119334486);__dbg.go(3.5,3.4);});
-  await p.waitForFunction(()=>{const [x,z]=__dbg.pos();return x<8.6&&Math.hypot(x-3.5,z-3.4)<1.9;},null,{timeout:5000});
-  await p.evaluate(()=>{__nav.clockT.getDelta=window.__savedDelta;});console.log('low-frame-rate office doorway PASS');
-  await p.evaluate(()=>{const q=__nav;Object.values(q.npcs).forEach(n=>n.visible=false);q.extras.forEach(e=>e.p.visible=false);const n=q.npcs.parent;n.visible=true;q.agentPlace(n,30,14,0);q.agentGo(n,32,14,0);q.clockT.getDelta();window.__savedRaf=requestAnimationFrame;window.requestAnimationFrame=cb=>setTimeout(()=>cb(performance.now()),200);});
-  await p.waitForTimeout(1600);
-  const slow=await p.evaluate(()=>{window.requestAnimationFrame=window.__savedRaf;const n=__nav.npcs.parent;return {x:n.position.x,z:n.position.z,path:n.userData.path};});
-  assert(Math.hypot(slow.x-32,slow.z-14)<.03,'5fps lost elapsed NPC movement time');console.log('5fps real-time NPC walking PASS',slow);
-  const crowd=await p.evaluate(()=>{
-    const q=__nav;__dbg.jump('yenroll');q.setCrowd('class',true);
-    q.agentPlace(q.npcs.parent,26.9,5.6,-Math.PI/2);q.agentGo(q.npcs.parent,5.2,15.3,Math.PI);q.setCrowd('leave',true);
-    let seconds=0;for(let i=0;i<1800&&q.npcs.parent.userData.path;i++){q.clockT.elapsedTime+=.025;q.tickCrowd();q.moveNPCs(.025);seconds+=.025;}
-    return {seconds,pos:[q.npcs.parent.position.x,q.npcs.parent.position.z],arrived:!q.npcs.parent.userData.path};
-  });
-  assert(crowd.arrived,'parent stalled in full classroom departure traffic');assert(Math.hypot(crowd.pos[0]-5.2,crowd.pos[1]-15.3)<.03);console.log('full classroom departure PASS',crowd);
-  const merge=await p.evaluate(()=>{
-    const q=__nav,actors=[q.npcs.parent,q.npcs.parent2,q.extras[14].p,q.extras[15].p];
-    const starts=[[20.61494979323519,1.3387356663447223],[21.014958242648895,.7606770249203996],[21.510355227862977,1.2208711887502728],[21.1456444028621,1.7805927085763043]];
-    const shared=[[21.125,1.375],[20.875,1.375],[20.625,1.375],[20.375,1.375],[20.125,1.375],[19.875,1.375],[19.625,1.375],[19.375,1.375],[19.125,1.375],[18.875,1.375],[13.375,3.375],[12.625,8.375],[11.375,9.625]];
-    const ends=[[5.2,15.3],[6.4,15.3],[4.5,17.3],[4.5,17.3]];
-    const tails=[[[9.625,12.375],[5.125,15.125],[5.125,15.375],[5.2,15.3]],[[9.125,12.875],[6.375,15.375],[6.4,15.3]],[[6.875,16.125],[4.625,17.375],[4.5,17.3]],[[6.875,16.125],[4.625,17.375],[4.5,17.3]]];
-    // Exact four-actor convergence from the continuous-time yun Playthrough.
-    // Passing left of a shared waypoint must not make everyone turn back into it.
-    return [.006,.012,.016,.025,.05].map(dt=>{
-    Object.values(q.npcs).forEach(n=>n.visible=false);q.extras.forEach(e=>e.p.visible=false);
-    actors.forEach((n,i)=>{n.visible=true;q.agentPlace(n,...starts[i],0);Object.assign(n.userData,{anchor:[...ends[i],Math.PI],yieldTime:[.0722,.0722,.0863,0][i],blockTime:0,passSide:1,departSeat:null,path:[...shared,...tails[i]].map(pt=>[...pt]),endRot:Math.PI,onArrive:i>=2?()=>{n.visible=false;}:null});});
-    const initial=actors.map((n,i)=>actors.map((m,j)=>i===j?Infinity:Math.hypot(n.position.x-m.position.x,n.position.z-m.position.z)));
-    let arrival=null,wall=false,overlap=false;const arrivalTimes=[];
-    for(let k=0;k<Math.ceil(45/dt);k++){
-      q.moveNPCs(dt);
-      actors.forEach((n,i)=>{wall ||= n.visible&&__dbg.blockedAt(n.position.x,n.position.z);actors.forEach((m,j)=>{if(i<j&&n.visible&&m.visible)overlap ||= Math.hypot(n.position.x-m.position.x,n.position.z-m.position.z)<Math.min(.66,initial[i][j])-.00001;});if(!n.userData.path&&arrivalTimes[i]==null)arrivalTimes[i]=k*dt;});
-      if(!actors[0].userData.path&&arrival===null)arrival=k*dt;
-    }
-    return {dt,arrival,arrivalTimes,wall,overlap,pos:actors.map(n=>[n.position.x,n.position.z]),parentArrived:Math.hypot(actors[0].position.x-ends[0][0],actors[0].position.z-ends[0][1])<.03};
-    });
-  });
-  console.log('classroom-exit merge',merge);for(const r of merge){assert(r.parentArrived&&r.arrival!==null&&r.arrival<45,`parent stalled at shared classroom-exit waypoint dt=${r.dt}`);assert(r.arrivalTimes.length===4&&[0,1,2,3].every(i=>Number.isFinite(r.arrivalTimes[i])&&r.arrivalTimes[i]<45),`classroom-exit actor failed to arrive dt=${r.dt}`);assert(!r.wall,'classroom-exit merge crossed furniture/wall');assert(!r.overlap,'classroom-exit merge increased body overlap');}console.log('shared classroom-exit waypoint / parent arrival / separation PASS');
-  const exit=await p.evaluate(()=>{
-    const q=__nav,n=q.npcs.pinyu;q.setCrowd('class',true);
-    // yclose explicitly removes the parents, Bo and Zhe before ot_pickup.
-    for(const id of ['parent','parent2','bo','zhe'])q.npcs[id].visible=false;
-    n.visible=true;q.agentPlace(n,17,4.62,Math.PI);n.userData.anchor=[4.6,16.3,Math.PI];q.agentGo(n,4.6,16.3,Math.PI);q.setCrowd('close',true);
-    let arrival=null;const exits=[];for(let i=0;i<2400;i++){const visible=q.extras.filter(e=>e.p.visible);q.clockT.elapsedTime+=.025;q.tickCrowd();q.moveNPCs(.025);for(const e of visible)if(!e.p.visible)exits.push([e.p.position.x,e.p.position.z]);if(!n.userData.path&&arrival===null)arrival=i*.025;}
-    return {arrival,pos:[n.position.x,n.position.z],remaining:q.extras.filter(e=>e.p.visible).map(e=>({kind:e.kind,state:e.state})),exits};
-  });
-  assert(exit.arrival!==null&&exit.arrival<45,'waiting student stalled in closing traffic');assert(Math.hypot(exit.pos[0]-4.6,exit.pos[1]-16.3)<.03);assert(exit.remaining.every(e=>e.kind==='study'&&e.state==='seat'),'departing students stalled');assert(exit.exits.length>20);assert(exit.exits.every(([x,z])=>x>3.6&&x<5.4&&z>=16.9&&z<=17.7),'student disappeared outside the entrance');console.log('closing traffic / waiting student / physical exit PASS',exit);
-}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
+  const ok=await p.evaluate(()=>{const s=__nav.SPOTS.c9podium.pos;__dbg.tp(__nav.SPOTS.door.pos[0],__nav.SPOTS.door.pos[1]-.5);return __dbg.go(s[0],s[1]+.6);});
+  assert(ok,'1F 到 3F 九年級講台要有路');
+  await p.waitForFunction(()=>{const s=__nav.SPOTS.c9podium.pos,[x,z]=__dbg.pos();return Math.hypot(x-s[0],z-s[1])<1.9&&!(__dbg.path||[]).length;},null,{timeout:60000}).catch(async e=>{console.log('player at',await p.evaluate(()=>({pos:__dbg.pos(),path:__dbg.path,mode:__dbg.mode,target:__nav.SPOTS.c9podium.pos})));throw e;});
+  assert.strictEqual(await p.evaluate(()=>__nav.floorOf(__dbg.pos()[0])),2,'玩家換到 3F');
+  console.log('player cross-floor walk 1F door → 3F podium PASS');
+  assert.deepStrictEqual(errs,[],'頁面不能有錯誤');
+}finally{await b.close();}})().catch(e=>{console.error(e);process.exit(1);});

@@ -20,7 +20,7 @@ async function drain(){let g=0;while(g++<60){
     if(await vis('#miniArea [data-n]:not([disabled])')){await p.click('#miniArea [data-n]:not([disabled]) >> nth=0');continue;}
     if(await vis('#miniArea [data-submit]:not([disabled])')){if(pick===1)await p.click('#miniArea [data-d="2"]');await p.click('#miniArea [data-submit]');continue;}
     if(await vis('.sheetp')){const n=await p.$$('.sheetp:not(.gone)');await n[n.length-1].click();await p.waitForTimeout(300);}
-    else if(await vis('#miniArea [data-k]:not([disabled])')){await p.click('#miniArea [data-k]:not([disabled]) >> nth='+(pick%3));}
+    else if(await vis('#miniArea [data-k]:not([disabled])')){const n=(await p.$$('#miniArea [data-k]:not([disabled])')).length;await p.click('#miniArea [data-k]:not([disabled]) >> nth='+Math.min(pick%3,Math.max(0,n-1))).catch(()=>{});}
     else if(await vis('#miniArea [data-next]')){await p.click('#miniArea [data-next]');}
     else if(await vis('#miniArea .choice[data-i]')&&!(await vis('#miniArea [data-call]'))&&!(await vis('[data-act=miniOk]'))){for(const i of [0,5,4]) await p.click(`#miniArea .choice[data-i="${i}"]`);}
     else if(await vis('#miniArea [data-call]')){await p.click('#miniArea [data-call]');}

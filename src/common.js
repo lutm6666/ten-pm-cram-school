@@ -28,6 +28,8 @@ const CHARS={
  chenba:{name:"陳爸爸",short:"家長",title:"小柏的爸爸",abbr:"家",color:"#6b7f3a",body:0x7d8f4a,hair:0x333333},
  ama:{name:"李阿嬤",short:"家長",title:"安安的阿嬤",abbr:"嬤",color:"#868e96",body:0xadb5bd,hair:0xdddddd},
  zhangma:{name:"張媽媽",short:"詢問",title:"來詢問安親的家長",abbr:"家",color:"#1c7ed6",body:0x4dabf7,hair:0x3a2a22},
+ anma:{name:"安安媽媽",short:"家長",title:"安安的媽媽・剛出差回來",abbr:"家",color:"#5f3dc4",body:0x845ef7,hair:0x1f1b18},
+ pinyuma:{name:"品妤媽媽",short:"家長",title:"品妤的媽媽・電話中",abbr:"☎",color:"#3b5bdb"},
  mima:{name:"小米媽媽",short:"家長",title:"小米的媽媽",abbr:"家",color:"#b5487d",body:0xe599f7,hair:0x2a2421},
  deliv:{name:"外送員",short:"外送",title:"外送平台",abbr:"送",color:"#d9480f",body:0xe8590c,hair:0x222222}
 };

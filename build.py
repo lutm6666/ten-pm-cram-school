@@ -3,7 +3,7 @@ ARTIFACT='--artifact' in sys.argv
 DBG='--dbg' in sys.argv
 sys.argv=[a for a in sys.argv if a not in('--artifact','--dbg')]
 src=lambda f:open('src/'+f,encoding='utf8').read()
-order=['layout.js','common.js','world.js','life.js','atmos.js','art.js','art_models.js','art_models_fix.js','art_phase2.js','art_phase2_ui.js','art_phase2_perf.js','cast.js','minis.js','events.js','overtime.js','chats.js','ach.js','line_teacher.js']+[f for f in sorted(os.listdir('src')) if f.startswith('line_') and f!='line_teacher.js']+['engine.js','settings.js','share.js','boot.js']
+order=['layout.js','common.js','world.js','life.js','atmos.js','art.js','art_models.js','art_models_fix.js','art_phase2.js','art_phase2_ui.js','art_phase2_perf.js','cast.js','minis.js','rush.js','events.js','overtime.js','chats.js','ach.js','items.js','sides.js','line_teacher.js']+[f for f in sorted(os.listdir('src')) if f.startswith('line_') and f!='line_teacher.js']+['day2.js','day2b.js','engine.js','settings.js','share.js','boot.js']
 three=sys.argv[1] if len(sys.argv)>1 else 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
 DBG=DBG or not three.startswith('http')
 # Debug jump is a scheduled-scene fixture; normal gameplay never uses it.
@@ -13,10 +13,10 @@ head='' if ARTIFACT else '''<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101826">
-<meta name="description" content="補習班打工人的一個晚上。3D 網頁小遊戲：當數學老師、櫃台班導或補習班主任，從 17:20 撐到晚上十點。">
+<meta name="description" content="補習班打工人的一天。3D 網頁小遊戲：國小安親加國中部的補習班，當安親老師、國中班導、跑堂數學老師、櫃台或主任，從中午接小朋友撐到晚上國中放學。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="晚上十點下課">
-<meta property="og:description" content="補習班打工人的一個晚上。三個位子、同一個晚上，直接在瀏覽器玩。">
+<meta property="og:description" content="補習班打工人的一天。五個位子、同一間補習班，直接在瀏覽器玩。">
 <meta property="og:url" content="https://lutm6666.github.io/ten-pm-cram-school/">
 <meta property="og:site_name" content="晚上十點下課">
 <meta property="og:image" content="https://lutm6666.github.io/ten-pm-cram-school/assets/og.png">
@@ -52,7 +52,7 @@ out=head+f'''<title>晚上十點下課 3D</title>
 '''
 # Logic tests use the local Three stub and must not wait on external font CDNs.
 if DBG:
-    out=out.replace('window.__dbg={', 'window.__dbg={guideTarget,npcState:()=>Object.entries(npcs).concat(extras.map((e,i)=>["extra"+i,e.p])).filter(([id,n])=>n.visible).map(([id,n])=>({id,x:n.position.x,z:n.position.z,path:n.userData.path,anchor:n.userData.anchor,moving:n.userData.moving,seated:n.userData.seated,act:n.userData.act,routeFailed:n.userData.routeFailed,yieldTime:n.userData.yieldTime,blockTime:n.userData.blockTime})),')
+    out=out.replace('window.__dbg={', 'window.__dbg={guideTarget,LINES,LINES2,EVENTS,EVENT_SLOTS,OT_EVENTS,SPOTS,CHARS,MINIS,CHATS,setG:g=>{G=g;},npcState:()=>Object.entries(npcs).concat(extras.map((e,i)=>["extra"+i,e.p])).filter(([id,n])=>n.visible).map(([id,n])=>({id,x:n.position.x,z:n.position.z,path:n.userData.path,anchor:n.userData.anchor,moving:n.userData.moving,seated:n.userData.seated,act:n.userData.act,routeFailed:n.userData.routeFailed,yieldTime:n.userData.yieldTime,blockTime:n.userData.blockTime})),')
 if three=='stub.js':
     out=re.sub(r'<link[^>]*href="https://fonts\.[^"]*"[^>]*>', '', out)
 open(sys.argv[2] if len(sys.argv)>2 else 'index.html','w',encoding='utf8',newline='\n').write(out)

@@ -35,20 +35,20 @@ const EVENTS=[
   choices:G=>[
    {label:"拿面紙，陪她去洗手間",fx:G=>byLine(G,{teacher:{stu:5,voice:2},jh:{stu:5,hp:-2}}),log:"陪流鼻血的學生去洗手間",res:[["pinyu","……謝謝。最近都睡不好。"],[null,"她說段考前每天念到一點，媽媽還幫她多報了一科。"]],set:{pinyuTalk:1}},
    {label:"請隔壁同學陪她去",fx:G=>byLine(G,{teacher:{stu:1},jh:{stu:1,pat:2}}),log:"請同學陪她去洗手間",res:[[null,"隔壁同學扶著她出去。五分鐘後，她回來了，鼻子塞著衛生紙。"]]}]})},
- {id:"roach",phases:["pre","class","break"],make:()=>({target:{npc:"hong"},goal:"自習室傳來尖叫",
-  pages:G=>[["hong","有、有蟑螂！會飛的那種！"],[null,"自習室的國中生全部站到椅子上，有人已經在錄影。"]],
+ {id:"roach",phases:["class","break"],make:()=>({target:{npc:"hong"},goal:"課輔室傳來尖叫",
+  pages:G=>[["hong","有、有蟑螂！會飛的那種！"],[null,"課輔室的國中生全部站到椅子上，有人已經在錄影。"]],
   choices:G=>[
-   {label:"拿拖鞋親自處理",fx:G=>byLine(G,{teacher:{hp:-5,stu:5},jh:{hp:-5,stu:5},yun:{hp:-5,ord:8},boss:{calm:-5,morale:8}}),log:"親自處理自習室的蟑螂",res:[[null,"一拖鞋。全場鼓掌。"],["hong","你是我的英雄。"]]},
+   {label:"拿拖鞋親自處理",fx:G=>byLine(G,{teacher:{hp:-5,stu:5},jh:{hp:-5,stu:5},yun:{hp:-5,ord:8},boss:{calm:-5,morale:8}}),log:"親自處理課輔室的蟑螂",res:[[null,"一拖鞋。全場鼓掌。"],["hong","你是我的英雄。"]]},
    {label:"打開門窗讓牠自己出去",fx:G=>byLine(G,{teacher:{stu:-2},jh:{stu:-2},yun:{ord:-3},boss:{calm:3}}),log:"讓蟑螂自己出去",res:[[null,"十五分鐘後，牠自己飛走了。這十五分鐘沒有人在念書。"]]}]})},
  {id:"rain",phases:["pre","break","class"],make:()=>({auto:true,goal:"外面下大雨了",
   pages:G=>[[null,"外面突然下起大雨，雨聲大到蓋過講話聲。"],[null,"手機群組一直跳通知：好幾個家長說會晚點來接。"]],
   choices:G=>[
-   {label:"在群組公告：自習室開到九點半",fx:G=>byLine(G,{teacher:{par:6,hp:-3},jh:{par:6,hp:-3},yun:{par:8,pat:-3},boss:{rep:6,calm:-3}}),log:"下雨延長自習室開放",res:[[null,"家長群組出現一排「謝謝」的貼圖。阿宏說他可以多留半小時。"]]},
+   {label:G.line.id==="teacher"?"請小芸在群組公告：課輔室開到九點半":"在群組公告：課輔室開到九點半",fx:G=>byLine(G,{teacher:{par:6,hp:-3},jh:{par:6,hp:-3},yun:{par:8,pat:-3},boss:{rep:6,calm:-3}}),log:"下雨延長課輔室開放",res:[[null,"家長群組出現一排「謝謝」的貼圖。阿宏說他可以多留半小時。"]]},
    {label:"把櫃台的備用雨傘借出去",fx:G=>byLine(G,{teacher:{par:3},jh:{par:3},yun:{par:5,ord:-2},boss:{rep:4}}),log:"借出備用雨傘",res:[[null,"十二把傘全部借光。明天應該只會回來八把。"]]},
    {label:"照常，不特別處理",fx:G=>byLine(G,{teacher:{},jh:{pat:2,par:-4},yun:{pat:3,par:-5},boss:{calm:3,rep:-3}}),log:"下雨照常處理",res:[[null,"雨一直下到九點多。"]]}]})}
 ];
 const EVENT_SLOTS={
- teacher:[{after:"t_trial",t:"18:20",phase:"class"},{after:"t_mood",t:"19:12",phase:"class"},{after:"t_hr",t:"20:30",phase:"class"}]
+ teacher:[{after:"t_lesson1",t:"18:20",phase:"class"},{after:"t_mood",t:"19:12",phase:"class"},{after:"t_lesson2",t:"20:30",phase:"class"}]
 };
 function buildSteps(L){
   const steps=[...L.steps],slots=[...(L.eventSlots||EVENT_SLOTS[L.id]||[])].sort(()=>Math.random()-.5).slice(0,2),used=new Set();

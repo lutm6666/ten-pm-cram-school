@@ -14,12 +14,13 @@ LINES.teacher={
  boards:{c9:"一元二次方程式\n段考範圍：1-1～2-3"},
  zoneText:{"九年級教室":"今晚的教室。十二個人，一個是來試聽的。","國中老師休息室":"跑堂老師的中繼站。放包包、喝口水、改考卷。","大廳":"機車停好，安全帽還沒摘，先跟櫃台打聲招呼。"},
  crowd:["jh","eng","parent"],
+ chats:["hr","pinyu","zhe","xiang","qing","bo","yun","boss","hong","parent"],
  start:[FLX(0,4.5),16.6],
  me:G=>({name:"你",title:`${G.tName}・國中數學`,abbr:"師",color:"#b7791f"}),
  npcs:{yun:PC.yunDesk,boss:PC.bossDesk,hr:PJ.hrDesk,cai:null,lin:null,wu:null,amy:null,hong:null,pinyu:SEAT("c9","pinyu"),zhe:SEAT("c9","zhe"),qing:SEAT("c9","qing"),xiang:null,trial:null,parent:null,teacher:null},
  steps:[
   {id:"t_arrive",chapter:{t:"17:30",title:"跑堂",sub:"下午在別間補習班上了兩堂國小數學。現在是九年級。",status:"趕路中",rush:["機車停好，安全帽還沒摘。","今天有試聽生，段考前一週。"]},
-   t:"17:32",target:{npc:"yun"},goal:"到櫃台拿今天的資料",
+   t:"17:30",target:{npc:"yun"},goal:"到櫃台拿今天的資料",
    pages:G=>[["yun","許老師！今天九年級有一位試聽生，媽媽會在樓下等。"],["yun","還有鄭老師說，複習卷她改了一頁，印好放在講桌上了。"],[null,"你看了一下手錶：離上課二十八分鐘。便當還在機車箱裡。"]],
    choices:G=>[
     {label:"在茶水間把便當吃完",fx:{hp:10},set:{ate:1},log:"上課前吃完晚餐",res:[[null,"你在茶水間用八分鐘吃完便當。微波爐前面排了兩個安親老師。"]]},

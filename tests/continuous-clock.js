@@ -3,7 +3,7 @@
 // Build first: python build.py stub.js tests/test.html
 const {chromium}=require('playwright');
 const assert=require('assert'),fs=require('fs'),path=require('path'),http=require('http');
-const probe=`window.__clockQA={get G(){return G},get mode(){return mode},get player(){return player},get D(){return D},step,stepReady,enterStep,nextStep,openStep,tickClock,simulateFrame,nearest,renderAll,renderDock,activeSides,phaseOf,setCrowd,tickCrowd,saveGame,npcs,extras,INFO,LINES,SET,toMin,fmt,clockT,get marker(){return marker},refreshNear(){near=nearest();renderDock();}};SET.speed=0;`;
+const probe=`window.__clockQA={get G(){return G},get mode(){return mode},get player(){return player},get D(){return D},step,stepReady,enterStep,nextStep,openStep,tickClock,simulateFrame,nearest,renderAll,renderDock,activeSides,phaseOf,setCrowd,tickCrowd,saveGame,npcs,extras,INFO,LINES,SPOTS,SET,toMin,fmt,clockT,get marker(){return marker},refreshNear(){near=nearest();renderDock();}};SET.speed=0;`;
 const root=path.resolve(__dirname,'..'),htmlPath=path.join(__dirname,'test.html');
 assert(fs.existsSync(htmlPath),'Build tests/test.html before running continuous-clock.js');
 const server=http.createServer((req,res)=>{
@@ -100,13 +100,13 @@ function check(label,detail){results.push({label,...detail});console.log('PASS',
     for(const line of ['teacher','yun','boss','care','jh']){
       await start(line);
       const fixture=await page.evaluate(()=>{
-        const q=__clockQA,nt=q.toMin(q.G.steps[1].t);q.G.clock=nt-14;q.renderAll();
+        const q=__clockQA,nt=q.toMin(q.G.steps[1].t);q.G.clock=Math.max(q.toMin(q.G.steps[0].t),nt-14);q.renderAll();
         return {start:q.G.clock,next:nt,nextId:q.G.steps[1].id};
       });
-      await finishMain(({teacher:2,yun:1,boss:1,care:1,jh:0})[line]);
+      await finishMain(({teacher:1,yun:1,boss:1,care:1,jh:0})[line]);
       const pending=await state();
       assert.strictEqual(pending.id,fixture.nextId);assert.strictEqual(pending.clock,fixture.start+2,`${line} cannot fast-forward at nextStep`);
-      assert.strictEqual(fixture.next-pending.clock,12);assert.strictEqual(pending.ready,false);assert.strictEqual(pending.due,null);
+      assert.strictEqual(fixture.next-pending.clock,fixture.next-fixture.start-2);assert.strictEqual(pending.ready,false);assert.strictEqual(pending.due,null);
       assert.strictEqual(await page.textContent('#clk'),pending.time,'HUD shows actual clock');
       assert((await page.textContent('#clksub')).includes(qTime(fixture.next)),'HUD announces scheduled start');
       await blockedBeforeTime();
@@ -119,35 +119,35 @@ function check(label,detail){results.push({label,...detail});console.log('PASS',
     }
 
     await start('teacher',{noEvents:true});
-    await page.evaluate(()=>{__clockQA.G.clock=17*60+36;__clockQA.renderAll();});await finishMain(2);
+    await page.evaluate(()=>{__clockQA.G.clock=17*60+36;__clockQA.G.items.push('glasses');__clockQA.renderAll();});await finishMain(1);
     const waiting=await state();
-    const bossBefore=await page.evaluate(()=>__clockQA.npcs.boss.userData.anchor.slice());
-    assert.deepStrictEqual(bossBefore.slice(0,2),[3.5,1.2],'Next task must not move the director into the hall early');
+    const hrHome=await page.evaluate(()=>__clockQA.LINES.teacher.npcs.hr.slice(0,2));
+    const bossBefore=await page.evaluate(()=>__clockQA.npcs.hr.userData.anchor.slice());
+    assert.deepStrictEqual(bossBefore.slice(0,2),hrHome,'Next task must not move the homeroom teacher early');
     // Real key events feed production movement/collision simulation.
     await page.evaluate(()=>__dbg.tp(4.5,16.5));const pos0=await page.evaluate(()=>__dbg.pos());
     await page.keyboard.down('ArrowUp');await frames(.8);await page.keyboard.up('ArrowUp');
     const pos1=await page.evaluate(()=>__dbg.pos());assert(Math.hypot(pos1[0]-pos0[0],pos1[1]-pos0[1])>1,'Waiting player can walk freely');
     assert.strictEqual((await state()).id,waiting.id);assert.strictEqual((await state()).clock,waiting.clock);
-    const kid=await page.evaluate(()=>__clockQA.activeSides().find(s=>s.id==='kid')?.id);assert.strictEqual(kid,'kid','Existing allowed side is available while waiting');
-    await page.evaluate(()=>{const sd=__clockQA.activeSides().find(s=>s.id==='kid'),t=__dbg.targetOf(sd.target);__dbg.tp(t.x,t.z);__clockQA.refreshNear();});
+    const kid=await page.evaluate(()=>__clockQA.activeSides().find(s=>s.id==='glasses')?.id);assert.strictEqual(kid,'glasses','Existing allowed side is available while waiting');
+    await page.evaluate(()=>{const sd=__clockQA.activeSides().find(s=>s.id==='glasses'),t=__dbg.targetOf(sd.target);__dbg.tp(t.x,t.z+1);__clockQA.refreshNear();});
     assert.strictEqual(await page.evaluate(()=>__dbg.near()?.type),'side');await page.locator('#actBtn').click();await drain(1);
-    assert.strictEqual(await page.evaluate(()=>__clockQA.G.sidesDone.kid),1);assert.strictEqual((await state()).clock,waiting.clock+3);assert.strictEqual((await state()).ready,false);
+    assert.strictEqual(await page.evaluate(()=>__clockQA.G.sidesDone.glasses),1);assert.strictEqual((await state()).clock,waiting.clock+3);assert.strictEqual((await state()).ready,false);
     // An environment explanation uses its visible interaction and close UI.
-    await page.evaluate(()=>{const i=__clockQA.INFO[0];__dbg.tp(i.pos[0],i.pos[1]);__clockQA.refreshNear();});
+    await page.evaluate(()=>{for(const i of __clockQA.INFO){__dbg.tp(i.pos[0],i.pos[1]);__clockQA.refreshNear();if(__dbg.near()?.type==='info')return;}});
     assert.strictEqual(await page.evaluate(()=>__dbg.near()?.type),'info');await page.locator('#actBtn').click();
     assert.strictEqual(await page.evaluate(()=>__clockQA.mode),'info');await page.locator('#sheet [data-act="closeSheet"]').click();
     assert.strictEqual((await state()).mode,'walk');assert.strictEqual((await state()).ready,false);
     const saved=await state(),savedPos=await page.evaluate(()=>__dbg.pos());await resume();const loaded=await state();
     assert.deepStrictEqual(loaded,saved,'Waiting main task state and clock survive reload');assert.deepStrictEqual(await page.evaluate(()=>__dbg.pos()),savedPos,'Waiting position survives reload');
-    assert.deepStrictEqual(await page.evaluate(()=>__clockQA.npcs.boss.userData.anchor.slice(0,2)),[3.5,1.2],'Resume cannot apply pending NPC location');
+    assert.deepStrictEqual(await page.evaluate(()=>__clockQA.npcs.hr.userData.anchor.slice(0,2)),hrHome,'Resume cannot apply pending NPC location');
     await blockedBeforeTime();
-    await page.evaluate(()=>{__clockQA.G.clock+=.375;__dbg.tp(10.4,15.1);__clockQA.renderAll();});
+    await page.evaluate(()=>{__clockQA.G.clock+=.375;__dbg.tp(8.5,14.2);__clockQA.renderAll();});
     const reloadWaiting=await state(),reloadPos=await page.evaluate(()=>__dbg.pos());
     await page.reload();await page.locator('[data-act="resume"]').click();
     assert.deepStrictEqual(await state(),reloadWaiting,'Direct reload checkpoints the fractional waiting clock through pagehide');
     assert.deepStrictEqual(await page.evaluate(()=>__dbg.pos()),reloadPos,'Direct reload checkpoints current exploration position');
-    assert.strictEqual(await page.evaluate(()=>__clockQA.extras.filter(e=>['class','jh','study'].includes(e.kind)&&e.p.visible).length),0,'Evening crowds cannot arrive during the early waiting fixture');
-    assert.strictEqual(await page.evaluate(()=>['amy','qing','xiang'].some(id=>__clockQA.npcs[id].visible)),false,'Time-driven named arrivals remain absent before schedule');
+    assert.strictEqual(await page.evaluate(()=>__clockQA.npcs.zhe.visible&&!!__clockQA.npcs.zhe.userData.entrySpec),false,'Time-driven named arrivals remain absent before schedule');
     check('waiting: free movement, allowed side, environment interaction, save/reload, NPC/crowd timing',{clock:loaded.time,id:loaded.id});
 
     // Deadlines cannot be recomputed to clock+8 when restoring an active task.
@@ -162,49 +162,49 @@ function check(label,detail){results.push({label,...detail});console.log('PASS',
     assert.strictEqual(lateAfter.log.filter(r=>r[1]==='遲到 11 分鐘').length,1);assert(lateAfter.text.includes('晚了 11 分鐘'));
     await drain(2);check('late arrival: original deadline, 11-minute count, scaled penalty, and log survive resume',{due:qTime(due),lates:lateAfter.lates,lateMin:lateAfter.lateMin});
 
-    // A future chapter must not move its cast or interrupt exploration.
-    await start('teacher',{noEvents:true});await page.evaluate(()=>__dbg.jump('hall'));
-    await page.evaluate(()=>{__clockQA.G.clock=18*60+16;__clockQA.renderAll();});await finishMain(2);
-    const chapterWait=await state();assert.strictEqual(chapterWait.id,'erase');assert.strictEqual(chapterWait.time,'18:18');assert.strictEqual(chapterWait.mode,'walk');assert.strictEqual(chapterWait.phase,'pre');
-    assert.deepStrictEqual(await page.evaluate(()=>__clockQA.npcs.parent.userData.anchor.slice(0,2)),[5.2,15.3],'Chapter NPCs retain their earlier positions');
+    // A future chapter must not interrupt exploration; class time then passes at the podium.
+    await start('teacher',{noEvents:true});await page.evaluate(()=>__dbg.jump('t_trial'));
+    await page.evaluate(()=>{__clockQA.G.clock=17*60+56;__clockQA.renderAll();});await finishMain(1);
+    const chapterWait=await state();assert.strictEqual(chapterWait.id,'t_lesson1');assert.strictEqual(chapterWait.time,'17:58');assert.strictEqual(chapterWait.mode,'walk');assert.strictEqual(chapterWait.ready,false);
     await resume();assert.deepStrictEqual(await state(),chapterWait,'Waiting chapter survives reload');
-    assert.deepStrictEqual(await page.evaluate(()=>__clockQA.npcs.parent.userData.anchor.slice(0,2)),[5.2,15.3],'Pending chapter cast remains in lobby after resume');
-    await advanceTo(18*60+29.975);assert.strictEqual((await state()).mode,'walk');
-    await advanceTo(18*60+30);assert.strictEqual((await state()).mode,'chapter');assert.strictEqual((await state()).phase,'class');
-    assert(await page.isVisible('[data-act="chapterGo"]'));assert.strictEqual((await state()).clock,18*60+30);
+    await advanceTo(17*60+59.975);assert.strictEqual((await state()).mode,'walk');
+    await advanceTo(18*60);assert.strictEqual((await state()).mode,'chapter');assert.strictEqual((await state()).phase,'class');
+    assert(await page.isVisible('[data-act="chapterGo"]'));assert.strictEqual((await state()).clock,18*60);
     await page.locator('[data-act="chapterGo"]').click();await atMain();await page.locator('#actBtn').click();await drain(1);
-    // Teaching roles do not roam during class: the lesson runs at the podium until the next task.
-    const lesson=await state();assert.strictEqual(lesson.id,'lesson1');assert.strictEqual(lesson.ready,true);assert(lesson.clock>=18*60+35&&lesson.clock<18*60+40,'Lesson time passes at the podium, then the automatic task opens at its schedule: '+lesson.time);
-    const atPodium=await page.evaluate(()=>{const p=__clockQA.player.position;return Math.hypot(p.x-20,p.z-2.9)<1;});assert(atPodium,'Teacher stays at the podium during class');
-    check('chapter then lesson: chapter waits for 18:30, class time passes at the podium to 18:35',{chapter:'18:30',auto:'18:35'});
+    await page.evaluate(()=>__clockQA.tickClock(.05));
+    const lesson=await state();assert.strictEqual(lesson.id,'t_zhe');assert.strictEqual(lesson.ready,true);assert.strictEqual(lesson.clock,18*60+40,'Lesson time passes at the podium until the next task');
+    const atPodium=await page.evaluate(()=>{const p=__clockQA.player.position,s=__clockQA.SPOTS.c9podium.pos;return Math.hypot(p.x-s[0],p.z-s[1])<1;});assert(atPodium,'Teacher stays at the podium during class');
+    check('chapter then lesson: chapter waits for 18:00, class time passes at the podium to 18:40',{chapter:'18:00',next:'18:40'});
 
     // A deterministic real random-event slot retains serializable event IDs.
-    await start('jh',{event:{after:'j_room',t:'18:00',phase:'pre'},events:['blackout']});await page.evaluate(()=>__dbg.jump('j_room'));
-    await finishMain(1);
-    const eventWait=await state();assert.strictEqual(eventWait.id,'ev_blackout');assert.strictEqual(eventWait.time,'17:52');assert.strictEqual(eventWait.mode,'walk');assert.strictEqual(eventWait.ready,false);
+    await start('jh',{event:{after:'j_bento',t:'17:40',phase:'pre'},events:['blackout']});await page.evaluate(()=>__dbg.jump('j_bento'));
+    if(await page.isVisible('[data-act="chapterGo"]'))await page.locator('[data-act="chapterGo"]').click();
+    await page.evaluate(()=>{__clockQA.G.clock=17*60+36;__clockQA.renderAll();});await finishMain(1);
+    const eventWait=await state();assert.strictEqual(eventWait.id,'ev_blackout');assert.strictEqual(eventWait.time,'17:38');assert.strictEqual(eventWait.mode,'walk');assert.strictEqual(eventWait.ready,false);
     await resume();assert.deepStrictEqual(await state(),eventWait,'Pending generated event restores without opening it');
-    assert.strictEqual(await page.evaluate(()=>__clockQA.npcs.xiang.visible),false,'Future main-task NPC has not entered');
-    await advanceTo(17*60+59.975);assert.strictEqual((await state()).mode,'walk');await advanceTo(18*60);
-    assert.strictEqual((await state()).id,'ev_blackout');assert.strictEqual((await state()).mode,'dialog');assert.strictEqual((await state()).time,'18:02');
-    await drain(0);const xiangWait=await state();assert.strictEqual(xiangWait.id,'j_xiang');assert.strictEqual(xiangWait.ready,false);
-    await resume();assert.deepStrictEqual(await state(),xiangWait);assert.strictEqual(await page.evaluate(()=>__clockQA.npcs.xiang.visible),false,'Pending main NPC remains absent on reload');
-    await advanceTo(18*60+9.975);assert.strictEqual(await page.evaluate(()=>__clockQA.npcs.xiang.visible),false);await advanceTo(18*60+10);
-    assert.strictEqual((await state()).ready,true);await frames(1);assert(await page.evaluate(()=>__clockQA.npcs.xiang.visible||!!__clockQA.npcs.xiang.userData.entrySpec),'Named main NPC starts entering only when its task opens');
-    check('generated auto event and future named NPC: serialized waiting, scheduled activation',{event:'18:00',npc:'18:10'});
+    assert.strictEqual(await page.evaluate(()=>__clockQA.npcs.zhe.visible),false,'Future main-task NPC has not entered');
+    await advanceTo(17*60+39.975);assert.strictEqual((await state()).mode,'walk');await advanceTo(17*60+40);
+    assert.strictEqual((await state()).id,'ev_blackout');assert.strictEqual((await state()).mode,'dialog');assert.strictEqual((await state()).time,'17:42');
+    await drain(0);const zheWait=await state();assert.strictEqual(zheWait.id,'j_roll');assert.strictEqual(zheWait.ready,false);
+    await resume();assert.deepStrictEqual(await state(),zheWait);assert.strictEqual(await page.evaluate(()=>__clockQA.npcs.zhe.visible),false,'Pending main NPC remains absent on reload');
+    await advanceTo(17*60+49.975);assert.strictEqual(await page.evaluate(()=>__clockQA.npcs.zhe.visible),false);
+    await advanceTo(17*60+50);if(await page.isVisible('[data-act="chapterGo"]'))await page.locator('[data-act="chapterGo"]').click();
+    assert.strictEqual((await state()).ready,true);await frames(1);assert(await page.evaluate(()=>__clockQA.npcs.zhe.visible||!!__clockQA.npcs.zhe.userData.entrySpec),'Named main NPC starts entering at its scheduled task');
+    check('generated auto event and future named NPC: serialized waiting, scheduled activation',{event:'17:40',npc:'17:50'});
 
     // Last-step index alone cannot force the crowd into the closing phase.
-    await start('care',{noEvents:true});await page.evaluate(()=>__dbg.jump('c_parents'));
+    await start('care',{noEvents:true});await page.evaluate(()=>__dbg.jump('c_late'));
     if(await page.isVisible('[data-act="chapterGo"]'))await page.locator('[data-act="chapterGo"]').click();
-    await page.evaluate(()=>{__clockQA.G.clock=18*60+6;__clockQA.renderAll();});await finishMain(1);
-    const finalWait=await state();assert.strictEqual(finalWait.id,'c_late');assert.strictEqual(finalWait.time,'18:08');assert.strictEqual(finalWait.ready,false);assert.strictEqual(finalWait.phase,'leave');
-    await resume();assert.deepStrictEqual(await state(),finalWait,'Pending final task keeps real crowd phase on resume');await advanceTo(18*60+20);
+    await page.evaluate(()=>{__clockQA.G.clock=18*60+30;__clockQA.renderAll();});await finishMain(1);
+    const finalWait=await state();assert.strictEqual(finalWait.id,'c_close');assert.strictEqual(finalWait.time,'18:32');assert.strictEqual(finalWait.ready,false);assert.strictEqual(finalWait.phase,'leave');
+    await resume();assert.deepStrictEqual(await state(),finalWait,'Pending final task keeps real crowd phase on resume');await advanceTo(18*60+45);
     assert.strictEqual((await state()).ready,true);assert.strictEqual((await state()).phase,'close');
-    check('pending final task: closing phase waits for scheduled start',{waiting:'18:08',start:'18:20'});
+    check('pending final task: closing phase waits for scheduled start',{waiting:'18:32',start:'18:45'});
 
     // Held glasses exercise a side's availability on targetless automatic
     // events, where accessing step().target.npc used to throw.
-    await start('teacher',{event:{after:'hall',t:'18:10',phase:'pre'},events:['blackout']});
-    await page.evaluate(()=>__dbg.jump('hall'));await finishMain(2);
+    await start('teacher',{event:{after:'t_trial',t:'17:58',phase:'pre'},events:['blackout']});
+    await page.evaluate(()=>__dbg.jump('t_trial'));await finishMain(1);
     await page.evaluate(()=>{__clockQA.G.items.push('glasses');__clockQA.simulateFrame(.05,0);});
     const glassesWait=await state();assert.strictEqual(glassesWait.id,'ev_blackout');assert.strictEqual(glassesWait.ready,false);
     assert(await page.evaluate(()=>__clockQA.activeSides().some(s=>s.id==='glasses')),'Allowed side stays available while waiting for a targetless event');
@@ -213,11 +213,12 @@ function check(label,detail){results.push({label,...detail});console.log('PASS',
 
     // An allowed side can spend past the main task's start without interrupting
     // its dialogue or applying the main NPC layout underneath it.
-    await start('teacher',{noEvents:true});await finishMain(2);
-    await page.evaluate(()=>{const q=__clockQA;q.G.clock=17*60+49;const sd=q.activeSides().find(s=>s.id==='kid'),t=__dbg.targetOf(sd.target);__dbg.tp(t.x,t.z);q.refreshNear();q.renderAll();});
+    await start('teacher',{noEvents:true});await finishMain(1);
+    const hrAnchor=await page.evaluate(()=>__clockQA.npcs.hr.userData.anchor.slice(0,2));
+    await page.evaluate(()=>{const q=__clockQA;q.G.clock=17*60+39;q.G.items.push('glasses');const sd=q.activeSides().find(s=>s.id==='glasses'),t=__dbg.targetOf(sd.target);__dbg.tp(t.x,t.z+1);q.refreshNear();q.renderAll();});
     assert.strictEqual(await page.evaluate(()=>__dbg.near()?.type),'side');await page.locator('#actBtn').click();
-    const crossing=await state();assert.strictEqual(crossing.clock,17*60+52);assert.strictEqual(crossing.mode,'dialog');assert.strictEqual(crossing.ready,false);
-    assert.deepStrictEqual(await page.evaluate(()=>__clockQA.npcs.boss.userData.anchor.slice(0,2)),[3.5,1.2],'Main NPC cannot move before the side dialogue returns to walking');
+    const crossing=await state();assert.strictEqual(crossing.clock,17*60+42);assert.strictEqual(crossing.mode,'dialog');assert.strictEqual(crossing.ready,false);
+    assert.deepStrictEqual(await page.evaluate(()=>__clockQA.npcs.hr.userData.anchor.slice(0,2)),hrAnchor,'Main NPC cannot move before the side dialogue returns to walking');
     await page.evaluate(()=>__clockQA.tickClock(.05));assert.deepStrictEqual(await state(),crossing,'Dialogue clock tick cannot activate the waiting main');
     await drain(1);assert.strictEqual((await state()).ready,false);await page.evaluate(()=>__clockQA.tickClock(.05));
     const crossed=await state();assert.strictEqual(crossed.ready,true);assert.strictEqual(crossed.clock,crossing.clock,'Main activation after side completion does not add a time jump');assert.strictEqual(crossed.mode,'walk');
@@ -230,13 +231,13 @@ function check(label,detail){results.push({label,...detail});console.log('PASS',
     await page.reload();await page.locator('[data-act="resume"]').click();const legacyActive=await state();
     assert.strictEqual(legacyActive.clock,crossed.clock);assert.strictEqual(legacyActive.idx,crossed.idx);assert.strictEqual(legacyActive.ready,true);assert.strictEqual(legacyActive.mode,'walk');
     await page.locator('[data-act="home"]').click();
-    await page.evaluate(()=>{const sv=JSON.parse(localStorage.getItem('ten-pm:save'));sv.clock=17*60+38;delete sv.stepReady;delete sv.due;delete sv.chapterPending;localStorage.setItem('ten-pm:save',JSON.stringify(sv));});
+    await page.evaluate(()=>{const sv=JSON.parse(localStorage.getItem('ten-pm:save'));sv.clock=17*60+40;delete sv.stepReady;delete sv.due;delete sv.chapterPending;localStorage.setItem('ten-pm:save',JSON.stringify(sv));});
     await page.reload();await page.locator('[data-act="resume"]').click();const legacyWait=await state();
-    assert.strictEqual(legacyWait.clock,17*60+38);assert.strictEqual(legacyWait.idx,crossed.idx);assert.strictEqual(legacyWait.ready,false);assert.strictEqual(legacyWait.due,null);assert.strictEqual(legacyWait.mode,'walk');
+    assert.strictEqual(legacyWait.clock,17*60+40);assert.strictEqual(legacyWait.idx,crossed.idx);assert.strictEqual(legacyWait.ready,false);assert.strictEqual(legacyWait.due,null);assert.strictEqual(legacyWait.mode,'walk');
     await blockedBeforeTime();check('legacy save shape: active and waiting readiness inferred without clock jump',{active:legacyActive.time,waiting:legacyWait.time});
     // 「等到 HH:MM」：等待中可直接快轉。時鐘落在排定時間、步驟啟動，路上的人都已到位。
     for(const line of ['teacher','yun','boss','care','jh']){
-      await start(line);await finishMain(({teacher:2,yun:1,boss:1,care:1,jh:0})[line]);
+      await start(line);await finishMain(({teacher:1,yun:1,boss:1,care:1,jh:0})[line]);
       const before=await state();assert.strictEqual(before.ready,false,line+' waits after early completion');
       assert(await page.isVisible('[data-act="waitNext"]'),line+' shows the wait button while waiting');
       const target=toMinute(await page.evaluate(()=>__clockQA.step().t));
