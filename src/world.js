@@ -230,19 +230,25 @@ function moveAgent(n,dt,speed=2.6){const u=n.userData;u.stepDistance=0;u.moving=
   const sp=Math.min(d,speed*dt),nx=n.position.x+vx/d*sp,nz=n.position.z+vz/d*sp;
   // Following traffic yields before body overlap. Seated people are part of furniture.
   const actors=Object.values(npcs).concat(extras.map(e=>e.p));
+  // Story placements may start slightly overlapping. A recovery step must
+  // increase separation until the normal body clearance is restored.
+  const actorsClear=(a,b)=>!actors.some(p=>p!==n&&p.visible&&!p.userData.seated&&Math.hypot(a-p.position.x,b-p.position.z)<Math.min(.66,Math.hypot(n.position.x-p.position.x,n.position.z-p.position.z))-.00001);
   const obstacle=actors.find(p=>p!==n&&p.visible&&!p.userData.seated&&Math.hypot(nx-p.position.x,nz-p.position.z)<.66&&Math.hypot(nx-p.position.x,nz-p.position.z)<Math.hypot(n.position.x-p.position.x,n.position.z-p.position.z));
   if(obstacle){
     u.yieldTime=(u.yieldTime||0)+dt;
     if(u.yieldTime>.6){
       const end=u.path[u.path.length-1],avoid=actors.filter(p=>p!==n&&p.visible&&!p.userData.seated).map(p=>[p.position.x,p.position.z]);
       const detour=findPathFrom(n.position.x,n.position.z,end[0],end[1],avoid);
-      if(detour){detour.push(end);u.path=detour;}u.yieldTime=0;return;
+      if(detour){detour.push(end);u.path=detour;u.yieldTime=0;return;}u.yieldTime=0;
     }
     // A small passing step lets opposing traffic and standing NPCs clear each other.
-    const side=u.passSide||1;for(const sign of [side,-side]){
-      const sx=n.position.x+vz/d*sp*sign,sz=n.position.z-vx/d*sp*sign;
-      if(!blockedAt(sx,sz)&&!actors.some(p=>p!==n&&p.visible&&!p.userData.seated&&Math.hypot(sx-p.position.x,sz-p.position.z)<.66)){
-        n.rotation.y=Math.atan2(sx-n.position.x,sz-n.position.z);n.position.x=sx;n.position.z=sz;u.passSide=sign;u.stepDistance=sp;u.moving=true;return;
+    const side=u.passSide||1;
+    // At a desk edge both perpendicular steps can be blocked. Back out along
+    // the incoming lane so a safe grid connector becomes available again.
+    for(const [ox,oz,sign] of [[vz/d*side,-vx/d*side,side],[-vz/d*side,vx/d*side,-side],[-vx/d,-vz/d,side]]){
+      const sx=n.position.x+ox*sp,sz=n.position.z+oz*sp;
+      if(!blockedAt(sx,sz)&&actorsClear(sx,sz)){
+        n.rotation.y=Math.atan2(ox,oz);n.position.x=sx;n.position.z=sz;u.passSide=sign;u.stepDistance=sp;u.moving=true;return;
       }
     }return;
   }
@@ -256,7 +262,7 @@ function moveAgent(n,dt,speed=2.6){const u=n.userData;u.stepDistance=0;u.moving=
     // after a passing step, without allowing any penetration of the desk.
     for(const [ax,az] of [[n.position.x,nz],[nx,n.position.z]]){
       const travel=Math.hypot(ax-n.position.x,az-n.position.z);
-      if(travel>.0001&&!hitSolid(ax,az)&&!actors.some(p=>p!==n&&p.visible&&!p.userData.seated&&Math.hypot(ax-p.position.x,az-p.position.z)<.66)){
+      if(travel>.0001&&!hitSolid(ax,az)&&actorsClear(ax,az)){
         setPose(n,false);n.rotation.y=Math.atan2(ax-n.position.x,az-n.position.z);n.position.x=ax;n.position.z=az;u.stepDistance=travel;u.moving=true;return;
       }
     }
