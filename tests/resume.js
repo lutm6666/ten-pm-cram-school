@@ -1,6 +1,8 @@
 const {chromium}=require('playwright');
+const {installClockProbe,settleScheduled}=require('./wait-for-step');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844}});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await installClockProbe(p);
 await p.goto('file://'+__dirname+'/test.html');
 await p.click('[data-act=start]');
 const vis=s=>p.isVisible(s).catch(()=>false);
@@ -15,7 +17,7 @@ async function drain(){for(let g=0;g<60;g++){
  if(await vis('#dlg .choice')){await p.click('#dlg .choice >> nth=1');continue;}
  if(await vis('[data-act=dnext]')){await p.click('[data-act=dnext]');continue;}
  return;}}
-async function doStep(){await drain();if(await vis('.report'))return;await p.locator('[data-act=guide]:visible').first().click();await p.waitForFunction(()=>__dbg.near()?.type==='main',{},{timeout:45000});await p.click('#actBtn');await drain();}
+async function doStep(){await drain();await settleScheduled(p,drain);if(await vis('.report'))return;await p.locator('[data-act=guide]:visible').first().click();await p.waitForFunction(()=>__dbg.near()?.type==='main',{},{timeout:45000});await p.click('#actBtn');await drain();}
 await drain();await doStep();await doStep();
 const before=await p.evaluate(()=>[__dbg.G.idx,__dbg.G.time,__dbg.G.log.length]);
 await p.click('[data-act=home]');await p.waitForTimeout(200);

@@ -5,7 +5,8 @@
     "build": "python3 build.py",
     "build:test": "python3 build.py stub.js tests/test.html",
     "test:phase2": "node tests/phase2-regression.js",
-    "test": "npm run build:test && node tests/navigation.js && node tests/consistency.js && node tests/play2.js teacher 0 && node tests/play2.js yun 1 && node tests/play2.js boss 2 && node tests/play3.js teacher+yun+boss 1 && node tests/resume.js && node tests/extras.js && DAY=2 node tests/play2.js teacher 1 && DAY=2 node tests/play2.js yun 2 && DAY=2 node tests/play2.js boss 0 && node tests/play2.js care 0 && node tests/play2.js care 2 && node tests/play2.js jh 0 && node tests/play2.js jh 1 && DAY=2 node tests/play2.js care 1 && DAY=2 node tests/play2.js jh 2"
+    "test:clock": "node tests/continuous-clock.js",
+    "test": "node tests/run.js"
   },
   "devDependencies": {
     "playwright": "1.47.2"

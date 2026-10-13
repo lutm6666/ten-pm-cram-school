@@ -6,7 +6,7 @@ SIDES.teacher=[
    {label:"陪他聊兩句",note:"花一點力氣",fx:{hp:-3,trial:8},log:"陪早到的試聽生聊天",res:[["me","會難，但難的地方我都會講兩次。"],["parent2","……喔。那還好。"],[null,"他笑了一下，往沙發那邊跑回去找媽媽。"]]},
    {label:"指個方向就好",fx:{trial:2},log:"幫試聽生指路",res:[["me","走廊走到底，左手邊。"],["parent2","謝謝老師。"]]}
   ]},
- {id:"glasses",from:"hall",until:"office",target:{npc:"boss"},title:"主任的眼鏡",action:"還眼鏡",avail:G=>G.items.includes("glasses")&&G.steps[G.idx].target.npc!=="boss",
+ {id:"glasses",from:"hall",until:"office",target:{npc:"boss"},title:"主任的眼鏡",action:"還眼鏡",avail:G=>G.items.includes("glasses"),
   pages:G=>[["me","主任，這是你的眼鏡嗎？走廊撿到的。"],["boss","我找了一整個下午！難怪看什麼都霧霧的。"],["boss","等一下試聽家長那邊，我會多幫你說兩句。"]],
   fx:{trial:5},log:"把眼鏡還給主任"},
  {id:"earphone",from:"copy",until:"after",target:{npc:"hong"},title:"耳機的主人",action:"找阿宏",avail:G=>G.items.includes("earphone"),
@@ -27,7 +27,7 @@ SIDES.teacher=[
 ];
 
 SIDES.yun=[
- {id:"yglasses",from:"yparent",until:"yclose",target:{npc:"boss"},title:"主任的眼鏡",action:"還眼鏡",avail:G=>G.items.includes("glasses")&&G.steps[G.idx].target.npc!=="boss",
+ {id:"yglasses",from:"yparent",until:"yclose",target:{npc:"boss"},title:"主任的眼鏡",action:"還眼鏡",avail:G=>G.items.includes("glasses"),
   pages:G=>[["me","主任，走廊撿到你的眼鏡。"],["boss","難怪我下午看報表都霧霧的！謝謝。"],["boss","對了，今天辛苦了。你的便當記得吃。"]],fx:{pat:5},log:"把眼鏡還給主任"},
  {id:"ybo",from:"ycopy",until:"yzhe",target:{npc:"bo"},title:"小柏的耳機",action:"找小柏",avail:G=>G.items.includes("earphone"),
   pages:G=>[["me","小柏，這是你的耳機嗎？"],["bo","我的耳機！我找一整天了。謝謝小芸姐！"],["bo","……那個，我每天九點都會溜去 7-11 買關東煮。不要跟我爸講喔。"]],fx:{ord:3},set:{knowBo:1},log:"還耳機給小柏，知道他九點會去 7-11"},

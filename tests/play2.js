@@ -1,9 +1,11 @@
 const {chromium}=require('playwright');
+const {installClockProbe,settleScheduled}=require('./wait-for-step');
 const fs=require('fs'),path=require('path');
 const out=process.env.OUT;if(out)fs.mkdirSync(out,{recursive:true});
 const line=process.argv[2]||'teacher', pick=+(process.argv[3]||0), grab=(process.argv[4]||'').split(',').filter(Boolean);
 (async()=>{const b=await chromium.launch(process.env.PAGE_URL?{args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{});const p=await b.newPage({viewport:process.env.PAGE_URL?{width:1280,height:800}:{width:390,height:844},hasTouch:!process.env.PAGE_URL,isMobile:!process.env.PAGE_URL,...(out&&process.env.PAGE_URL?{recordVideo:{dir:out,size:{width:1280,height:800}}}:{})});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error'&&!/ERR_TUNNEL|Failed to load/.test(m.text()))errs.push(m.text())});
+await installClockProbe(p,process.env.PAGE_URL);
 await p.goto(process.env.PAGE_URL||'file://'+__dirname+'/test.html');
 if(process.env.DAY==='2'){await p.evaluate(([line,prev])=>{localStorage.setItem('ten-pm:done',JSON.stringify(['teacher','yun','boss','care','jh']));const o={};['teacher','yun','boss','care','jh'].forEach(id=>o[id]={f:id===line?prev:{},h:{missed:3,cleared:1}});localStorage.setItem('ten-pm:out',JSON.stringify(o));localStorage.setItem('ten-pm:day','2');},[line,JSON.parse(process.env.PREV||'{}')]);await p.reload();}
 if(line!=='teacher') await p.click(`[data-role=${line}]`);
@@ -42,6 +44,8 @@ while(guard++<60){
   if(sides.length){const [id]=sides[0];let ok=false;for(let r=0;r<12&&!ok;r++){const pos=await p.evaluate(id=>{const s=__dbg.SIDES[__dbg.G.line.id].find(s=>s.id===id);const t=s&&__dbg.guideTarget(s.target);return t?[t.x,t.z]:null},id);if(!pos){await p.waitForTimeout(60);continue;}const [x,z]=pos;
       await p.evaluate(([x,z])=>__dbg.go(x,z),[x,z]);for(let k=0;k<25;k++){await p.waitForTimeout(60);if(await p.evaluate(`(()=>{const n=__dbg.near();return n&&n.type==='side'&&n.sd.id==='${id}'})()`)){ok=true;break;}}}
     console.log('  side',id,ok?'done':'NOT REACHED');if(ok){await p.click('#actBtn');await drain();continue;}else{flowFailed=true;errs.push(`side target not reached: ${id}`);console.log('SIDESTATE',JSON.stringify(await p.evaluate(()=>({pos:__dbg.pos(),path:__dbg.path,near:__dbg.near(),npcs:__dbg.npcState()}))));break;}}
+  await settleScheduled(p,drain);
+  if(await vis('.report'))break;
   const state=await p.evaluate(()=>{const d=__dbg,st=d.G&&d.G.steps[d.G.idx];return{mode:d.mode,idx:d.G&&d.G.idx,len:d.G&&d.G.steps.length,stepId:st&&st.id,goal:st&&st.goal,target:st&&st.target,report:!!document.querySelector('.report')};});
   if(!state.stepId){
     if(state.report||state.mode==='end')break;

@@ -6,6 +6,7 @@ src=lambda f:open('src/'+f,encoding='utf8').read()
 order=['common.js','world.js','life.js','atmos.js','art.js','art_models.js','art_models_fix.js','art_phase2.js','art_phase2_env.js','art_phase2_story.js','art_phase2_light.js','art_phase2_ui.js','art_phase2_perf.js','minis.js','events.js','overtime.js','chats.js','ach.js','line_teacher.js']+[f for f in sorted(os.listdir('src')) if f.startswith('line_') and f!='line_teacher.js']+['day2.js','links.js','day2b.js']+[f for f in ['items.js','sides.js'] if os.path.exists('src/'+f)]+['extras2.js']+['engine.js','consistency.js','consistency_visual.js','consistency_timeline.js','consistency_clock_catchup.js','settings.js','share.js','boot.js']
 three=sys.argv[1] if len(sys.argv)>1 else 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
 DBG=DBG or not three.startswith('http')
+# Debug jump is a scheduled-scene fixture; normal gameplay never uses it.
 head='' if ARTIFACT else '''<!doctype html>
 <html lang="zh-Hant" prefix="og: https://ogp.me/ns#">
 <head>
@@ -45,7 +46,7 @@ out=head+f'''<title>晚上十點下課 3D</title>
 <script src="{three}"></script>
 <script>
 (function(){{
-'''+"\n".join(src(f) for f in order)+("\nwindow.__dbg={get marks(){return Object.keys(itemMarks)},resumeGame,saveGame,runMini,get G(){return G},get path(){return path},get guiding(){return guiding},get keys(){return keys},findPathFrom,get mode(){return mode},findPath,blockedAt,ITEMS,SIDES,INFO,targetOf,activeSides,chatTargets,get chatUsed(){return G&&G.chatUsed},go:(x,z)=>{path=findPath(x,z);return !!path},pos:()=>[player.position.x,player.position.z],near:()=>near,jump:id=>{G.idx=G.steps.findIndex(s=>s.id===id);G.steps.slice(0,G.idx).forEach(s=>{if(s.npc)for(const k in s.npc)setNPC(k,val(s.npc[k],G),true);if(s.after)for(const k in s.after)setNPC(k,val(s.after[k],G),true);});enterStep();},card:()=>drawResultCard().toDataURL(),CAM,tp:(x,z,ry)=>{player.position.set(x,0,z);if(ry!=null)CAM.yaw=ry;path=null;}};" if DBG else "")+'''
+'''+"\n".join(src(f) for f in order)+("\nwindow.__dbg={get marks(){return Object.keys(itemMarks)},resumeGame,saveGame,runMini,get G(){return G},get path(){return path},get guiding(){return guiding},get keys(){return keys},findPathFrom,get mode(){return mode},findPath,blockedAt,ITEMS,SIDES,INFO,targetOf,activeSides,chatTargets,get chatUsed(){return G&&G.chatUsed},go:(x,z)=>{path=findPath(x,z);return !!path},pos:()=>[player.position.x,player.position.z],near:()=>near,jump:id=>{G.idx=G.steps.findIndex(s=>s.id===id);if(G.idx<0)throw new Error('Unknown fixture step '+id);G.clock=Math.max(G.clock,toMin(step().t));G.steps.slice(0,G.idx).forEach(s=>{if(s.npc)for(const k in s.npc)setNPC(k,val(s.npc[k],G),true);if(s.after)for(const k in s.after)setNPC(k,val(s.after[k],G),true);});enterStep();},card:()=>drawResultCard().toDataURL(),CAM,tp:(x,z,ry)=>{player.position.set(x,0,z);if(ry!=null)CAM.yaw=ry;path=null;}};" if DBG else "")+'''
 })();
 </script>
 '''

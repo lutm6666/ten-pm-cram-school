@@ -1,10 +1,11 @@
 // Real WebGL regression runner. State fixtures are explicit; UI navigation is real.
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert');
+const {CLOCK_PROBE,waitForStep}=require('./wait-for-step');
 const root=path.resolve(__dirname,'..'),out=path.resolve(process.env.OUT||'../../outputs');
 const tag=process.env.TAG||'after';fs.mkdirSync(out,{recursive:true});
 let three;
-const probe=`window.__qa={get near(){return near},get G(){return G},get mode(){return mode},get step(){return step()},get player(){return player},npcs,extras,scene,LINES,EVENTS,WALLS,SET,agentGo,agentPlace,moveAgent,animPerson,blockedAt,setCrowd,tickCrowd,openStep,enterStep,nextStep,FX,CAM,clockT};`;
+const probe=CLOCK_PROBE+`window.__qa={get near(){return near},get G(){return G},get mode(){return mode},get step(){return step()},get player(){return player},npcs,extras,scene,LINES,EVENTS,WALLS,SET,agentGo,agentPlace,moveAgent,animPerson,blockedAt,setCrowd,tickCrowd,openStep,enterStep,nextStep,FX,CAM,clockT};`;
 const server=http.createServer((req,res)=>{
   if(req.url==='/three.js'){res.setHeader('Content-Type','application/javascript');res.end(three);return;}
   let html=(process.env.BASELINE_REF?require('child_process').execFileSync('git',['show',process.env.BASELINE_REF+':index.html'],{cwd:root,encoding:'utf8'}):fs.readFileSync(path.join(root,'index.html'),'utf8')).replace('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','/three.js');
@@ -26,7 +27,7 @@ const server=http.createServer((req,res)=>{
     else if(await p.isVisible('#dlg .choice')){if(!choose)return;await p.locator('#dlg .choice').first().click();}
     else if(await p.isVisible('[data-act=dnext]'))await click('[data-act=dnext]');else return;
   }};
-  const navigate=async()=>{await click('#next [data-act=guide]');try{await p.waitForFunction(()=>__qa.near?.type==='main',{},{timeout:45000});}catch(e){console.log(await p.evaluate(()=>({step:__qa.step.id,npcs:Object.entries(__qa.npcs).filter(([id,n])=>n.visible).map(([id,n])=>({id,x:n.position.x,z:n.position.z,path:n.userData.path,moving:n.userData.moving})),player:[__qa.player.position.x,__qa.player.position.z]})));throw e;}
+  const navigate=async()=>{await waitForStep(p);if(await p.isVisible('[data-act=chapterGo]'))await click('[data-act=chapterGo]');await click('#next [data-act=guide]');try{await p.waitForFunction(()=>__qa.near?.type==='main',{},{timeout:45000});}catch(e){console.log(await p.evaluate(()=>({step:__qa.step.id,npcs:Object.entries(__qa.npcs).filter(([id,n])=>n.visible).map(([id,n])=>({id,x:n.position.x,z:n.position.z,path:n.userData.path,moving:n.userData.moving})),player:[__qa.player.position.x,__qa.player.position.z]})));throw e;}
     await click('#actBtn');
   };
   try{
@@ -37,6 +38,7 @@ const server=http.createServer((req,res)=>{
     await p.locator('#dlg .choice').nth(1).click();await drain(false);
     // Finish office result, then earthquake opens automatically.
     await drain(false);
+    await waitForStep(p);await drain(false);
     await p.locator('#dlg .choice').first().click();await p.waitForTimeout(400);await shot('quake-1802');
     const quake=await p.evaluate(()=>({clock:__qa.G.clock,text:document.querySelector('#dlg').innerText,zone:[__qa.player.position.x,__qa.player.position.z],bossAct:__qa.npcs.boss.userData.act,playerY:__qa.player.userData.rig.position.y}));
     if(tag==='after'){assert(!quake.text.includes('大家鑽到桌子底下'));assert(quake.text.includes('主任室'));assert.strictEqual(quake.bossAct,'cover');assert(quake.playerY<0);}

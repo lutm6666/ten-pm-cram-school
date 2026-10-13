@@ -1,7 +1,9 @@
 const {chromium}=require('playwright');
+const {installClockProbe,settleScheduled}=require('./wait-for-step');
 const LINESEQ=(process.argv[2]||'teacher').split('+');let line=LINESEQ[0];const _x=0, pick=+(process.argv[3]||0), grab=(process.argv[4]||'').split(',').filter(Boolean);
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error'&&!/ERR_TUNNEL|Failed to load/.test(m.text()))errs.push(m.text())});
+await installClockProbe(p);
 await p.goto('file://'+__dirname+'/test.html');
 for(const L of LINESEQ){line=L;
 await p.click(`[data-role=${line}]`);
@@ -39,6 +41,7 @@ while(guard++<60){
       const [x,z]=target;
       await p.evaluate(([x,z])=>__dbg.go(x,z),[x,z]);for(let k=0;k<25;k++){await p.waitForTimeout(60);if(await p.evaluate(`(()=>{const n=__dbg.near();return n&&n.type==='side'&&n.sd.id==='${id}'})()`)){ok=true;break;}}}
     console.log('  side',id,ok?'done':'NOT REACHED');if(ok){await p.click('#actBtn');await drain();continue;}else break;}
+  await settleScheduled(p,drain);if(await vis('.report'))break;
   const g=await p.textContent('.nextcard .g');await p.click('[data-act=guide]');
   let ok=false;for(let k=0;k<750;k++){await p.waitForTimeout(60);const n=await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'});if(n){ok=true;break;}}
   console.log('step',g,ok?'ok':'NOT REACHED');if(!ok)console.log(await p.evaluate(()=>{const d=__dbg,n=d.near(),G=d.G,st=G&&G.steps&&G.steps[G.idx];return JSON.stringify({path:d.path,guiding:d.guiding,keys:d.keys,pos:d.pos(),tg:st?d.targetOf(st.target):null,mode:d.mode,near:n&&n.type,idx:G&&G.idx,stepCount:G&&G.steps&&G.steps.length,id:st&&st.id,done:G&&G.done,report:!!document.querySelector('.report'),sides:d.activeSides().map(s=>s.id)})}));if(!ok)break;try{await p.click('#actBtn',{timeout:5000});}catch(e){console.log('CLICKFAIL',await p.evaluate(()=>{const G=__dbg.G,st=G&&G.steps&&G.steps[G.idx];return JSON.stringify({mode:__dbg.mode,dock:document.getElementById('dock').hidden,cover:document.getElementById('cover').hidden,coverHTML:document.getElementById('cover').innerHTML.slice(0,120),dlg:document.getElementById('dlg').hidden,sheet:document.getElementById('sheet').hidden,idx:G&&G.idx,id:st&&st.id,done:G&&G.done})}));break;}

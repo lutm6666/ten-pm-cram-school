@@ -40,30 +40,45 @@ function newGame(lineId,day=1){
   path=null;enterStep();
 }
 const step=()=>G.steps[G.idx];
+// A pending step has an index, but none of its scene/dialogue effects yet.
+const stepReady=()=>!!(G&&step()&&G.stepReady&&G.clock>=toMin(step().t));
+const sideStepIndex=()=>G.idx-(stepReady()?0:1);
+function stepDue(st){
+  if(st.auto)return null;
+  let nx=G.idx+1;while(G.steps[nx]&&G.steps[nx].auto)nx++;
+  const nt=G.steps[nx]?toMin(G.steps[nx].t):endMin();
+  return Math.max(nt,G.clock+8);
+}
 function enterStep(){
   const st=step();if(!st)return finish();
+  G.stepReady=false;G.chapterPending=false;G.due=null;
+  mode="walk";near=null;lastNearKey="";
+  if(!activateStep()){G.status=statusOf();setCrowd(phaseOf());renderAll();saveGame();}
+}
+function activateStep(){
+  const st=step();if(!st||G.stepReady||mode!=="walk"||G.clock<toMin(st.t))return false;
+  G.stepReady=true;G.due=stepDue(st);G.chapterPending=!!st.chapter;
   if(st.npc)for(const id in st.npc)setNPC(id,val(st.npc[id],G));
   if(st.npc)replanTraffic();
-  G.clock=Math.max(G.clock,toMin(st.t));G.due=null;
-  if(!st.auto){let nx=G.idx+1;while(G.steps[nx]&&G.steps[nx].auto)nx++;const nt=G.steps[nx]?toMin(G.steps[nx].t):endMin();G.due=Math.max(nt,G.clock+8);}
   if(st.chapter){G.chapterTitle=st.chapter.title;}G.status=statusOf();
   setCrowd(phaseOf());saveGame();
   if(st.chapter)showChapter(st.chapter);
   else if(st.auto){mode="walk";renderAll();openStep();}
   else{mode="walk";renderAll();}
+  return true;
 }
-function nextStep(){if(G.idx===0)store.set("tipWalk",true);const st=step();if(st?.onClose)st.onClose();if(st&&st.after)for(const id in st.after)setNPC(id,val(st.after[id],G));G.idx++;path=null;enterStep();}
+function nextStep(){if(!stepReady())return;if(G.idx===0)store.set("tipWalk",true);const st=step();if(st?.onClose)st.onClose();if(st&&st.after)for(const id in st.after)setNPC(id,val(st.after[id],G));G.idx++;path=null;enterStep();}
 
 /* ---------- 目標與附近的東西 ---------- */
 function guideTarget(t){const m=targetOf(t);if(t&&t.npc){const u=npcs[t.npc].userData;if(u.path&&u.anchor)return{...m,x:u.anchor[0],z:u.anchor[1]};}return m;}
 function targetOf(t){if(!t)return null;if(t.npc){const n=npcs[t.npc];return{x:n.position.x,z:n.position.z,h:n.userData.top+.8,name:CHARS[t.npc].name,kind:"npc",id:t.npc};}
   const s=SPOTS[t.spot];return{x:s.pos[0],z:s.pos[1],h:s.h+.5,name:s.name,kind:"spot"};}
 function activeSides(){const list=SIDES[G.line.id]||[],ids=G.steps.map(s=>s.id);
-  const mainNpc=G.steps[G.idx]&&G.steps[G.idx].target&&G.steps[G.idx].target.npc;
-  return list.filter(sd=>!G.sidesDone[sd.id]&&!(mainNpc&&sd.target.npc===mainNpc)&&G.idx>=ids.indexOf(sd.from)&&G.idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G)));}
+  const mainNpc=stepReady()&&G.steps[G.idx].target&&G.steps[G.idx].target.npc,idx=sideStepIndex();
+  return list.filter(sd=>!G.sidesDone[sd.id]&&!(mainNpc&&sd.target.npc===mainNpc)&&idx>=ids.indexOf(sd.from)&&idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G)));}
 function nearest(){
   const px=player.position.x,pz=player.position.z,d=(x,z)=>Math.hypot(x-px,z-pz),c=[];
-  const m=targetOf(step().target);if(m){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:"main",label:step().action||(m.kind==="npc"?`找${CHARS[m.id].name}`:`到${m.name}`)});}
+  const m=stepReady()?targetOf(step().target):null;if(m){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:"main",label:step().action||(m.kind==="npc"?`找${CHARS[m.id].name}`:`到${m.name}`)});}
   for(const sd of activeSides()){const t=targetOf(sd.target);if(t){const ds=d(t.x,t.z);if(ds<1.9)c.push({dist:ds,type:"side",sd,label:sd.action||`找${t.name}`});}}
   for(const it of ITEMS){if(itemMarks[it.id]&&!G.items.includes(it.id)){const di=d(it.pos[0],it.pos[1]);if(di<1.3)c.push({dist:di-.3,type:"item",it,label:"撿起來"});}}
   for(const id of chatTargets()){const n=npcs[id],dc=d(n.position.x,n.position.z);if(dc<1.5)c.push({dist:dc+.8,type:"chat",id,label:`聊聊・${CHARS[id].name}`});}
@@ -96,10 +111,10 @@ function renderHud(){
 }
 function endMin(){return toMin((G&&G.line.endAt)||"22:00");}
 function otMin(){return G?Math.max(0,Math.floor(G.clock-endMin())):0;}
-function dueText(){if(!G)return"";if(otMin()&&mode!=="end"){const r=mode==="walk"&&G.due!=null?Math.floor(G.due-G.clock):null;return `<span class="ot">已加班 ${otMin()} 分</span>`+(r==null?"":r>=0?`<span class="due ${r<=3?"warn":""}">剩 ${r} 分</span>`:`<span class="due late">晚 ${-r} 分</span>`);}return dueText0();}
+function dueText(){if(!G)return"";if(step()&&!G.stepReady&&mode!=="end")return `下一件事 ${esc(step().t)}・可自由探索`;if(otMin()&&mode!=="end"){const r=mode==="walk"&&G.due!=null?Math.floor(G.due-G.clock):null;return `<span class="ot">已加班 ${otMin()} 分</span>`+(r==null?"":r>=0?`<span class="due ${r<=3?"warn":""}">剩 ${r} 分</span>`:`<span class="due late">晚 ${-r} 分</span>`);}return dueText0();}
 function dueText0(){if(mode==="walk"&&G.due!=null){const r=Math.floor(G.due-G.clock);return r>=0?`<span class="due ${r<=3?"warn":""}">${fmt(G.due)} 前・剩 ${r} 分</span>`:`<span class="due late">已經晚了 ${-r} 分</span>`;}return `${esc(G.chapterTitle||"")}・${esc(G.line.role)}`;}
 let lastClockMin=-1;
-function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}}}
+function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}saveGame();}activateStep();}
 function checkBell(){if(!G)return;const ph=phaseOf();if(ph===crowdPhase)return;const prev=crowdPhase;setCrowd(ph);G.status=statusOf();renderHud();
   const B=G.line.bells||{class:["上課鐘響了","學生陸續回到座位。"],break:["下課了","下課 15 分鐘，20:05 上第二節。"],leave:["下課了","今天的課上完了，學生陸續離開。"]};
   if(ph==="class"){chime();showBanner(...B.class);}else if(ph==="break"){chime();showBanner(...B.break);}else if(ph==="leave"&&prev!=="close"){chime();showBanner(...B.leave);}}
@@ -107,7 +122,7 @@ function spend(min){if(G){G.clock+=min;checkBell();}}
 function renderNext(){
   const el=$("next");if(mode!=="walk"){el.hidden=true;return;}el.hidden=false;
   const hint=G.idx===0&&!store.get("tipWalk",false)?`<div class="in"><p class="nexthint">按「帶我去」會自己走過去。想自己走：用左下的方向鍵，或點地板。頭上有紅色「！」的就是要找的對象。</p></div>`:"";
-  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${esc(val(step().goal,G))}</span><button data-act="guide">帶我去</button></div></div>${hint}`;
+  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${!stepReady()?"下一件事 "+esc(step().t):G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${esc(val(step().goal,G))}${!stepReady()?"・尚未開始，可自由探索":""}</span>${stepReady()&&!step().auto?'<button data-act="guide">帶我去</button>':""}</div></div>${hint}`;
   $("next").style.top=document.querySelector(".hud").offsetHeight+8+"px";
 }
 function renderDock(){
@@ -123,7 +138,7 @@ function showChapter(ch){
   c.innerHTML=`<div class="chap fade"><div class="t">${esc(ch.t)}</div><h2>${esc(ch.title)}</h2><p>${esc(ch.sub||"")}</p>${ch.rush?`<div class="rush">${ch.rush.map(r=>`<div>${rich(r)}</div>`).join("")}</div>`:""}<button data-act="chapterGo">繼續</button></div>`;
   c.querySelector("[data-act=chapterGo]").focus();
 }
-function closeChapter(){$("cover").hidden=true;$("cover").className="cover";mode="walk";renderAll();if(step().auto)openStep();}
+function closeChapter(){if(!stepReady())return;G.chapterPending=false;$("cover").hidden=true;$("cover").className="cover";mode="walk";renderAll();saveGame();if(step().auto)openStep();}
 
 /* ---------- 對話 ---------- */
 let D=null; // {pages,i,choices,onChoice,endLabel,onEnd,deltas}
@@ -168,6 +183,7 @@ function resolveChoice(c,onDone,arg){
   runDialog({pages,chatId,deltas:deltas||`<span class="d">沒有變化</span>`,endLabel:dead?"……":"好",noskip:true,onEnd:()=>dead?finish():onDone()});
 }
 function openStep(){
+  if(!stepReady()||mode!=="walk")return;
   if(step().onOpen)step().onOpen();
   const st=step();if(st.effect)startEffect(st.effect);const carry=G.idx===0&&G.line.carry&&G.day!==2?G.line.carry(G):[];if(st.id==="ev_rain")startRain(12);if(/phone|calls|ymom|bmom|ycalls|ot_group/.test(st.id))ring(2);let pages=val(st.pages,G);const choices=st.choices?val(st.choices,G):null;
   if(carry.length)pages=[...carry,...pages];
@@ -231,6 +247,7 @@ function openCodex(){
 
 /* ---------- 開場與結算 ---------- */
 function showTitle(){
+  if(G&&!G.done&&(mode==="walk"||mode==="chapter"))saveGame();
   endQuake();
   mode="title";G=null;renderAll();$("dlg").hidden=true;$("sheet").hidden=true;$("sheetBg").hidden=true;
   const c=$("cover");c.className="cover";c.hidden=false;const lines=Object.values(LINES);
@@ -305,8 +322,11 @@ function epilogue(){
    <div class="actions"><button class="primary" data-act="title">回主頁</button></div></div>`;
 }
 /* ---------- 存檔 ---------- */
-function saveGame(){if(!G)return;store.set("save",{line:G.line.id,day:G.day||1,steps:G.steps.map(s=>({id:s.id,t:s.t})),idx:G.idx,s:G.s,h:G.h,f:G.f,log:G.log,items:G.items,sidesDone:G.sidesDone,clock:G.clock,status:G.status,chapterTitle:G.chapterTitle,lates:G.lates,lateMin:G.lateMin,minis:G.minis,chatUsed:G.chatUsed||[],chatWith:G.chatWith||[],hard:G.hard,pName:G.pName,tName:G.tName,name:G.name,pos:[player.position.x,player.position.z],when:Date.now()});}
+function saveGame(){if(!G||G.done)return;store.set("save",{line:G.line.id,day:G.day||1,steps:G.steps.map(s=>({id:s.id,t:s.t})),idx:G.idx,s:G.s,h:G.h,f:G.f,log:G.log,items:G.items,sidesDone:G.sidesDone,clock:G.clock,stepReady:G.stepReady,due:G.due,chapterPending:G.chapterPending,status:G.status,chapterTitle:G.chapterTitle,lates:G.lates,lateMin:G.lateMin,minis:G.minis,chatUsed:G.chatUsed||[],chatWith:G.chatWith||[],hard:G.hard,pName:G.pName,tName:G.tName,name:G.name,pos:[player.position.x,player.position.z],when:Date.now()});}
 function clearSave(){store.set("save",null);}
+// Reloading while exploring keeps the exact waiting clock and position, even
+// between minute checkpoints. Unfinished dialogues retain their safe checkpoint.
+window.addEventListener("pagehide",()=>{if(mode==="walk"||mode==="chapter")saveGame();});
 function resumeGame(){
   endQuake();nextEntryAt=0;
   const sv=store.get("save",null);if(!sv||!LINES[sv.line])return showTitle();
@@ -315,17 +335,23 @@ function resumeGame(){
   {const outAll=store.get("out",{});G.prevAll=outAll;G.prev=G.day===2?((outAll[sv.line]||{}).f||{}):{};}
   Object.defineProperty(G,"time",{get(){return fmt(G.clock);},set(v){},configurable:true});
   G.steps=sv.steps.map(m=>{const s=L.steps.find(x=>x.id===m.id);if(s)return s;if(/^ot_/.test(m.id))return otRestore(m.id,m.t,L);const ev=EVENTS.find(e=>"ev_"+e.id===m.id);return ev?{...ev.make(),id:m.id,t:m.t,isEvent:true}:null;}).filter(Boolean);
+  const st=step();if(!st)return finish();
+  // Older saves always entered their current step immediately. New saves keep
+  // the original deadline and never apply a pending step's NPC instructions.
+  G.stepReady=G.clock>=toMin(st.t)&&(sv.stepReady??true);
+  G.chapterPending=G.stepReady&&!!sv.chapterPending;
+  G.due=G.stepReady?(Object.prototype.hasOwnProperty.call(sv,"due")?sv.due:stepDue(st)):null;
   makePlayer(L);player.position.set(sv.pos[0],0,sv.pos[1]);
   Object.keys(CHARS).forEach(id=>{if(CHARS[id].body!==undefined)setNPC(id,null);});
   for(const id in L.npcs)if(CHARS[id]&&CHARS[id].body!==undefined)setNPC(id,val(L.npcs[id],G),true);
-  for(let i=0;i<=G.idx&&i<G.steps.length;i++){const s=G.steps[i];if(s.npc)for(const id in s.npc)setNPC(id,val(s.npc[id],G),true);if(i<G.idx&&s.after)for(const id in s.after)setNPC(id,val(s.after[id],G),true);}
+  for(let i=0;i<=G.idx&&i<G.steps.length;i++){const s=G.steps[i];if((i<G.idx||G.stepReady)&&s.npc)for(const id in s.npc)setNPC(id,val(s.npc[id],G),true);if(i<G.idx&&s.after)for(const id in s.after)setNPC(id,val(s.after[id],G),true);}
   Object.values(itemMarks).forEach(m=>scene.remove(m));for(const k in itemMarks)delete itemMarks[k];
   syncItems();
   for(const id in sideMarks){scene.remove(sideMarks[id]);delete sideMarks[id];}
   setBoard(L.board);setDaylight(!!L.daylight);placeJuniorHigh(L);
   crowdPhase=null;setCrowd(phaseOf(),true);FX.shake=FX.dark=0;path=null;
-  const st=G.steps[G.idx];G.due=null;if(!st.auto){let nx=G.idx+1;while(G.steps[nx]&&G.steps[nx].auto)nx++;const nt=G.steps[nx]?toMin(G.steps[nx].t):endMin();G.due=Math.max(nt,G.clock+8);}
-  mode="walk";renderAll();if(st.auto)openStep();
+  near=null;lastNearKey="";lastClockMin=-1;
+  mode="walk";renderAll();if(G.chapterPending)showChapter(st.chapter);else if(G.stepReady&&st.auto)openStep();
 }
 function finish(){
   mode="end";const r=G.line.ending(G);G.result=r;remember(r);G.done=true;clearSave();doneLines.add(G.day===2?G.line.id+"@2":G.line.id);store.set("done",[...doneLines]);checkAch();renderAll();
@@ -359,7 +385,7 @@ document.addEventListener("click",e=>{
   else if(act==="dnext")dNext();else if(act==="dchat")dChat();else if(act==="dskip")dSkip();
   else if(act==="closeSheet")closeSheet();else if(act==="closeTerm")$("termPop").hidden=true;
   else if(act==="camReset"){CAM.yaw=0;CAM.tilt=1;CAM.zoom=1;saveCam();}
-  else if(act==="guide"){const t=guideTarget(step().target);path=findPath(t.x,t.z);guiding=true;}
+  else if(act==="guide"&&stepReady()){const t=guideTarget(step().target);if(t){path=findPath(t.x,t.z);guiding=true;}}
   else if(act==="codex")openCodex();
   else if(act==="sound"){soundOn=!soundOn;store.set("sound",soundOn);renderHud();if(soundOn){beep("ok");startAmbient();}else stopAmbient();a.setAttribute("aria-pressed",soundOn);if(a.classList.contains("toggle"))a.textContent=soundOn?"開":"關";}
   else if(act==="settings")openSettings();
@@ -422,7 +448,7 @@ function tickTips(){if(!G||mode!=="walk")return;
   if(!store.get("tipSide",false)&&activeSides().length){store.set("tipSide",true);showBanner("有人頭上出現「？」","那是支線。可以繞過去看看，也可以不理它。");}
   if(!store.get("tipItem",false)&&ITEMS.some(it=>itemMarks[it.id]&&Math.hypot(it.pos[0]-player.position.x,it.pos[1]-player.position.z)<5)){store.set("tipItem",true);showBanner("地上有東西在發光","走過去可以撿起來。撿東西會花一點時間。");}}
 const _pv=new THREE.Vector3();
-function tickEdge(){const a=$("edgeArrow");if(!G||mode!=="walk"){a.hidden=true;return;}const m=targetOf(step()?.target);if(!m){a.hidden=true;return;}
+function tickEdge(){const a=$("edgeArrow");if(!G||mode!=="walk"||!stepReady()){a.hidden=true;return;}const m=targetOf(step()?.target);if(!m){a.hidden=true;return;}
   _pv.set(m.x,1,m.z).project(camera);const W=innerWidth,H=innerHeight;let sx=(_pv.x+1)/2*W,sy=(1-_pv.y)/2*H;const behind=_pv.z>1;
   const nx=$("next"),nb=nx&&!nx.hidden?nx.getBoundingClientRect().bottom:0,top=Math.max(document.querySelector(".hud").offsetHeight+90,nb+34),l=34,r=W-34;let bot=H-40;
   for(const sel of [".dpad","#actBtn",".camreset"]){const e=document.querySelector(sel);if(e&&e.offsetParent){const b=e.getBoundingClientRect();if(b.height)bot=Math.min(bot,b.top-32);}}
@@ -451,7 +477,7 @@ function simulateFrame(dt,t){
     for(const id in sideMarks)sideMarks[id].visible=false;
     act.forEach(sd=>{const tg=targetOf(sd.target);if(!tg)return;const mk=sideMarks[sd.id]||(sideMarks[sd.id]=addSideMark());mk.visible=true;mk.position.set(tg.x,tg.h+Math.sin(t*3+1)*.1,tg.z);});
     if(mode==="walk"){const z=zoneAt(player.position.x,player.position.z);if(z&&z[0]!==G.zone){G.zone=z[0];if(!G.zonesSeen)G.zonesSeen={};if(!G.zonesSeen[z[0]]){G.zonesSeen[z[0]]=1;showBanner(z[0],(G.line.zoneText&&G.line.zoneText[z[0]])||z[5]);}}}
-    const m=targetOf(step()?.target);marker.visible=mode==="walk"&&!!m;if(m)marker.position.set(m.x,m.h+Math.sin(t*3)*.12,m.z);
+    const m=stepReady()?targetOf(step()?.target):null;marker.visible=mode==="walk"&&!!m;if(m)marker.position.set(m.x,m.h+Math.sin(t*3)*.12,m.z);
     tickItemMarks(t);tickEdge();tickTips();
     tickClock(dt);p2StoryUpdate();tickNight(dt);tickRain(dt);
     const quakeDialog=step()?.id==='ev_quake'&&mode==='dialog';

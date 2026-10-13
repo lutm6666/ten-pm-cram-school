@@ -106,7 +106,7 @@ function chatAnswer(c,pk){const a=c.a,r=G.line.id;return a[r+"."+pk]??a[r]??a[pk
 function matchQ(qs,text){const t=text.replace(/\s/g,"");let best=-1,score=0;
   qs.forEach((q,i)=>{let s=0;q.keys.forEach(k=>{if(t.includes(k))s+=k.length;});if(t&&q.q.replace(/[？?]/g,"").includes(t))s+=t.length;if(s>score){score=s;best=i;}});return best;}
 function chatTargets(){
-  if(!G)return[];const st=step(),main=st&&st.target&&st.target.npc,side=new Set(activeSides().map(s=>s.target&&s.target.npc).filter(Boolean));
+  if(!G)return[];const st=step(),main=stepReady()&&st.target&&st.target.npc,side=new Set(activeSides().map(s=>s.target&&s.target.npc).filter(Boolean));
   return Object.keys(CHATS).filter(id=>(!G.line.chats||G.line.chats.includes(id))&&id!==G.line.id&&npcs[id]&&npcs[id].visible&&id!==main&&!side.has(id));
 }
 let CH=null;

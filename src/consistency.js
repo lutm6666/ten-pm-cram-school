@@ -165,14 +165,14 @@ guideTarget=function(t){
   return m;
 };
 activeSides=function(){
-  const list=SIDES[G.line.id]||[],ids=G.steps.map(s=>s.id),mt=consTarget(G.steps[G.idx]&&G.steps[G.idx].target),mainNpc=mt&&mt.npc;
+  const list=SIDES[G.line.id]||[],ids=G.steps.map(s=>s.id),mt=stepReady()?consTarget(step().target):null,mainNpc=mt&&mt.npc,idx=sideStepIndex();
   return list.filter(sd=>{
     const st=consTarget(sd.target),n=st&&st.npc?npcs[st.npc]:null;
-    return !G.sidesDone[sd.id]&&!(mainNpc&&st&&st.npc===mainNpc)&&G.idx>=ids.indexOf(sd.from)&&G.idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G))&&(!st||!st.npc||consNpcReady(n));
+    return !G.sidesDone[sd.id]&&!(mainNpc&&st&&st.npc===mainNpc)&&idx>=ids.indexOf(sd.from)&&idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G))&&(!st||!st.npc||consNpcReady(n));
   });
 };
 nearest=function(){
-  const px=player.position.x,pz=player.position.z,d=(x,z)=>Math.hypot(x-px,z-pz),c=[],st=step(),mt=consTarget(st&&st.target),m=targetOf(mt);
+  const px=player.position.x,pz=player.position.z,d=(x,z)=>Math.hypot(x-px,z-pz),c=[],st=step(),mt=stepReady()?consTarget(st&&st.target):null,m=targetOf(mt);
   if(m&&(m.kind!=='npc'||consNpcReady(npcs[m.id]))){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:'main',label:st.action||(m.kind==='npc'?`找${CHARS[m.id].name}`:`到${m.name}`)});}
   for(const sd of activeSides()){const t=targetOf(sd.target);if(t){const ds=d(t.x,t.z);if(ds<1.9)c.push({dist:ds,type:'side',sd,label:sd.action||`找${t.name}`});}}
   for(const it of ITEMS){if(itemMarks[it.id]&&!G.items.includes(it.id)){const di=d(it.pos[0],it.pos[1]);if(di<1.3)c.push({dist:di-.3,type:'item',it,label:'撿起來'});}}

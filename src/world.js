@@ -235,6 +235,14 @@ function setNPC(id,spec,instant){ // spec: [x,z,rotY] 或 null（不在場）
   n.visible=true;agentPlace(n,spec[0],spec[1],spec[2]);}
 function moveAgent(n,dt,speed=2.6){const u=n.userData;u.stepDistance=0;u.moving=false;if(!u.path||!n.visible||u.act==='cover')return;
   if(!u.path.length){u.path=null;u.moving=false;if(u.endRot!=null)n.rotation.y=u.endRot;setPose(n,isChair(n.position.x,n.position.z));const f=u.onArrive;u.onArrive=null;f&&f();return;}
+  // Passing traffic can carry an actor beyond an intermediate waypoint. Do
+  // not turn back into the same merge point: retain only the forward segment
+  // when the connector is clear. The final destination still arrives exactly.
+  while(u.path.length>1){
+    const [ax,az]=u.path[0],[bx,bz]=u.path[1];
+    if((n.position.x-ax)*(bx-ax)+(n.position.z-az)*(bz-az)<=0||!los(n.position.x,n.position.z,bx,bz,trafficAvoid(n),R))break;
+    u.path.shift();
+  }
   const [x,z]=u.path[0],vx=x-n.position.x,vz=z-n.position.z,d=Math.hypot(vx,vz);
   if(d<.025){u.path.shift();return;}
   const sp=Math.min(d,speed*dt),nx=n.position.x+vx/d*sp,nz=n.position.z+vz/d*sp;

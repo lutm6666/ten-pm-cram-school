@@ -33,6 +33,28 @@ const fs=require('fs'),assert=require('assert');
     return {seconds,pos:[q.npcs.parent.position.x,q.npcs.parent.position.z],arrived:!q.npcs.parent.userData.path};
   });
   assert(crowd.arrived,'parent stalled in full classroom departure traffic');assert(Math.hypot(crowd.pos[0]-5.2,crowd.pos[1]-15.3)<.03);console.log('full classroom departure PASS',crowd);
+  const merge=await p.evaluate(()=>{
+    const q=__nav,actors=[q.npcs.parent,q.npcs.parent2,q.extras[14].p,q.extras[15].p];
+    const starts=[[20.61494979323519,1.3387356663447223],[21.014958242648895,.7606770249203996],[21.510355227862977,1.2208711887502728],[21.1456444028621,1.7805927085763043]];
+    const shared=[[21.125,1.375],[20.875,1.375],[20.625,1.375],[20.375,1.375],[20.125,1.375],[19.875,1.375],[19.625,1.375],[19.375,1.375],[19.125,1.375],[18.875,1.375],[13.375,3.375],[12.625,8.375],[11.375,9.625]];
+    const ends=[[5.2,15.3],[6.4,15.3],[4.5,17.3],[4.5,17.3]];
+    const tails=[[[9.625,12.375],[5.125,15.125],[5.125,15.375],[5.2,15.3]],[[9.125,12.875],[6.375,15.375],[6.4,15.3]],[[6.875,16.125],[4.625,17.375],[4.5,17.3]],[[6.875,16.125],[4.625,17.375],[4.5,17.3]]];
+    // Exact four-actor convergence from the continuous-time yun Playthrough.
+    // Passing left of a shared waypoint must not make everyone turn back into it.
+    return [.006,.012,.016,.025,.05].map(dt=>{
+    Object.values(q.npcs).forEach(n=>n.visible=false);q.extras.forEach(e=>e.p.visible=false);
+    actors.forEach((n,i)=>{n.visible=true;q.agentPlace(n,...starts[i],0);Object.assign(n.userData,{anchor:[...ends[i],Math.PI],yieldTime:[.0722,.0722,.0863,0][i],blockTime:0,passSide:1,departSeat:null,path:[...shared,...tails[i]].map(pt=>[...pt]),endRot:Math.PI,onArrive:i>=2?()=>{n.visible=false;}:null});});
+    const initial=actors.map((n,i)=>actors.map((m,j)=>i===j?Infinity:Math.hypot(n.position.x-m.position.x,n.position.z-m.position.z)));
+    let arrival=null,wall=false,overlap=false;const arrivalTimes=[];
+    for(let k=0;k<Math.ceil(45/dt);k++){
+      q.moveNPCs(dt);
+      actors.forEach((n,i)=>{wall ||= n.visible&&__dbg.blockedAt(n.position.x,n.position.z);actors.forEach((m,j)=>{if(i<j&&n.visible&&m.visible)overlap ||= Math.hypot(n.position.x-m.position.x,n.position.z-m.position.z)<Math.min(.66,initial[i][j])-.00001;});if(!n.userData.path&&arrivalTimes[i]==null)arrivalTimes[i]=k*dt;});
+      if(!actors[0].userData.path&&arrival===null)arrival=k*dt;
+    }
+    return {dt,arrival,arrivalTimes,wall,overlap,pos:actors.map(n=>[n.position.x,n.position.z]),parentArrived:Math.hypot(actors[0].position.x-ends[0][0],actors[0].position.z-ends[0][1])<.03};
+    });
+  });
+  console.log('classroom-exit merge',merge);for(const r of merge){assert(r.parentArrived&&r.arrival!==null&&r.arrival<45,`parent stalled at shared classroom-exit waypoint dt=${r.dt}`);assert(r.arrivalTimes.length===4&&[0,1,2,3].every(i=>Number.isFinite(r.arrivalTimes[i])&&r.arrivalTimes[i]<45),`classroom-exit actor failed to arrive dt=${r.dt}`);assert(!r.wall,'classroom-exit merge crossed furniture/wall');assert(!r.overlap,'classroom-exit merge increased body overlap');}console.log('shared classroom-exit waypoint / parent arrival / separation PASS');
   const exit=await p.evaluate(()=>{
     const q=__nav,n=q.npcs.pinyu;q.setCrowd('class',true);
     // yclose explicitly removes the parents, Bo and Zhe before ot_pickup.
