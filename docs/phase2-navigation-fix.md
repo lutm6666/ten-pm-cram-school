@@ -49,6 +49,13 @@ walls and other furniture remain collidable. The closing-traffic fixture checks
 pickup arrival, all departing students reaching the opening, and seated study
 students remaining in place.
 
+The hosted software-WebGL run exposed dropped simulation time below 20fps.
+The loop now subdivides each elapsed frame into collision steps of at most 50ms
+and renders once. Only long background/resume gaps are capped at 500ms. A 5fps
+test checks an NPC still covers two units within 1.6 seconds; the original
+50ms-per-frame cap fails that check. The hosted arrival test keeps its original
+duration and seven-student seat requirement.
+
 `tests/navigation.js` reproduces the podium jam at three time steps; the base
 version fails and the fix passes arrival, wall and body separation assertions.
 The test is part of `npm test`. No timeout was increased or test skipped.

@@ -22,6 +22,10 @@ const fs=require('fs'),assert=require('assert');
   await p.evaluate(()=>{window.__savedDelta=__nav.clockT.getDelta;__nav.clockT.getDelta=()=>.05;__dbg.tp(9.624773519383476,3.2078527119334486);__dbg.go(3.5,3.4);});
   await p.waitForFunction(()=>{const [x,z]=__dbg.pos();return x<8.6&&Math.hypot(x-3.5,z-3.4)<1.9;},null,{timeout:5000});
   await p.evaluate(()=>{__nav.clockT.getDelta=window.__savedDelta;});console.log('low-frame-rate office doorway PASS');
+  await p.evaluate(()=>{const q=__nav;Object.values(q.npcs).forEach(n=>n.visible=false);q.extras.forEach(e=>e.p.visible=false);const n=q.npcs.parent;n.visible=true;q.agentPlace(n,30,14,0);q.agentGo(n,32,14,0);q.clockT.getDelta();window.__savedRaf=requestAnimationFrame;window.requestAnimationFrame=cb=>setTimeout(()=>cb(performance.now()),200);});
+  await p.waitForTimeout(1600);
+  const slow=await p.evaluate(()=>{window.requestAnimationFrame=window.__savedRaf;const n=__nav.npcs.parent;return {x:n.position.x,z:n.position.z,path:n.userData.path};});
+  assert(Math.hypot(slow.x-32,slow.z-14)<.03,'5fps lost elapsed NPC movement time');console.log('5fps real-time NPC walking PASS',slow);
   const crowd=await p.evaluate(()=>{
     const q=__nav;__dbg.jump('yenroll');q.setCrowd('class',true);
     q.agentPlace(q.npcs.parent,26.9,5.6,-Math.PI/2);q.agentGo(q.npcs.parent,5.2,15.3,Math.PI);q.setCrowd('leave',true);

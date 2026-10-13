@@ -432,8 +432,7 @@ function tickEdge(){const a=$("edgeArrow");if(!G||mode!=="walk"){a.hidden=true;r
   a.style.left=(cx+dx*k)+"px";a.style.top=(cy+dy*k)+"px";a.firstChild.style.transform=`rotate(${Math.atan2(dy,dx)}rad)`;a.hidden=false;}
 /* ---------- 主迴圈 ---------- */
 const camOff=new THREE.Vector3(0,9,7.4),camLook=new THREE.Vector3(4.5,.6,16);let lastNearKey="";
-function tick(){
-  const dt=Math.min(.05,clockT.getDelta()),t=clockT.elapsedTime;
+function simulateFrame(dt,t){
   if(G&&player){
     if(mode==="walk"){
       let dx=0,dz=0,pathDistance=Infinity;const ix=(keys.r?1:0)-(keys.l?1:0),iz=(keys.d?1:0)-(keys.u?1:0);
@@ -468,5 +467,11 @@ function tick(){
     if(FX.shake>0){const a=.18*Math.min(1,FX.shake);camera.position.x+=(Math.random()-.5)*a;camera.position.y+=(Math.random()-.5)*a;}
   } else {camera.position.set(14+Math.sin(t*.1)*6,16,22);camLook.set(14,0,9);const now=performance.now()/1000;moveNPCs(dt);
     extras.forEach(e=>{if(e.p.visible){animPerson(e.p,dt,t,{});tickEmote(e.p,now);}});for(const id in npcs)if(npcs[id].visible)animPerson(npcs[id],dt,t,{act:npcAct(id,npcs[id],t)});}
+}
+function tick(){
+  // Slow WebGL frames must not discard movement time. Keep collision updates
+  // at <=50ms while rendering once; cap long background/resume gaps at 500ms.
+  const elapsed=Math.min(.5,clockT.getDelta()),count=Math.max(1,Math.ceil(elapsed/.05)),dt=elapsed/count;
+  for(let i=0;i<count;i++)simulateFrame(dt,clockT.elapsedTime-elapsed+dt*(i+1));
   camera.lookAt(camLook);renderer.render(scene,camera);requestAnimationFrame(tick);
 }
