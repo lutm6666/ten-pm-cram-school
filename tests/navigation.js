@@ -18,6 +18,10 @@ const fs=require('fs'),assert=require('assert');
   });
   for(const r of result){assert(r.arrived,`podium detour stalled at dt=${r.dt}`);assert(!r.wall,'detour crossed furniture/wall');assert(r.min>=Math.min(.66,r.initial)-.00001,'actor overlap increased');assert.deepStrictEqual(r.guide,[5.2,15.3],'guide changed during yield');}
   console.log('yenroll podium detour / body separation / stable guide PASS',result);
+  if(await p.isVisible('[data-act=chapterGo]'))await p.click('[data-act=chapterGo]');
+  await p.evaluate(()=>{window.__savedDelta=__nav.clockT.getDelta;__nav.clockT.getDelta=()=>.05;__dbg.tp(9.624773519383476,3.2078527119334486);__dbg.go(3.5,3.4);});
+  await p.waitForFunction(()=>{const [x,z]=__dbg.pos();return x<8.6&&Math.hypot(x-3.5,z-3.4)<1.9;},null,{timeout:5000});
+  await p.evaluate(()=>{__nav.clockT.getDelta=window.__savedDelta;});console.log('low-frame-rate office doorway PASS');
   const crowd=await p.evaluate(()=>{
     const q=__nav;__dbg.jump('yenroll');q.setCrowd('class',true);
     q.agentPlace(q.npcs.parent,26.9,5.6,-Math.PI/2);q.agentGo(q.npcs.parent,5.2,15.3,Math.PI);q.setCrowd('leave',true);
@@ -25,4 +29,13 @@ const fs=require('fs'),assert=require('assert');
     return {seconds,pos:[q.npcs.parent.position.x,q.npcs.parent.position.z],arrived:!q.npcs.parent.userData.path};
   });
   assert(crowd.arrived,'parent stalled in full classroom departure traffic');assert(Math.hypot(crowd.pos[0]-5.2,crowd.pos[1]-15.3)<.03);console.log('full classroom departure PASS',crowd);
+  const exit=await p.evaluate(()=>{
+    const q=__nav,n=q.npcs.pinyu;q.setCrowd('class',true);
+    // yclose explicitly removes the parents, Bo and Zhe before ot_pickup.
+    for(const id of ['parent','parent2','bo','zhe'])q.npcs[id].visible=false;
+    n.visible=true;q.agentPlace(n,17,4.62,Math.PI);n.userData.anchor=[4.6,16.3,Math.PI];q.agentGo(n,4.6,16.3,Math.PI);q.setCrowd('close',true);
+    let arrival=null;const exits=[];for(let i=0;i<2400;i++){const visible=q.extras.filter(e=>e.p.visible);q.clockT.elapsedTime+=.025;q.tickCrowd();q.moveNPCs(.025);for(const e of visible)if(!e.p.visible)exits.push([e.p.position.x,e.p.position.z]);if(!n.userData.path&&arrival===null)arrival=i*.025;}
+    return {arrival,pos:[n.position.x,n.position.z],remaining:q.extras.filter(e=>e.p.visible).map(e=>({kind:e.kind,state:e.state})),exits};
+  });
+  assert(exit.arrival!==null&&exit.arrival<45,'waiting student stalled in closing traffic');assert(Math.hypot(exit.pos[0]-4.6,exit.pos[1]-16.3)<.03);assert(exit.remaining.every(e=>e.kind==='study'&&e.state==='seat'),'departing students stalled');assert(exit.exits.length>20);assert(exit.exits.every(([x,z])=>x>3.6&&x<5.4&&z>=16.9&&z<=17.7),'student disappeared outside the entrance');console.log('closing traffic / waiting student / physical exit PASS',exit);
 }finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

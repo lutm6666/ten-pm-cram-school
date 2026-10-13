@@ -43,6 +43,11 @@ function setKidCrowd(ph,instant,now,kids){
 function tickCrowd(){
   const now=clockT.elapsedTime;
   [...extras].sort((a,b)=>(a.arriveClock??a.at??Infinity)-(b.arriveClock??b.at??Infinity)).forEach(e=>{const p=e.p;
+    // The door is an opening, not a single point all departing bodies must
+    // occupy. Complete departure only after walking into its clear footprint.
+    if(e.state==='exiting'&&p.visible&&p.position.x>3.6&&p.position.x<5.4&&p.position.z>=16.9&&p.position.z<=17.7){
+      const u=p.userData,arrive=u.onArrive;u.path=null;u.onArrive=null;u.moving=false;arrive&&arrive();
+    }
     if(e.state==="toArrive"&&now>e.at&&enterAgent(p,DOOR,e.home,()=>{e.state="seat";})){e.state="arriving";
       if(Math.random()<.5)emote(p,e.kind==="kid"?pick(["老師好！","我要喝水","今天作業好多","我第一名！"]):pick(["老師好","好熱","今天考什麼？","呼～趕上了"]),2);
     }

@@ -313,11 +313,11 @@ function tickItemMarks(t){Object.values(itemMarks).forEach(g=>{const u=g.userDat
 function resize(){const w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.fov=w<600?52:38;camera.updateProjectionMatrix();}
 
 /* ---------- 碰撞與尋路 ---------- */
-function blockedAt(x,z,r=R){if(x<r||z<r||x>W-r||z>H-r)return true;for(const s of solids){if(x>s[0]-r&&x<s[2]+r&&z>s[1]-r&&z<s[3]+r)return true;}return false;}
+function blockedAt(x,z,r=R,ignore=[]){if(x<r||z<r||x>W-r||z>H-r)return true;for(const s of solids){if(!ignore.includes(s)&&x>s[0]-r&&x<s[2]+r&&z>s[1]-r&&z<s[3]+r)return true;}return false;}
 function buildGrid(){gridB=new Uint8Array(GW*GH);for(let j=0;j<GH;j++)for(let i=0;i<GW;i++)gridB[j*GW+i]=blockedAt((i+.5)*CELL,(j+.5)*CELL)?1:0;}
 const cellOf=(x,z)=>[Math.max(0,Math.min(GW-1,Math.floor(x/CELL))),Math.max(0,Math.min(GH-1,Math.floor(z/CELL)))];
 function nearestFree(i,j,cells=gridB,reachable=()=>true){const free=(a,b)=>!cells[b*GW+a]&&reachable((a+.5)*CELL,(b+.5)*CELL);if(free(i,j))return[i,j];for(let r=1;r<40;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;const a=i+di,b=j+dj;if(a>=0&&b>=0&&a<GW&&b<GH&&free(a,b))return[a,b];}return null;}
-function los(ax,az,bx,bz,avoid=[],radius=R+.07){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.05);for(let k=1;k<=n;k++){const t=k/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t;if(blockedAt(x,z,radius)||avoid.some(p=>Math.hypot(x-p[0],z-p[1])<Math.min(.72,Math.hypot(ax-p[0],az-p[1]))-.00001))return false;}return true;}
+function los(ax,az,bx,bz,avoid=[],radius=R+.07,ignore=[]){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.05);for(let k=1;k<=n;k++){const t=k/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t;if(blockedAt(x,z,radius,ignore)||avoid.some(p=>Math.hypot(x-p[0],z-p[1])<Math.min(.72,Math.hypot(ax-p[0],az-p[1]))-.00001))return false;}return true;}
 function findPath(tx,tz){return findPathFrom(player.position.x,player.position.z,tx,tz);}
 function findPathFrom(fx,fz,tx,tz,avoid=[]){
   const routeGrid=avoid.length?gridB.slice():gridB;
@@ -325,17 +325,23 @@ function findPathFrom(fx,fz,tx,tz,avoid=[]){
   // A passing step can leave the current cell inside another actor's planning
   // margin. Select a reachable start in the SAME temporary grid, and retain
   // that connector; otherwise A* starts surrounded by blocked cells forever.
-  const start=nearestFree(...cellOf(fx,fz),routeGrid,(x,z)=>blockedAt(fx,fz)||los(fx,fz,x,z,avoid,R)),end=nearestFree(...cellOf(tx,tz),routeGrid);
-  if(!start||!end)return null;
-  const [si,sj]=start,[gi,gj]=end;
-  const N=GW*GH,g=new Float32Array(N).fill(1e9),prev=new Int32Array(N).fill(-1),closed=new Uint8Array(N),s=sj*GW+si,goal=gj*GW+gi;g[s]=0;
-  const h=k=>Math.hypot(k%GW-gi,Math.floor(k/GW)-gj);const open=[s];
+  const starts=[],end=nearestFree(...cellOf(tx,tz),routeGrid);
+  if(blockedAt(fx,fz)&&isChair(fx,fz)){
+    // Both sides of a chair are valid departures. Choosing just the closest
+    // grid cell can strand a student in an aisle whose far end is occupied.
+    const ownSeat=solids.filter(s=>fx>s[0]&&fx<s[2]&&fz>s[1]&&fz<s[3]),[ci,cj]=cellOf(fx,fz);
+    for(let dj=-4;dj<=4;dj++)for(let di=-4;di<=4;di++){const i=ci+di,j=cj+dj,x=(i+.5)*CELL,z=(j+.5)*CELL;if(i>=0&&j>=0&&i<GW&&j<GH&&!routeGrid[j*GW+i]&&Math.hypot(x-fx,z-fz)<=.9&&los(fx,fz,x,z,avoid,R,ownSeat))starts.push([i,j]);}
+  }else{const start=nearestFree(...cellOf(fx,fz),routeGrid,(x,z)=>los(fx,fz,x,z,avoid,R));if(start)starts.push(start);}
+  if(!starts.length||!end)return null;
+  const [gi,gj]=end;
+  const N=GW*GH,g=new Float32Array(N).fill(1e9),prev=new Int32Array(N).fill(-1),closed=new Uint8Array(N),goal=gj*GW+gi;
+  const h=k=>Math.hypot(k%GW-gi,Math.floor(k/GW)-gj);const open=starts.map(([i,j])=>{const k=j*GW+i;g[k]=Math.hypot((i+.5)*CELL-fx,(j+.5)*CELL-fz)/CELL;return k;});let reached=false;
   while(open.length){let bi=0,bf=g[open[0]]+h(open[0]);for(let k=1;k<open.length;k++){const f=g[open[k]]+h(open[k]);if(f<bf){bf=f;bi=k;}}
-    const cur=open[bi];open[bi]=open[open.length-1];open.pop();if(cur===goal)break;if(closed[cur])continue;closed[cur]=1;const ci=cur%GW,cj=Math.floor(cur/GW);
+    const cur=open[bi];open[bi]=open[open.length-1];open.pop();if(cur===goal){reached=true;break;}if(closed[cur])continue;closed[cur]=1;const ci=cur%GW,cj=Math.floor(cur/GW);
     for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){if(!di&&!dj)continue;const a=ci+di,b=cj+dj;if(a<0||b<0||a>=GW||b>=GH)continue;const k=b*GW+a;
       if(routeGrid[k]||closed[k])continue;if(di&&dj&&(routeGrid[cj*GW+a]||routeGrid[b*GW+ci]))continue;const ng=g[cur]+(di&&dj?1.414:1);if(ng<g[k]){g[k]=ng;prev[k]=cur;open.push(k);}}}
-  if(prev[goal]<0&&goal!==s)return null;
-  const pts=[];for(let k=goal;k!==-1;k=prev[k]){pts.unshift([(k%GW+.5)*CELL,(Math.floor(k/GW)+.5)*CELL]);if(k===s)break;}
+  if(!reached)return null;
+  const pts=[];for(let k=goal;k!==-1;k=prev[k])pts.unshift([(k%GW+.5)*CELL,(Math.floor(k/GW)+.5)*CELL]);
   const out=[];let ax=fx,az=fz,i=0;while(i<pts.length){let j=pts.length-1;while(j>i&&!los(ax,az,pts[j][0],pts[j][1],avoid))j--;out.push(pts[j]);[ax,az]=pts[j];i=j+1;}
   return out;
 }

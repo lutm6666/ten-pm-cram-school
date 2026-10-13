@@ -31,6 +31,24 @@ temporary moving/unavailable state, within the original retry budget. It now
 fails on unreached sides or absent ending reports instead of returning success
 after abandoning a route.
 
+The hosted WebGL run also reproduced player waypoint overshoot at the office
+door: at the 50ms frame cap, a .17-unit step repeatedly crossed a waypoint whose
+arrival radius was .08. Guided movement now clamps travel to the remaining
+waypoint distance and reaches the waypoint before turning. A recorded doorway
+position with a fixed 50ms delta fails before the fix and passes after it.
+
+Departing background students complete their exit when their bodies reach the
+clear door opening (x 3.6–5.4, z 16.9–17.7), instead of requiring every student to
+occupy the same exact point. This clears the reception-area queue while keeping
+the waiting named student reachable. It does not remove students elsewhere.
+Seated study-room students retain the existing late-study story behavior.
+Seat departure seeds A* from all physically reachable sides of the actor's own
+chair, avoiding the previous arbitrary nearest-cell choice that could select a
+dead aisle. Only the departing chair footprint is exempted on that connector;
+walls and other furniture remain collidable. The closing-traffic fixture checks
+pickup arrival, all departing students reaching the opening, and seated study
+students remaining in place.
+
 `tests/navigation.js` reproduces the podium jam at three time steps; the base
 version fails and the fix passes arrival, wall and body separation assertions.
 The test is part of `npm test`. No timeout was increased or test skipped.

@@ -436,10 +436,10 @@ function tick(){
   const dt=Math.min(.05,clockT.getDelta()),t=clockT.elapsedTime;
   if(G&&player){
     if(mode==="walk"){
-      let dx=0,dz=0;const ix=(keys.r?1:0)-(keys.l?1:0),iz=(keys.d?1:0)-(keys.u?1:0);
+      let dx=0,dz=0,pathDistance=Infinity;const ix=(keys.r?1:0)-(keys.l?1:0),iz=(keys.d?1:0)-(keys.u?1:0);
       if(ix||iz){const cy=Math.cos(CAM.yaw),sy=Math.sin(CAM.yaw);dx=ix*cy+iz*sy;dz=-ix*sy+iz*cy;}
-      if(!dx&&!dz&&path&&path.length){const [px,pz]=path[0],vx=px-player.position.x,vz=pz-player.position.z,dd=Math.hypot(vx,vz);if(dd<.08)path.shift();else{dx=vx/dd;dz=vz/dd;}}
-      if(dx||dz){const l=Math.hypot(dx,dz);dx/=l;dz/=l;const ox=player.position.x,oz=player.position.z;stepPlayer(ox+dx*3.4*dt,oz+dz*3.4*dt);
+      if(!dx&&!dz&&path&&path.length){const [px,pz]=path[0],vx=px-player.position.x,vz=pz-player.position.z,dd=Math.hypot(vx,vz);if(dd<.01)path.shift();else{dx=vx/dd;dz=vz/dd;pathDistance=dd;}}
+      if(dx||dz){const l=Math.hypot(dx,dz);dx/=l;dz/=l;const ox=player.position.x,oz=player.position.z,travel=Math.min(3.4*dt,pathDistance);stepPlayer(ox+dx*travel,oz+dz*travel);
         player.userData.stepDistance=Math.hypot(player.position.x-ox,player.position.z-oz);
         if(path&&player.userData.stepDistance<.002){G.stuck=(G.stuck||0)+dt;if(G.stuck>.4){G.stuck=0;const end=path[path.length-1];path=findPath(end[0],end[1]);}}else G.stuck=0;player.rotation.y=Math.atan2(dx,dz);G.moving=player.userData.stepDistance>.001;}
       else{G.moving=false;player.userData.stepDistance=0;}
