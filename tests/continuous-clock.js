@@ -173,11 +173,10 @@ function check(label,detail){results.push({label,...detail});console.log('PASS',
     await advanceTo(18*60+30);assert.strictEqual((await state()).mode,'chapter');assert.strictEqual((await state()).phase,'class');
     assert(await page.isVisible('[data-act="chapterGo"]'));assert.strictEqual((await state()).clock,18*60+30);
     await page.locator('[data-act="chapterGo"]').click();await atMain();await page.locator('#actBtn').click();await drain(1);
-    assert.strictEqual((await state()).id,'lesson1');assert.strictEqual((await state()).ready,false);assert.strictEqual((await state()).time,'18:32','Follow-up automatic lesson also waits');
-    const autoWait=await state();await resume();assert.deepStrictEqual(await state(),autoWait,'Waiting automatic lesson survives reload');
-    await advanceTo(18*60+34.975);assert.strictEqual((await state()).mode,'walk');
-    await advanceTo(18*60+35);assert.strictEqual((await state()).mode,'dialog');assert.strictEqual((await state()).id,'lesson1');assert.strictEqual((await state()).time,'18:37','Automatic task spends only its normal opening time at scheduled start');
-    check('chapter and following auto task: wait, resume, then activate at their production times',{chapter:'18:30',auto:'18:35'});
+    // Teaching roles do not roam during class: the lesson runs at the podium until the next task.
+    const lesson=await state();assert.strictEqual(lesson.id,'lesson1');assert.strictEqual(lesson.ready,true);assert(lesson.clock>=18*60+35&&lesson.clock<18*60+40,'Lesson time passes at the podium, then the automatic task opens at its schedule: '+lesson.time);
+    const atPodium=await page.evaluate(()=>{const p=__clockQA.player.position;return Math.hypot(p.x-20,p.z-2.9)<1;});assert(atPodium,'Teacher stays at the podium during class');
+    check('chapter then lesson: chapter waits for 18:30, class time passes at the podium to 18:35',{chapter:'18:30',auto:'18:35'});
 
     // A deterministic real random-event slot retains serializable event IDs.
     await start('jh',{event:{after:'j_room',t:'18:00',phase:'pre'},events:['blackout']});await page.evaluate(()=>__dbg.jump('j_room'));

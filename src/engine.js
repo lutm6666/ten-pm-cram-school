@@ -53,7 +53,7 @@ function enterStep(){
   const st=step();if(!st)return finish();
   G.stepReady=false;G.chapterPending=false;G.due=null;
   mode="walk";near=null;lastNearKey="";
-  if(!activateStep()){G.status=statusOf();setCrowd(phaseOf());renderAll();saveGame();}
+  if(!activateStep()){G.status=statusOf();setCrowd(phaseOf());renderAll();saveGame();lessonSkip();}
 }
 function activateStep(){
   const st=step();if(!st||G.stepReady||mode!=="walk"||G.clock<toMin(st.t))return false;
@@ -111,10 +111,10 @@ function renderHud(){
 }
 function endMin(){return toMin((G&&G.line.endAt)||"22:00");}
 function otMin(){return G?Math.max(0,Math.floor(G.clock-endMin())):0;}
-function dueText(){if(!G)return"";if(step()&&!G.stepReady&&mode!=="end")return `下一件事 ${esc(step().t)}・可自由探索`;if(otMin()&&mode!=="end"){const r=mode==="walk"&&G.due!=null?Math.floor(G.due-G.clock):null;return `<span class="ot">已加班 ${otMin()} 分</span>`+(r==null?"":r>=0?`<span class="due ${r<=3?"warn":""}">剩 ${r} 分</span>`:`<span class="due late">晚 ${-r} 分</span>`);}return dueText0();}
+function dueText(){if(!G)return"";if(step()&&!G.stepReady&&mode!=="end")return announced(step())?`下一件事 ${esc(step().t)}・可自由探索`:"空檔・可自由探索";if(otMin()&&mode!=="end"){const r=mode==="walk"&&G.due!=null?Math.floor(G.due-G.clock):null;return `<span class="ot">已加班 ${otMin()} 分</span>`+(r==null?"":r>=0?`<span class="due ${r<=3?"warn":""}">剩 ${r} 分</span>`:`<span class="due late">晚 ${-r} 分</span>`);}return dueText0();}
 function dueText0(){if(mode==="walk"&&G.due!=null){const r=Math.floor(G.due-G.clock);return r>=0?`<span class="due ${r<=3?"warn":""}">${fmt(G.due)} 前・剩 ${r} 分</span>`:`<span class="due late">已經晚了 ${-r} 分</span>`;}return `${esc(G.chapterTitle||"")}・${esc(G.line.role)}`;}
 let lastClockMin=-1;
-function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}saveGame();}activateStep();}
+function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}saveGame();if(!lessonSkip())activateStep();}else activateStep();}
 function checkBell(){if(!G)return;const ph=phaseOf();if(ph===crowdPhase)return;const prev=crowdPhase;setCrowd(ph);G.status=statusOf();renderHud();
   const B=G.line.bells||{class:["上課鐘響了","學生陸續回到座位。"],break:["下課了","下課 15 分鐘，20:05 上第二節。"],leave:["下課了","今天的課上完了，學生陸續離開。"]};
   if(ph==="class"){chime();showBanner(...B.class);}else if(ph==="break"){chime();showBanner(...B.break);}else if(ph==="leave"&&prev!=="close"){chime();showBanner(...B.leave);}}
@@ -122,7 +122,7 @@ function spend(min){if(G){G.clock+=min;checkBell();}}
 function renderNext(){
   const el=$("next");if(mode!=="walk"){el.hidden=true;return;}el.hidden=false;
   const hint=G.idx===0&&!store.get("tipWalk",false)?`<div class="in"><p class="nexthint">按「帶我去」會自己走過去。想自己走：用左下的方向鍵，或點地板。頭上有紅色「！」的就是要找的對象。</p></div>`:"";
-  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${!stepReady()?"尚未開始":G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${esc(val(step().goal,G))}</span>${stepReady()&&!step().auto?'<button data-act="guide">帶我去</button>':!stepReady()?`<button data-act="waitNext">等到 ${esc(step().t)}</button>`:""}</div></div>${hint}`;
+  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${!stepReady()?"空檔":G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${!stepReady()?"可以四處看看":esc(val(step().goal,G))}</span>${stepReady()&&!step().auto?'<button data-act="guide">帶我去</button>':!stepReady()?'<button data-act="waitNext">快轉</button>':""}</div></div>${hint}`;
   $("next").style.top=document.querySelector(".hud").offsetHeight+8+"px";
 }
 function renderDock(){
@@ -455,12 +455,28 @@ function settleScene(){
     else if(e.state==="leaving"||e.state==="exiting"){p.visible=false;u.path=null;u.moving=false;e.state="gone";}
     else if(p.visible&&u.path&&u.path.length){const end=u.path[u.path.length-1],cb=u.onArrive;agentPlace(p,end[0],end[1],u.endRot);cb&&cb();}});
 }
-function skipWait(){
-  if(!G||mode!=="walk"||stepReady())return;const st=step();if(!st)return;
-  const to=toMin(st.t);if(G.clock<to){G.clock=to;path=null;guiding=false;}
+/* 等待中只預告「本來就排定」的事（課表、約好的人）；突發事件連時間都不說。 */
+function announced(st){return !!st&&!st.isEvent&&!st.auto&&!/^ot_/.test(st.id);}
+/* 上課中的老師不能晃出教室：空檔直接上完這段課，停在下一件事或下課鐘。 */
+const TEACHING={teacher:"podium",jh:"jhpodium"};
+function teachingNow(){return !!(G&&TEACHING[G.line.id]&&phaseOf()==="class");}
+function lessonSkip(){
+  if(!G||mode!=="walk"||stepReady()||!teachingNow())return false;
+  const st=step();if(!st)return false;let to=toMin(st.t);
+  for(const [at,ph] of (G.line.schedule||SCHEDULE)){const m=toMin(at);if(m>G.clock&&ph!=="class"){to=Math.min(to,m);break;}}
+  if(to<=G.clock)return false;
+  const sp=SPOTS[TEACHING[G.line.id]];player.position.set(sp.pos[0],0,sp.pos[1]);player.rotation.y=0; // 講台後方的空位，面向學生（講桌本身有碰撞）
+  const from=fmt(G.clock);skipTo(to);showBanner("上課中",`${from}–${fmt(to)}　你在講台上把這一段課上完。`);return true;
+}
+function skipTo(to){
+  if(G.clock<to){G.clock=to;path=null;guiding=false;}
   checkBell();checkMsgs();tickCrowd();settleScene();
   lastClockMin=-1;G.status=statusOf();
   if(!activateStep())renderAll();
+}
+function skipWait(){
+  if(!G||mode!=="walk"||stepReady())return;const st=step();if(!st)return;
+  skipTo(toMin(st.t));
 }
 function checkMsgs(){if(!G||mode!=="walk")return;const list=G.line.msgs||[];G.msgIdx=G.msgIdx||0;
   while(G.msgIdx<list.length&&toMin(list[G.msgIdx][0])<=G.clock){const [at,from,text]=list[G.msgIdx++];if(G.clock-toMin(at)<20){showMsg(from,val(text,G));break;}}}

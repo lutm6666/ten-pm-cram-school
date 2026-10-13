@@ -177,6 +177,19 @@ LINES2.yun={...LINES.yun,day:2,
     {label:"答應九點傳訊息給他",fx:{par:10,pat:-4},set:{boMsg:1},log:"答應每天九點跟陳爸爸報平安",res:[["chenba","……謝謝。真的謝謝。"],[null,"你在手機設了一個每天 21:00 的鬧鐘。"]]},
     {label:"請阿宏盯自習室的登記表",fx:{ord:8,par:4},set:{signRule:1},log:"自習室外出要登記",res:[["chenba","這樣好。有規定比較好。"],[null,"阿宏在登記表上加了一欄：「去哪裡」。"]]},
     {label:"說補習班管不到外面",fx:{par:-8,pat:4},log:"跟家長說外出管不到",res:[["chenba","……我知道了。"],[null,"他走的時候，沒有跟你說再見。"]]}]},
+  {id:"y2bonine",t:"20:50",target:{npc:"bo"},goal:"小柏在穿外套",action:"叫住小柏",
+   pages:G=>{const f=G.f,l=[[null,"八點五十。自習室裡，小柏已經在拉外套拉鍊了，比平常早十分鐘。"]];
+     if(f.signRule)l.push(["bo","（在門口的登記表上寫字）去哪裡……「7-11」。"],["bo","這樣可以了吧？我有寫喔。"]);
+     else if(f.boMsg)l.push([null,"你想起剛剛答應陳爸爸的事。手機裡 21:00 的鬧鐘還沒響。"],["bo","姐姐……我只是去買關東煮。"]);
+     else l.push(["bo","（看到你，愣了一下）……我只是去樓下一下。"]);
+     return l;},
+   choices:G=>[
+    {label:"「去吧，九點十五前回來。」",fx:{ord:2,par:G.f.boMsg?6:2},set:{boOutOk:1},log:"讓小柏去 7-11，約好九點十五前回來",
+     res:G=>[["bo","十五分鐘！我保證。"],...(G.f.boMsg?[[null,"你傳訊息給陳爸爸：「小柏去 7-11，九點十五前回來。」"],[null,"已讀。過了一下，回了一個讚。"]]:[[null,"九點十二分，他拎著一杯關東煮回來，還多拿了一支湯匙。"]])]},
+    {label:"「自習時間，先回去坐好。」",fx:{ord:6,pat:-2,par:-2},set:{boStay:1},log:"叫小柏留在自習室",
+     res:[["bo","……喔。"],[null,"他回到座位，把外套脫了又穿上。十分鐘後，趴在桌上睡著了。"]]},
+    {label:"給他五十塊：「幫我帶一杯熱的。」",fx:{hp:4,pat:3,ord:-3},set:{boErrand:1},log:"託小柏幫忙買熱飲",
+     res:[["bo","姐姐你也還沒吃晚餐喔？"],[null,"他帶回來一杯熱豆漿，還有一張發票。「找你十五塊。」"]]}]},
   {id:"y2teacher",chapter:{t:"21:15",title:"下課",sub:"老師們回到休息室。",status:"收拾中"},
    t:"21:18",target:{npc:"teacher"},goal:"許老師在休息室",
    pages:G=>{const p=pv(G),l=[];

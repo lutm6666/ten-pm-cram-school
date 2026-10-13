@@ -3437,6 +3437,19 @@ LINES2.yun={...LINES.yun,day:2,
     {label:"答應九點傳訊息給他",fx:{par:10,pat:-4},set:{boMsg:1},log:"答應每天九點跟陳爸爸報平安",res:[["chenba","……謝謝。真的謝謝。"],[null,"你在手機設了一個每天 21:00 的鬧鐘。"]]},
     {label:"請阿宏盯自習室的登記表",fx:{ord:8,par:4},set:{signRule:1},log:"自習室外出要登記",res:[["chenba","這樣好。有規定比較好。"],[null,"阿宏在登記表上加了一欄：「去哪裡」。"]]},
     {label:"說補習班管不到外面",fx:{par:-8,pat:4},log:"跟家長說外出管不到",res:[["chenba","……我知道了。"],[null,"他走的時候，沒有跟你說再見。"]]}]},
+  {id:"y2bonine",t:"20:50",target:{npc:"bo"},goal:"小柏在穿外套",action:"叫住小柏",
+   pages:G=>{const f=G.f,l=[[null,"八點五十。自習室裡，小柏已經在拉外套拉鍊了，比平常早十分鐘。"]];
+     if(f.signRule)l.push(["bo","（在門口的登記表上寫字）去哪裡……「7-11」。"],["bo","這樣可以了吧？我有寫喔。"]);
+     else if(f.boMsg)l.push([null,"你想起剛剛答應陳爸爸的事。手機裡 21:00 的鬧鐘還沒響。"],["bo","姐姐……我只是去買關東煮。"]);
+     else l.push(["bo","（看到你，愣了一下）……我只是去樓下一下。"]);
+     return l;},
+   choices:G=>[
+    {label:"「去吧，九點十五前回來。」",fx:{ord:2,par:G.f.boMsg?6:2},set:{boOutOk:1},log:"讓小柏去 7-11，約好九點十五前回來",
+     res:G=>[["bo","十五分鐘！我保證。"],...(G.f.boMsg?[[null,"你傳訊息給陳爸爸：「小柏去 7-11，九點十五前回來。」"],[null,"已讀。過了一下，回了一個讚。"]]:[[null,"九點十二分，他拎著一杯關東煮回來，還多拿了一支湯匙。"]])]},
+    {label:"「自習時間，先回去坐好。」",fx:{ord:6,pat:-2,par:-2},set:{boStay:1},log:"叫小柏留在自習室",
+     res:[["bo","……喔。"],[null,"他回到座位，把外套脫了又穿上。十分鐘後，趴在桌上睡著了。"]]},
+    {label:"給他五十塊：「幫我帶一杯熱的。」",fx:{hp:4,pat:3,ord:-3},set:{boErrand:1},log:"託小柏幫忙買熱飲",
+     res:[["bo","姐姐你也還沒吃晚餐喔？"],[null,"他帶回來一杯熱豆漿，還有一張發票。「找你十五塊。」"]]}]},
   {id:"y2teacher",chapter:{t:"21:15",title:"下課",sub:"老師們回到休息室。",status:"收拾中"},
    t:"21:18",target:{npc:"teacher"},goal:"許老師在休息室",
    pages:G=>{const p=pv(G),l=[];
@@ -3965,7 +3978,7 @@ function enterStep(){
   const st=step();if(!st)return finish();
   G.stepReady=false;G.chapterPending=false;G.due=null;
   mode="walk";near=null;lastNearKey="";
-  if(!activateStep()){G.status=statusOf();setCrowd(phaseOf());renderAll();saveGame();}
+  if(!activateStep()){G.status=statusOf();setCrowd(phaseOf());renderAll();saveGame();lessonSkip();}
 }
 function activateStep(){
   const st=step();if(!st||G.stepReady||mode!=="walk"||G.clock<toMin(st.t))return false;
@@ -4023,10 +4036,10 @@ function renderHud(){
 }
 function endMin(){return toMin((G&&G.line.endAt)||"22:00");}
 function otMin(){return G?Math.max(0,Math.floor(G.clock-endMin())):0;}
-function dueText(){if(!G)return"";if(step()&&!G.stepReady&&mode!=="end")return `下一件事 ${esc(step().t)}・可自由探索`;if(otMin()&&mode!=="end"){const r=mode==="walk"&&G.due!=null?Math.floor(G.due-G.clock):null;return `<span class="ot">已加班 ${otMin()} 分</span>`+(r==null?"":r>=0?`<span class="due ${r<=3?"warn":""}">剩 ${r} 分</span>`:`<span class="due late">晚 ${-r} 分</span>`);}return dueText0();}
+function dueText(){if(!G)return"";if(step()&&!G.stepReady&&mode!=="end")return announced(step())?`下一件事 ${esc(step().t)}・可自由探索`:"空檔・可自由探索";if(otMin()&&mode!=="end"){const r=mode==="walk"&&G.due!=null?Math.floor(G.due-G.clock):null;return `<span class="ot">已加班 ${otMin()} 分</span>`+(r==null?"":r>=0?`<span class="due ${r<=3?"warn":""}">剩 ${r} 分</span>`:`<span class="due late">晚 ${-r} 分</span>`);}return dueText0();}
 function dueText0(){if(mode==="walk"&&G.due!=null){const r=Math.floor(G.due-G.clock);return r>=0?`<span class="due ${r<=3?"warn":""}">${fmt(G.due)} 前・剩 ${r} 分</span>`:`<span class="due late">已經晚了 ${-r} 分</span>`;}return `${esc(G.chapterTitle||"")}・${esc(G.line.role)}`;}
 let lastClockMin=-1;
-function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}saveGame();}activateStep();}
+function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}saveGame();if(!lessonSkip())activateStep();}else activateStep();}
 function checkBell(){if(!G)return;const ph=phaseOf();if(ph===crowdPhase)return;const prev=crowdPhase;setCrowd(ph);G.status=statusOf();renderHud();
   const B=G.line.bells||{class:["上課鐘響了","學生陸續回到座位。"],break:["下課了","下課 15 分鐘，20:05 上第二節。"],leave:["下課了","今天的課上完了，學生陸續離開。"]};
   if(ph==="class"){chime();showBanner(...B.class);}else if(ph==="break"){chime();showBanner(...B.break);}else if(ph==="leave"&&prev!=="close"){chime();showBanner(...B.leave);}}
@@ -4034,7 +4047,7 @@ function spend(min){if(G){G.clock+=min;checkBell();}}
 function renderNext(){
   const el=$("next");if(mode!=="walk"){el.hidden=true;return;}el.hidden=false;
   const hint=G.idx===0&&!store.get("tipWalk",false)?`<div class="in"><p class="nexthint">按「帶我去」會自己走過去。想自己走：用左下的方向鍵，或點地板。頭上有紅色「！」的就是要找的對象。</p></div>`:"";
-  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${!stepReady()?"尚未開始":G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${esc(val(step().goal,G))}</span>${stepReady()&&!step().auto?'<button data-act="guide">帶我去</button>':!stepReady()?`<button data-act="waitNext">等到 ${esc(step().t)}</button>`:""}</div></div>${hint}`;
+  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${!stepReady()?"空檔":G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${!stepReady()?"可以四處看看":esc(val(step().goal,G))}</span>${stepReady()&&!step().auto?'<button data-act="guide">帶我去</button>':!stepReady()?'<button data-act="waitNext">快轉</button>':""}</div></div>${hint}`;
   $("next").style.top=document.querySelector(".hud").offsetHeight+8+"px";
 }
 function renderDock(){
@@ -4367,12 +4380,28 @@ function settleScene(){
     else if(e.state==="leaving"||e.state==="exiting"){p.visible=false;u.path=null;u.moving=false;e.state="gone";}
     else if(p.visible&&u.path&&u.path.length){const end=u.path[u.path.length-1],cb=u.onArrive;agentPlace(p,end[0],end[1],u.endRot);cb&&cb();}});
 }
-function skipWait(){
-  if(!G||mode!=="walk"||stepReady())return;const st=step();if(!st)return;
-  const to=toMin(st.t);if(G.clock<to){G.clock=to;path=null;guiding=false;}
+/* 等待中只預告「本來就排定」的事（課表、約好的人）；突發事件連時間都不說。 */
+function announced(st){return !!st&&!st.isEvent&&!st.auto&&!/^ot_/.test(st.id);}
+/* 上課中的老師不能晃出教室：空檔直接上完這段課，停在下一件事或下課鐘。 */
+const TEACHING={teacher:"podium",jh:"jhpodium"};
+function teachingNow(){return !!(G&&TEACHING[G.line.id]&&phaseOf()==="class");}
+function lessonSkip(){
+  if(!G||mode!=="walk"||stepReady()||!teachingNow())return false;
+  const st=step();if(!st)return false;let to=toMin(st.t);
+  for(const [at,ph] of (G.line.schedule||SCHEDULE)){const m=toMin(at);if(m>G.clock&&ph!=="class"){to=Math.min(to,m);break;}}
+  if(to<=G.clock)return false;
+  const sp=SPOTS[TEACHING[G.line.id]];player.position.set(sp.pos[0],0,sp.pos[1]);player.rotation.y=0; // 講台後方的空位，面向學生（講桌本身有碰撞）
+  const from=fmt(G.clock);skipTo(to);showBanner("上課中",`${from}–${fmt(to)}　你在講台上把這一段課上完。`);return true;
+}
+function skipTo(to){
+  if(G.clock<to){G.clock=to;path=null;guiding=false;}
   checkBell();checkMsgs();tickCrowd();settleScene();
   lastClockMin=-1;G.status=statusOf();
   if(!activateStep())renderAll();
+}
+function skipWait(){
+  if(!G||mode!=="walk"||stepReady())return;const st=step();if(!st)return;
+  skipTo(toMin(st.t));
 }
 function checkMsgs(){if(!G||mode!=="walk")return;const list=G.line.msgs||[];G.msgIdx=G.msgIdx||0;
   while(G.msgIdx<list.length&&toMin(list[G.msgIdx][0])<=G.clock){const [at,from,text]=list[G.msgIdx++];if(G.clock-toMin(at)<20){showMsg(from,val(text,G));break;}}}

@@ -34,6 +34,14 @@ in-progress paths) at their destinations before `activateStep()`. Waiting stays
 optional: players may still explore, chat or do side tasks until the start.
 `tests/continuous-clock.js` covers the skip on all five day-one roles.
 
+While waiting, the card shows only 「空檔・可以四處看看」. The HUD names the
+next time only for scheduled tasks (not random events, automatic tasks or
+overtime), so nothing that should surprise the player is announced early.
+
+Teaching roles (teacher, jh) never roam during class: when their task is
+pending in the class phase, `lessonSkip()` keeps them at their podium and runs
+the clock to the next task or the next non-class bell, whichever is first.
+
 ## Regression coverage
 
 `npm test` builds the stub page and runs the existing navigation, narrative,
