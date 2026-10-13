@@ -554,7 +554,7 @@ function buildWorld(){
   furn([8.2,16.7,8.75,17.5],1.1,0xdfe6ea);box(.12,.12,.06,0x3b82f6,8.36,.85,16.66);box(.12,.12,.06,0xe11d48,8.6,.85,16.66);
   wallSign("歡迎試聽\n高三學測衝刺班",2.2,1.9,9.12,0,2.2,.9,"#ffd166","#1c2633",50);
   wallSign("去年學測榜單\n頂標 3・前標 11",.22,1.6,15.6,Math.PI/2,2.2,1.1,"#c9302a","#fff6e8",46);
-  wallSign("學測衝刺班 熱烈招生中",4.5,2.55,17.78,Math.PI,3,.5,"#c9302a","#ffffff",46);
+  wallSign("學測衝刺班 熱烈招生中",8.2,1.7,17.78,Math.PI,3,.5,"#c9302a","#ffffff",46);
   const plant=new THREE.Mesh(new THREE.SphereGeometry(.38,8,6),new THREE.MeshLambertMaterial({color:0x5f8a4f}));plant.position.set(.65,.65,9.6);scene.add(plant);solids.push([.25,9.2,1.05,10.0]);
 
   // 主任室
@@ -1012,10 +1012,10 @@ function artThreshold(x,z,w,d,color=0x77818b){artBox(w,.02,d,color,x,.012,z,null
 function artAddDoorThresholds(){
   // Explicit open entry: the old continuous perimeter wall hid the doorway.
   const entry=new THREE.Group();entry.name='p2-main-entrance';scene.add(entry);
-  [3.25,5.75].forEach(x=>artBox(.12,2.20,.18,0x647481,x,1.1,17.87,entry));
-  artBox(2.62,.13,.18,0x647481,4.5,2.20,17.87,entry);
+  // 牆只有 1.1m 高（俯視切面），門框跟牆頂齊平、不加門楣，否則從鏡頭看像一個空心框。
+  [3.25,5.75].forEach(x=>artBox(.14,1.14,.2,0x647481,x,.57,17.87,entry));
   artThreshold(4.5,17.84,2.35,.25);
-  const sign=wallSign('入口 / 出口',4.5,2.04,17.73,Math.PI,1.25,.25,'#ffffff','#386657',34);sign.material.side=THREE.DoubleSide;
+  const sign=wallSign('入口 / 出口',2.2,.78,17.73,Math.PI,1.1,.24,'#ffffff','#386657',32);sign.material.side=THREE.DoubleSide;
   // Open classroom jambs make the C-class entrance readable from both sides.
   [29.54,31.66].forEach(x=>artBox(.10,1.45,.18,0x657985,x,.725,11));
   artThreshold(30.6,11,1.9,.30);
@@ -1634,11 +1634,11 @@ function p2RoomIdentity(){
   const wood=fmMat('p2env:wallWood',{map:p2WoodPanelTex(),rough:.74,metal:0});
   fmBox(3.7,.42,.045,wood,6.65,.36,.225);
   p2CabinetUnit(7.65,1.05,1.05,1.35,.42,p2Std('officeCab',0x6b7479,.62,.15),p2Std('officeCabDoor',0x81898e,.65,.10));
-  wallSign('續班追蹤\n本週待聯絡',6.25,1.48,.235,0,2.2,.72,'#3d3126','#d6ba8a',42);
+  wallSign('續班追蹤\n本週待聯絡',8.05,1.68,.235,0,1.45,.56,'#3d3126','#d6ba8a',36);
 
   // 講師休息室：上櫃、公告板，空間變成「工作休息區」而非另一間教室。
   [2.1,3.35,4.60].forEach(x=>p2CabinetUnit(x,5.38,1.05,.72,.30,p2Std('loungeUpper',0xb7afa4,.82,0),p2Std('loungeUpperDoor',0xd3ccc1,.86,0)));
-  wallSign('代課・請假・影印提醒',5.75,1.45,5.13,0,2.2,.48,'#3d4b55','#f0e4c8',38);
+  wallSign('代課・請假・影印提醒',.22,1.45,7.0,Math.PI/2,2.2,.48,'#3d4b55','#f0e4c8',38);
 
   // B 班：右側教材櫃 + 公告欄。
   p2CabinetUnit(27.25,8.55,.75,1.18,.42,p2Std('classCab',0x7b858b,.60,.14),p2Std('classCabDoor',0x9da6aa,.66,.10),null,-Math.PI/2);
@@ -1734,7 +1734,10 @@ function p2BuildLocalLighting(){
   p2Point('lounge',4.2,1.8,7.0,0xffe2bd,.12,4.8);
 }
 function p2ApplyLocalLighting(day){
-  P2_LOCAL_LIGHTS.forEach(l=>{l.intensity=l.userData.nightIntensity*(day?.18:1);});
+  // 白天直接關掉（不是調暗）：每盞 PointLight 都會加在每個像素的光照計算上。
+  // 手機（窄螢幕）也不開：這幾盞燈強度很低，畫面差異小，但在手機 GPU 上大約多吃三成像素成本。
+  const phone=innerWidth<600||(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
+  P2_LOCAL_LIGHTS.forEach(l=>{l.visible=!day&&!phone;l.intensity=l.userData.nightIntensity;});
 }
 
 const P2_LIGHT_BASE_BUILDWORLD=buildWorld;
@@ -1912,6 +1915,70 @@ function p2PerfAudit(){
   return summary;
 }
 window.__p2PerfAudit=p2PerfAudit;
+
+/* ================= 靜態場景合併 =================
+   家具、牆、地板裝飾在整場遊戲中不會動，依「材質 × 9m 區塊」合併成一個 mesh，
+   把 draw call 與 scene graph 的走訪量降到原本的一小部分。
+   會動、會換、會切換顯示的東西都排除：人物、車、夜景燈、課桌上的個人物品、
+   點擊用的地板、半透明材質、白板（setBoard 會整塊換掉）。 */
+function p2MergeStatic(){
+  if(!scene||!THREE.BufferGeometry)return 0;
+  const skip=new Set();
+  const addTree=o=>o&&o.traverse&&o.traverse(c=>skip.add(c));
+  Object.values(npcs).forEach(addTree);extras.forEach(e=>addTree(e.p));if(typeof player!=='undefined')addTree(player);
+  if(typeof cars!=='undefined')cars.forEach(addTree);
+  if(typeof NIGHT_PARTS!=='undefined'){NIGHT_PARTS.glows.forEach(addTree);NIGHT_PARTS.ground.forEach(([m])=>addTree(m));}
+  if(typeof P2_STORY_PROPS!=='undefined')P2_STORY_PROPS.forEach(s=>addTree(s.belongings));
+  if(typeof ground!=='undefined')addTree(ground);if(typeof boardSign!=='undefined')addTree(boardSign);
+  scene.updateMatrixWorld(true);
+  const visibleChain=o=>{for(let c=o;c;c=c.parent)if(c.visible===false)return false;return true;};
+  const buckets=new Map();
+  scene.traverse(o=>{
+    if(!o.isMesh||skip.has(o)||o.isSkinnedMesh||o.isInstancedMesh)return;
+    const m=o.material,g=o.geometry;
+    if(!m||Array.isArray(m)||m.transparent||m.vertexColors||o.renderOrder)return;
+    if(!g||!g.isBufferGeometry||!g.attributes.position||!g.attributes.normal||(g.groups&&g.groups.length>1))return;
+    if(!visibleChain(o)){return;}
+    if(o.matrixWorld.determinant()<0)return;
+    const p=new THREE.Vector3().setFromMatrixPosition(o.matrixWorld);
+    const key=m.uuid+'|'+Math.floor(p.x/9)+'|'+Math.floor(p.z/9);
+    if(!buckets.has(key))buckets.set(key,{mat:m,list:[]});buckets.get(key).list.push(o);
+  });
+  const nm=new THREE.Matrix3();let removed=0;
+  for(const {mat,list} of buckets.values()){
+    if(list.length<2)continue;
+    const useUv=list.every(o=>o.geometry.attributes.uv);
+    let vCount=0,iCount=0;
+    list.forEach(o=>{const g=o.geometry;vCount+=g.attributes.position.count;iCount+=g.index?g.index.count:g.attributes.position.count;});
+    const pos=new Float32Array(vCount*3),nor=new Float32Array(vCount*3),uv=useUv?new Float32Array(vCount*2):null;
+    const idx=vCount>65535?new Uint32Array(iCount):new Uint16Array(iCount);
+    let vo=0,io=0;const v=new THREE.Vector3();
+    list.forEach(o=>{const g=o.geometry,P=g.attributes.position,N=g.attributes.normal,U=g.attributes.uv;
+      nm.getNormalMatrix(o.matrixWorld);
+      // 鏡像縮放會把三角形翻面；這種少見情況就保留原物件。
+      for(let i=0;i<P.count;i++){
+        v.fromBufferAttribute(P,i).applyMatrix4(o.matrixWorld);pos[(vo+i)*3]=v.x;pos[(vo+i)*3+1]=v.y;pos[(vo+i)*3+2]=v.z;
+        v.fromBufferAttribute(N,i).applyMatrix3(nm).normalize();nor[(vo+i)*3]=v.x;nor[(vo+i)*3+1]=v.y;nor[(vo+i)*3+2]=v.z;
+        if(uv){uv[(vo+i)*2]=U.getX(i);uv[(vo+i)*2+1]=U.getY(i);}
+      }
+      if(g.index){for(let i=0;i<g.index.count;i++)idx[io+i]=g.index.getX(i)+vo;io+=g.index.count;}
+      else{for(let i=0;i<P.count;i++)idx[io+i]=vo+i;io+=P.count;}
+      vo+=P.count;
+    });
+    const mg=new THREE.BufferGeometry();
+    mg.setAttribute('position',new THREE.BufferAttribute(pos,3));mg.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+    if(uv)mg.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+    mg.setIndex(new THREE.BufferAttribute(idx,1));mg.computeBoundingSphere();mg.computeBoundingBox();
+    const merged=new THREE.Mesh(mg,mat);merged.name='p2-static-merged';merged.matrixAutoUpdate=false;
+    merged.castShadow=list.some(o=>o.castShadow);merged.receiveShadow=list.some(o=>o.receiveShadow);
+    scene.add(merged);
+    list.forEach(o=>{o.parent&&o.parent.remove(o);removed++;});
+  }
+  // 合併後變空的群組也拿掉，scene graph 走訪更輕。
+  const empty=[];scene.traverse(o=>{if(o.isGroup&&!skip.has(o)&&o.children.length===0)empty.push(o);});
+  empty.forEach(o=>o.parent&&o.parent.remove(o));
+  return removed;
+}
 
 /* ================= 小遊戲 ================= */
 MINIS.jam={
@@ -3967,7 +4034,7 @@ function spend(min){if(G){G.clock+=min;checkBell();}}
 function renderNext(){
   const el=$("next");if(mode!=="walk"){el.hidden=true;return;}el.hidden=false;
   const hint=G.idx===0&&!store.get("tipWalk",false)?`<div class="in"><p class="nexthint">按「帶我去」會自己走過去。想自己走：用左下的方向鍵，或點地板。頭上有紅色「！」的就是要找的對象。</p></div>`:"";
-  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${!stepReady()?"下一件事 "+esc(step().t):G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${esc(val(step().goal,G))}${!stepReady()?"・尚未開始，可自由探索":""}</span>${stepReady()&&!step().auto?'<button data-act="guide">帶我去</button>':""}</div></div>${hint}`;
+  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${!stepReady()?"尚未開始":G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${esc(val(step().goal,G))}</span>${stepReady()&&!step().auto?'<button data-act="guide">帶我去</button>':!stepReady()?`<button data-act="waitNext">等到 ${esc(step().t)}</button>`:""}</div></div>${hint}`;
   $("next").style.top=document.querySelector(".hud").offsetHeight+8+"px";
 }
 function renderDock(){
@@ -4230,6 +4297,7 @@ document.addEventListener("click",e=>{
   else if(act==="dnext")dNext();else if(act==="dchat")dChat();else if(act==="dskip")dSkip();
   else if(act==="closeSheet")closeSheet();else if(act==="closeTerm")$("termPop").hidden=true;
   else if(act==="camReset"){CAM.yaw=0;CAM.tilt=1;CAM.zoom=1;saveCam();}
+  else if(act==="waitNext")skipWait();
   else if(act==="guide"&&stepReady()){const t=guideTarget(step().target);if(t){path=findPath(t.x,t.z);guiding=true;}}
   else if(act==="codex")openCodex();
   else if(act==="sound"){soundOn=!soundOn;store.set("sound",soundOn);renderHud();if(soundOn){beep("ok");startAmbient();}else stopAmbient();a.setAttribute("aria-pressed",soundOn);if(a.classList.contains("toggle"))a.textContent=soundOn?"開":"關";}
@@ -4287,6 +4355,25 @@ function syncItems(){if(!G)return;const ph=typeof phaseOf==="function"?phaseOf()
 /* ---------- 手機訊息、教學提示、畫面外箭頭 ---------- */
 let msgT=null;
 function showMsg(from,text){const m=$("msg");m.innerHTML=`<small>${esc(from)}</small><div>${esc(text)}</div>`;const nx=$("next");m.style.top=(nx.hidden?document.querySelector(".hud").offsetHeight+10:nx.offsetTop+nx.offsetHeight+10)+"px";m.hidden=false;beep("side");clearTimeout(msgT);msgT=setTimeout(()=>m.hidden=true,5200);}
+/* 等待中的空檔可以直接快轉到下一件事。時鐘跳過去之後，把「照真實秒數走路」的人
+   直接補到該在的位置，避免劇情時間到了、人還在半路。 */
+function settleScene(){
+  for(const n of Object.values(npcs)){const u=n.userData;
+    if(u.entrySpec){const s=u.entrySpec;u.entrySpec=null;n.visible=true;agentPlace(n,s[0],s[1],s[2]??Math.PI);continue;}
+    if(n.visible&&u.path&&u.path.length){const end=u.path[u.path.length-1],cb=u.onArrive;agentPlace(n,end[0],end[1],u.endRot);cb&&cb();}}
+  extras.forEach(e=>{const p=e.p,u=p.userData;
+    if(e.state==="clockWait"&&G.clock>=(e.arriveClock??Infinity))e.state="toArrive";
+    if(e.state==="toArrive"||e.state==="arriving"){p.visible=true;agentPlace(p,...e.home);e.state="seat";u.act=null;}
+    else if(e.state==="leaving"||e.state==="exiting"){p.visible=false;u.path=null;u.moving=false;e.state="gone";}
+    else if(p.visible&&u.path&&u.path.length){const end=u.path[u.path.length-1],cb=u.onArrive;agentPlace(p,end[0],end[1],u.endRot);cb&&cb();}});
+}
+function skipWait(){
+  if(!G||mode!=="walk"||stepReady())return;const st=step();if(!st)return;
+  const to=toMin(st.t);if(G.clock<to){G.clock=to;path=null;guiding=false;}
+  checkBell();checkMsgs();tickCrowd();settleScene();
+  lastClockMin=-1;G.status=statusOf();
+  if(!activateStep())renderAll();
+}
 function checkMsgs(){if(!G||mode!=="walk")return;const list=G.line.msgs||[];G.msgIdx=G.msgIdx||0;
   while(G.msgIdx<list.length&&toMin(list[G.msgIdx][0])<=G.clock){const [at,from,text]=list[G.msgIdx++];if(G.clock-toMin(at)<20){showMsg(from,val(text,G));break;}}}
 function tickTips(){if(!G||mode!=="walk")return;
@@ -4802,7 +4889,7 @@ function openShareCard(){
 if(document.querySelector('link[rel="manifest"]')&&"serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}
 
 /* ================= 啟動 ================= */
-try{buildWorld();buildNight();const L=LINES.teacher;for(const id in L.npcs)if(CHARS[id]&&CHARS[id].body!==undefined)setNPC(id,typeof L.npcs[id]==="function"?null:L.npcs[id],true);showTitle();tick();}
+try{buildWorld();buildNight();const L=LINES.teacher;for(const id in L.npcs)if(CHARS[id]&&CHARS[id].body!==undefined)setNPC(id,typeof L.npcs[id]==="function"?null:L.npcs[id],true);try{p2MergeStatic();}catch(e){console.warn("static merge skipped",e);}showTitle();tick();}
 catch(err){const c=$("cover");c.hidden=false;c.innerHTML=`<div class="card"><h2>3D 場景載入失敗</h2><p>你的瀏覽器可能不支援 WebGL，或 3D 函式庫沒有載入。請換一個瀏覽器，或重新整理頁面再試一次。</p></div>`;console.error(err);}
 /* HUD 高度一變，就把「下一步」卡片跟著往下推 */
 try{const h=document.querySelector(".hud"),fit=()=>{$("next").style.top=h.offsetHeight+8+"px";};if(window.ResizeObserver)new ResizeObserver(fit).observe(h);addEventListener("resize",()=>{fit();renderDock();});}catch(e){}
