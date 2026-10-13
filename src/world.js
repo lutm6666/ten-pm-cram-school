@@ -203,7 +203,7 @@ function makePlayer(line){if(player)scene.remove(player);player=person(line.body
 function agentGo(p,x,z,rot,onArrive){const u=p.userData;
   // Ambient offsets and story targets can fall inside a desk. Finish on a free
   // cell instead of appending an unchecked segment through furniture.
-  if(!isChair(x,z)&&blockedAt(x,z)){const [i,j]=nearestFree(...cellOf(x,z));x=(i+.5)*CELL;z=(j+.5)*CELL;}
+  if(!isChair(x,z)&&blockedAt(x,z)){const cell=nearestFree(...cellOf(x,z));if(!cell){u.path=null;u.moving=false;u.routeFailed=true;return;}const [i,j]=cell;x=(i+.5)*CELL;z=(j+.5)*CELL;}
   const pth=findPathFrom(p.position.x,p.position.z,x,z);if(!pth){u.path=null;u.moving=false;u.routeFailed=true;return;}
   u.routeFailed=false;
   if(u.seated){u.departSeat=[p.position.x,p.position.z];setPose(p,false);}pth.push([x,z]);u.path=pth;u.endRot=rot;u.onArrive=onArrive||null;}
@@ -294,13 +294,18 @@ function resize(){const w=window.innerWidth,h=window.innerHeight;renderer.setSiz
 function blockedAt(x,z,r=R){if(x<r||z<r||x>W-r||z>H-r)return true;for(const s of solids){if(x>s[0]-r&&x<s[2]+r&&z>s[1]-r&&z<s[3]+r)return true;}return false;}
 function buildGrid(){gridB=new Uint8Array(GW*GH);for(let j=0;j<GH;j++)for(let i=0;i<GW;i++)gridB[j*GW+i]=blockedAt((i+.5)*CELL,(j+.5)*CELL)?1:0;}
 const cellOf=(x,z)=>[Math.max(0,Math.min(GW-1,Math.floor(x/CELL))),Math.max(0,Math.min(GH-1,Math.floor(z/CELL)))];
-function nearestFree(i,j){if(!gridB[j*GW+i])return[i,j];for(let r=1;r<40;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;const a=i+di,b=j+dj;if(a>=0&&b>=0&&a<GW&&b<GH&&!gridB[b*GW+a])return[a,b];}return[i,j];}
-function los(ax,az,bx,bz,avoid=[]){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.05);for(let k=1;k<=n;k++){const t=k/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t;if(blockedAt(x,z,R+.07)||avoid.some(p=>Math.hypot(x-p[0],z-p[1])<.72))return false;}return true;}
+function nearestFree(i,j,cells=gridB,reachable=()=>true){const free=(a,b)=>!cells[b*GW+a]&&reachable((a+.5)*CELL,(b+.5)*CELL);if(free(i,j))return[i,j];for(let r=1;r<40;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;const a=i+di,b=j+dj;if(a>=0&&b>=0&&a<GW&&b<GH&&free(a,b))return[a,b];}return null;}
+function los(ax,az,bx,bz,avoid=[],radius=R+.07){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.05);for(let k=1;k<=n;k++){const t=k/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t;if(blockedAt(x,z,radius)||avoid.some(p=>Math.hypot(x-p[0],z-p[1])<Math.min(.72,Math.hypot(ax-p[0],az-p[1]))-.00001))return false;}return true;}
 function findPath(tx,tz){return findPathFrom(player.position.x,player.position.z,tx,tz);}
 function findPathFrom(fx,fz,tx,tz,avoid=[]){
   const routeGrid=avoid.length?gridB.slice():gridB;
   if(avoid.length)for(let j=0;j<GH;j++)for(let i=0;i<GW;i++)if(avoid.some(p=>Math.hypot((i+.5)*CELL-p[0],(j+.5)*CELL-p[1])<.72))routeGrid[j*GW+i]=1;
-  const [si,sj]=nearestFree(...cellOf(fx,fz)),[gi,gj]=nearestFree(...cellOf(tx,tz));
+  // A passing step can leave the current cell inside another actor's planning
+  // margin. Select a reachable start in the SAME temporary grid, and retain
+  // that connector; otherwise A* starts surrounded by blocked cells forever.
+  const start=nearestFree(...cellOf(fx,fz),routeGrid,(x,z)=>blockedAt(fx,fz)||los(fx,fz,x,z,avoid,R)),end=nearestFree(...cellOf(tx,tz),routeGrid);
+  if(!start||!end)return null;
+  const [si,sj]=start,[gi,gj]=end;
   const N=GW*GH,g=new Float32Array(N).fill(1e9),prev=new Int32Array(N).fill(-1),closed=new Uint8Array(N),s=sj*GW+si,goal=gj*GW+gi;g[s]=0;
   const h=k=>Math.hypot(k%GW-gi,Math.floor(k/GW)-gj);const open=[s];
   while(open.length){let bi=0,bf=g[open[0]]+h(open[0]);for(let k=1;k<open.length;k++){const f=g[open[k]]+h(open[k]);if(f<bf){bf=f;bi=k;}}
@@ -308,7 +313,7 @@ function findPathFrom(fx,fz,tx,tz,avoid=[]){
     for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){if(!di&&!dj)continue;const a=ci+di,b=cj+dj;if(a<0||b<0||a>=GW||b>=GH)continue;const k=b*GW+a;
       if(routeGrid[k]||closed[k])continue;if(di&&dj&&(routeGrid[cj*GW+a]||routeGrid[b*GW+ci]))continue;const ng=g[cur]+(di&&dj?1.414:1);if(ng<g[k]){g[k]=ng;prev[k]=cur;open.push(k);}}}
   if(prev[goal]<0&&goal!==s)return null;
-  const pts=[];for(let k=goal;k!==-1&&k!==s;k=prev[k])pts.unshift([(k%GW+.5)*CELL,(Math.floor(k/GW)+.5)*CELL]);
+  const pts=[];for(let k=goal;k!==-1;k=prev[k]){pts.unshift([(k%GW+.5)*CELL,(Math.floor(k/GW)+.5)*CELL]);if(k===s)break;}
   const out=[];let ax=fx,az=fz,i=0;while(i<pts.length){let j=pts.length-1;while(j>i&&!los(ax,az,pts[j][0],pts[j][1],avoid))j--;out.push(pts[j]);[ax,az]=pts[j];i=j+1;}
   return out;
 }

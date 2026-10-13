@@ -1,4 +1,4 @@
-import sys,os
+import sys,os,re
 ARTIFACT='--artifact' in sys.argv
 DBG='--dbg' in sys.argv
 sys.argv=[a for a in sys.argv if a not in('--artifact','--dbg')]
@@ -49,5 +49,8 @@ out=head+f'''<title>晚上十點下課 3D</title>
 })();
 </script>
 '''
+# Logic tests use the local Three stub and must not wait on external font CDNs.
+if three=='stub.js':
+    out=re.sub(r'<link[^>]*href="https://fonts\.[^"]*"[^>]*>', '', out)
 open(sys.argv[2] if len(sys.argv)>2 else 'index.html','w',encoding='utf8').write(out)
 print(order)

@@ -1,8 +1,10 @@
 const {chromium}=require('playwright');
+const fs=require('fs'),path=require('path');
+const out=process.env.OUT;if(out)fs.mkdirSync(out,{recursive:true});
 const line=process.argv[2]||'teacher', pick=+(process.argv[3]||0), grab=(process.argv[4]||'').split(',').filter(Boolean);
-(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+(async()=>{const b=await chromium.launch(process.env.PAGE_URL?{args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{});const p=await b.newPage({viewport:process.env.PAGE_URL?{width:1280,height:800}:{width:390,height:844},hasTouch:!process.env.PAGE_URL,isMobile:!process.env.PAGE_URL,...(out&&process.env.PAGE_URL?{recordVideo:{dir:out,size:{width:1280,height:800}}}:{})});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error'&&!/ERR_TUNNEL|Failed to load/.test(m.text()))errs.push(m.text())});
-await p.goto('file://'+__dirname+'/test.html');
+await p.goto(process.env.PAGE_URL||'file://'+__dirname+'/test.html');
 if(process.env.DAY==='2'){await p.evaluate(([line,prev])=>{localStorage.setItem('ten-pm:done',JSON.stringify(['teacher','yun','boss','care','jh']));const o={};['teacher','yun','boss','care','jh'].forEach(id=>o[id]={f:id===line?prev:{},h:{missed:3,cleared:1}});localStorage.setItem('ten-pm:out',JSON.stringify(o));localStorage.setItem('ten-pm:day','2');},[line,JSON.parse(process.env.PREV||'{}')]);await p.reload();}
 if(line!=='teacher') await p.click(`[data-role=${line}]`);
 if(process.env.DAY==='2') await p.click('[data-day="2"]');
@@ -47,11 +49,13 @@ while(guard++<60){
   }
   const g=await p.textContent('.nextcard .g');
   const guide=await vis('[data-act=guide]');if(!guide){flowFailed=true;errs.push(`guide missing at ${state.stepId}`);console.log('FLOWSTATE',JSON.stringify(state));break;}
+  if(out&&state.stepId==='yenroll')await p.screenshot({path:path.join(out,'yenroll-from-counter.png')});
   await p.click('[data-act=guide]');
   let ok=false;for(let k=0;k<750;k++){await p.waitForTimeout(60);const n=await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'});if(n){ok=true;break;}if(await vis('.report'))break;}
   console.log('step',g,ok?'ok':'NOT REACHED');
   if(!ok){const diag=await p.evaluate(()=>{const d=__dbg,st=d.G&&d.G.steps[d.G.idx],tg=st&&st.target?d.targetOf(st.target):null,n=d.near();return{path:d.path,guiding:d.guiding,keys:d.keys,pos:d.pos(),tg,mode:d.mode,near:n&&n.type,idx:d.G&&d.G.idx,len:d.G&&d.G.steps.length,id:st&&st.id,sides:d.activeSides().map(s=>s.id),report:!!document.querySelector('.report')};});console.log('FLOWSTATE',JSON.stringify(diag));if(diag.report||diag.mode==='end')break;flowFailed=true;errs.push(`main target not reached: ${diag.id||'no-step'}`);break;}
-  try{await p.click('#actBtn',{timeout:5000});}catch(e){const diag=await p.evaluate(()=>{const st=__dbg.G&&__dbg.G.steps[__dbg.G.idx];return{mode:__dbg.mode,dock:document.getElementById('dock').hidden,cover:document.getElementById('cover').hidden,coverHTML:document.getElementById('cover').innerHTML.slice(0,120),dlg:document.getElementById('dlg').hidden,sheet:document.getElementById('sheet').hidden,id:st&&st.id};});console.log('CLICKFAIL',JSON.stringify(diag));flowFailed=true;errs.push(`action click failed: ${diag.id||'no-step'}`);break;}
+  if(out&&state.stepId==='yenroll'){await p.screenshot({path:path.join(out,'yenroll-arrived.png')});fs.writeFileSync(path.join(out,'yenroll-arrived.json'),JSON.stringify(await p.evaluate(()=>({pos:__dbg.pos(),target:__dbg.targetOf(__dbg.G.steps[__dbg.G.idx].target),near:__dbg.near()?.type,path:__dbg.path})),null,2));}
+  try{await p.click('#actBtn',{timeout:5000});if(out&&state.stepId==='yenroll')await p.screenshot({path:path.join(out,'yenroll-dialog.png')});}catch(e){const diag=await p.evaluate(()=>{const st=__dbg.G&&__dbg.G.steps[__dbg.G.idx];return{mode:__dbg.mode,dock:document.getElementById('dock').hidden,cover:document.getElementById('cover').hidden,coverHTML:document.getElementById('cover').innerHTML.slice(0,120),dlg:document.getElementById('dlg').hidden,sheet:document.getElementById('sheet').hidden,id:st&&st.id};});console.log('CLICKFAIL',JSON.stringify(diag));flowFailed=true;errs.push(`action click failed: ${diag.id||'no-step'}`);break;}
 }
 await drain();
 if(await vis('[data-act=shareCard]')){await p.click('[data-act=shareCard]');const ok=await p.evaluate(()=>{const i=document.querySelector('#sheet img');return !!(i&&i.src.startsWith('data:image/png')&&i.src.length>20000)});console.log('share card',ok?'ok':'FAIL');if(!ok)errs.push('share card failed');await p.click('#sheet [data-act=closeSheet]');}

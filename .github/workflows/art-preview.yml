@@ -26,6 +26,8 @@ jobs:
         run: python3 build.py --dbg https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js tests/shots.html
       - name: Capture visual-validation screenshots
         run: OUT=art-preview-shots node tests/shots.js
+      - name: Check movement and event regressions in real Chromium
+        run: OUT=art-preview-shots/phase2 npm run test:phase2
       - uses: actions/upload-artifact@v4
         with:
           name: art-preview-screenshots
