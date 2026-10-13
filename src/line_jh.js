@@ -1,135 +1,147 @@
-/* ================= 職業線：國中部英文老師（晚上 17:30–21:45） ================= */
-/* 國中部在走廊最裡面的 C 班。影印機、投影機、教室，都要跟高三搶。 */
-const PJ={copierWait:[7.2,12,0],amyPodium:[32,2.6,0],xiangLocker:[33,14.4,Math.PI],xiangSeat:[32,6.42,Math.PI],qingSeat:[34.4,4.62,Math.PI],qingHall:[30.6,12.4,Math.PI],
-  pinyuJhDoor:[30.6,12.3,0],door:[4.5,17.6]};
-const jhPrev=G=>((G.prevAll||{}).care||{}).f||null;
-
+/* ================= 職業線：國中九年級班導（鄭老師） ================= */
+/* 13:30 到班：班務、印考卷、登成績、打掃。17:20 學生到班，17:50 確認到班、沒到的打給家長。
+   上課時在後面顧秩序、收手機；下課簽聯絡本、處理大家的需求。 */
 LINES.jh={
- id:"jh",role:"國中部英文老師",short:"國中",body:0x8ce99a,shift:"晚上 17:30–21:45",
- pick:"教國中 C 班的會考英文。教室在走廊最裡面，影印機、投影機都要跟高三搶。",
- cast:["xiang","qing","boss","yun","teacher","pinyu"],
- stats:{hp:["體力",55],voice:["嗓子",60],stu:["學生",50],par:["家長",50]},hidden:{},
- late:{fx:{stu:-4,par:-2},text:"國中生已經開始滑手機了。"},
- coda:"國中生不會記得你今天搶到了投影機。但有人會記得，那個單字你教了三遍。",
- msgs:[["17:42","國中部群組","子晴媽媽：老師，子晴這次段考英文幾分？"],["18:20","許老師","不好意思，影印機我們先用一下喔🙏"],["19:36","何主任","C 班今天可以小聲一點嗎？B 班有試聽。"],["20:58","國中部群組","阿翔媽媽：他今天有沒有把手機交出來？"]],
- preStatus:"備課中",endAt:"21:45",ownItems:true,
- events:["quake","blackout","rain","roach"],
- eventSlots:[{after:"j_room",t:"18:00",phase:"pre"},{after:"j_noise",t:"19:30",phase:"class"},{after:"j_line",t:"20:35",phase:"class"}],
- start:[4.5,16.6],
- me:G=>({name:"你",title:`${G.pName}・國中部英文`,abbr:"英",color:"#2b8a3e"}),
- npcs:{yun:P.yunDesk,boss:P.bossOffice,teacher:P.teacherLounge,pinyu:P.pinyuSeat,zhe:P.zheSeat,hong:P.hongStudy,qing:PJ.qingSeat,xiang:null,amy:null,parent:null,parent2:null,bo:PY.boStudy,chenba:null},
+ id:"jh",self:"hr",role:"國中班導",short:"班導",body:0x5b7fa6,shift:"13:30–21:30",
+ pick:"帶國中九年級。印考卷、登成績、點到班、打電話、簽聯絡本。上課的是別人，班上的事都是你的。",
+ cast:["pinyu","zhe","xiang","qing","teacher","boss","yun","xiangma"],
+ stats:{hp:["體力",55],pat:["耐心",60],stu:["學生",50],par:["家長",50]},hidden:{},
+ late:{fx:{stu:-4,par:-2},text:"班上已經在滑手機了。"},
+ coda:"九年級的燈關了。聯絡本疊在桌上，每一本都簽了名。明天，段考倒數五天。",
+ msgs:[["14:20","許老師","鄭老師，複習卷我改了一頁，檔案重傳了🙏"],["16:50","九年級家長群","子晴媽媽：老師，段考前可以多一次小考嗎？"],["18:05","主任","試聽生坐第三排靠窗，麻煩多看一下"],["20:40","阿翔媽媽","老師，他有到嗎？今天真的很謝謝你"]],
+ preStatus:"準備中",endAt:"21:30",daylight:true,
+ staff:["lin","wu","amy","hong"],
+ boards:{c9:"會考倒數 210 天\n段考：下週二、三"},
+ zoneText:{"九年級教室":"你的班。十二個座位，後面黑板寫著會考倒數。","國中辦公室":"你的桌子。成績登記本、聯絡本、一整疊還沒改的考卷。","教材室":"影印機在這裡。下午兩點到四點，全補習班都在排隊。"},
+ schedule:[["13:30","pre"],["18:00","class"],["19:25","break"],["19:35","class"],["21:00","leave"]],
+ phaseStatus:{pre:"準備中",class:"上課中",break:"下課",leave:"放學",close:"收拾中"},
+ bells:{class:["上課了","手機進籃子。許老師開始上課。"],break:["下課十分鐘","簽聯絡本、上廁所、搶電梯。"],leave:["放學","刷卡、等家長、搶電梯。"]},
+ events:["quake","blackout","rain","delivery","nosebleed"],
+ eventSlots:[{after:"j_score",t:"15:40",phase:"pre"},{after:"j_xiang",t:"18:40",phase:"class"},{after:"j_qing",t:"19:33",phase:"break"}],
+ chats:["pinyu","zhe","xiang","qing","teacher","boss","yun","hong","cai"],
+ start:[FLX(0,4.5),16.6],dead:G=>G.s.hp<=0||G.s.pat<=0,
+ me:G=>({name:"你",title:`${G.pName}・九年級班導`,abbr:"導",color:"#2f5d8a"}),
+ npcs:{yun:PC.yunDesk,boss:PC.bossDesk,teacher:null,cai:AT("g2podium",0,0,0),lin:PC.lin,wu:PC.wu,hong:null,amy:null,pinyu:null,zhe:null,xiang:null,qing:null,trial:null,parent:null,xiangma:null,bo:null,chenba:null,hr:null},
  steps:[
-  {id:"j_copier",chapter:{t:"17:30",title:"國中部・傍晚",sub:"國中生六點以後會陸續到。",status:"備課中",rush:["段考複習卷還沒印。","影印機前面已經有人在排隊。"]},
-   t:"17:30",target:{spot:"copier"},goal:"去印段考複習卷",action:"排隊",
-   pages:G=>[[null,"影印機正在吐高三的講義。旁邊還有一疊貼著便利貼：「許老師・B 班・24 份」。"],["yun","啊，國中部的老師！你也要印嗎？許老師的還要十分鐘……"],[null,"你手上的段考複習卷，只要 30 張。"]],
+  {id:"j_arrive",chapter:{t:"13:30",title:"到班",sub:"段考倒數六天。班務清單比平常長一倍。",status:"準備中",rush:["數學、英文、理化的考卷要印。","昨天的小考還沒登。","教室還沒掃。"]},
+   t:"13:30",target:{spot:"hrdesk"},goal:"上三樓，看今天的班務",action:"打開班務本",
+   pages:G=>[[null,"三樓還沒有人。你的桌上放著班務本，第一頁是主任的字：「段考前一週，考卷一份都不能少。」"],[null,"今天要印：數學複習卷 15 份、英文小考 15 份、理化題本 15 份。昨天的小考要登記。教室要打掃。"]],
    choices:G=>[
-    {label:"「我只要 30 張，可以先插一下嗎？」",fx:{stu:4},set:{cutQueue:1},log:"影印機插隊印複習卷",res:[["yun","……好啦，那我跟許老師說晚五分鐘。"],[null,"三十張複習卷印好了。走廊另一頭，許老師探頭看了一眼。"]]},
-    {label:"排隊等",min:10,fx:{hp:-3},log:"影印機乖乖排隊",res:[[null,"你等了十分鐘，順便幫小芸把卡住的一張紙拉出來。"],["yun","謝謝你～下次你先！"]]},
-    {label:"去對面超商印",min:15,fx:{hp:-6,par:2},log:"跑超商印複習卷",res:[[null,"超商的影印機一張兩塊。三十張，六十塊，收據記得留。"]]}]},
-  {id:"j_room",t:"17:50",target:{npc:"boss"},goal:"主任找你",
-   pages:G=>[["boss","今天 B 班有試聽，C 班的投影機先借 B 班用。"],["boss","你們國中部……今天先用白板，可以吧？"],[null,"C 班的投影機是上個月才修好的。"]],
+    {label:"先印考卷，影印機下午會塞",fx:{ord:0,hp:-2,stu:2},set:{printFirst:1},log:"先下樓印考卷",res:[[null,"你抱著三份原稿下樓。電梯在一樓不動。"]]},
+    {label:"先把昨天的成績登完",fx:{par:3},log:"先登成績",res:[[null,"你登到第五個人的時候，想起影印機。下午兩點以後，安親和美語都會來排。"]]}]},
+  {id:"j_copy",t:"13:45",target:{spot:"copier"},goal:"下樓印考卷",action:"開始印",npc:{cai:AT("copier",1,.4,Math.PI/2)},after:{cai:AT("g2podium",0,0,0)},
+   pages:G=>[[null,"影印機前，二年級的蔡老師抱著一疊評量原稿。"],["cai","鄭老師也要印？我只有八張……"],[null,"你手上的考卷，加起來一百二十張。影印機發出「嗶——」的一聲，卡紙燈亮了。"]],
    choices:G=>[
-    {label:"爭取：國中部也有家長在看",fx:{par:4,hp:-2},set:{fought:1},log:"跟主任爭取投影機",res:[["boss","我知道……但試聽只有今天。"],[null,"投影機還是被搬走了。不過主任在本子上寫了一行：「C 班投影機」。"]]},
-    {label:"好，改用白板",fx:{voice:-4},log:"讓出投影機改用白板",res:[["boss","謝謝你體諒。"]]},
-    {label:"借自習室的電視",note:"要自己搬",fx:{hp:-6,stu:5},set:{tv:1},log:"搬自習室電視到 C 班",res:[[null,"你跟阿宏把電視推過走廊，輪子卡了兩次。"],["hong","國中部的老師好拼喔。"]]}]},
-  {id:"j_xiang",t:"18:10",target:{npc:"xiang"},goal:"阿翔不肯交手機",npc:{xiang:[PJ.xiangLocker[0],PJ.xiangLocker[1],Math.PI,PJ.door]},
-   pages:G=>{const c=jhPrev(G),l=[["xiang","老師，我手機不能交啦，我媽會打來。"]];
-     if(c&&c.yuChecked)l.push(["xiang","……對了，我弟說今天安親老師教他進位。他說回家要寫給我看。"]);
-     else if(c)l.push(["xiang","我弟今天數學又錯一堆，我媽叫我回家教他。我哪有空。"]);
-     else l.push([null,"籃子裡已經有十二支手機了。只差他一支。"]);
-     return l;},
+    {label:"自己拉卡紙",mini:"jam",fx:r=>({hp:-3-2*Math.min(4,r.tears),pat:r.tears?-3:2}),log:r=>r.tears?`修影印機，撕破 ${r.tears} 次`:"修好影印機",res:r=>r.tears?[[null,"碎紙卡在滾輪裡，蔡老師拿鑷子幫你夾。"],["cai","我先去樓上用手寫好了。"]]:[[null,"四張紙完整拉出來。"],["cai","好厲害！那你先印，我等。"]]},
+    {label:"讓蔡老師先印，八張很快",fx:{pat:3,hp:1},set:{letCai:1},log:"讓安親先用影印機",res:[["cai","謝謝謝謝！"],[null,"八張評量印完，輪到你的時候，影印機開始卡紙。你拉了十分鐘。"]]},
+    {label:"「我們段考前一週，真的比較急。」",fx:{stu:3,pat:-3},log:"國中部先用影印機",res:[["cai","……好，那你先。"],[null,"她抱著原稿站在旁邊。等到第四十張的時候，她走回樓上了。"]]}]},
+  {id:"j_score",t:"15:00",target:{spot:"hrdesk"},goal:"登記昨天的小考成績",action:"打開成績單",
+   pages:G=>[[null,"三張小考卷，總分是學生自己加的。家長會在聯絡本上看到這個數字。"]],
    choices:G=>[
-    {label:"規定就是規定，放籃子",fx:{stu:-5,par:4},log:"收走阿翔的手機",res:[["xiang","（嘆氣）好啦。"],[null,"他把手機丟進籃子，用書包蓋住。"]]},
-    {label:"約好：上課放籃子，下課前十分鐘還你",fx:{stu:6},set:{deal:1},log:"跟阿翔約定手機時間",res:[["xiang","……真的？好。"],[null,"他自己把手機放進去，還排得很整齊。"]]},
-    {label:"「你媽打來，我幫你接。」",fx:{stu:3,par:2,voice:-2},set:{momLine:1},log:"幫阿翔接媽媽電話",res:[["xiang","蛤……好啦。"]]}]},
-  {id:"j_class",chapter:{t:"18:30",title:"國中 C 班",sub:"18:30–19:50・會考英文",status:"上課中"},
-   t:"18:30",target:{spot:"jhpodium"},goal:"走上 C 班講台",npc:{xiang:PJ.xiangSeat},
-   pages:G=>{const l=[[null,"C 班十個人。後排兩個在偷看籃子裡的手機。"]];if(!G.f.tv&&!G.f.fought)l.push([null,"投影機不在。白板上還有上一堂的單字。"]);else if(G.f.tv)l.push([null,"自習室的電視架在講台邊，畫面有點歪。"]);l.push([null,"會考英文，單字不熟，什麼都別說。"]);return l;},
+    {label:"一張一張核對",mini:"jhscore",fx:r=>({par:r.hits>=2?6:-4,hp:-2}),log:r=>`核對小考成績，抓到 ${r.hits}/3 個錯`,res:r=>r.hits>=2?[[null,"錯的地方都圈出來了。系統裡的數字是對的。"]]:[[null,"有一張漏看了。明天大概會有家長打來問。"]]},
+    {label:"照學生寫的登",fx:{hp:3,par:-6},log:"成績照抄",res:[[null,"很快就登完了。"]]}]},
+  {id:"j_clean",t:"16:30",target:{spot:"c9back"},goal:"打掃教室，排今天的座位",action:"排座位",
+   pages:G=>[[null,"段考前一週，品妤昨天傳訊息說想坐第一排。阿哲的媽媽也說「讓他坐前面一點，被老師看著」。"],[null,"第一排只有四個位子。今天還有一個試聽生要坐。"]],
    choices:G=>[
-    {label:"單字搶答",note:"五題",mini:"vocab",fx:r=>({voice:-6,stu:r.right>=4?12:r.right>=2?5:-2}),set:{loud:1},log:r=>`單字搶答，答對 ${r.right} 題`,
-     res:r=>r.right>=4?[[null,"C 班搶答搶到拍桌子。連阿翔都舉手了。"]]:[[null,"答對的不多，但至少大家醒了。"]]},
-    {label:"直接講課文",fx:{voice:-10,stu:-2},log:"直接上課文",res:[[null,"課文講完了。有一半的人在畫重點，另一半在畫畫。"]]}]},
-  {id:"j_noise",t:"19:15",target:{npc:"pinyu"},goal:"有人在 C 班門口",npc:{pinyu:PJ.pinyuJhDoor},after:{pinyu:P.pinyuSeat},
-   pages:G=>[["pinyu","老師……不好意思，許老師說 B 班在小考，請你們小聲一點。"],...(G.f.loud?[[null,"剛剛的單字搶答，整條走廊都聽得到。"]]:[]),...(G.f.cutQueue?[["pinyu","還有……我們今天講義晚到，有人沒拿到。"]]:[])],
+    {label:"照小考成績排，前面是最需要被看著的",fx:{stu:4,par:4,hp:-3},set:{zheFront:1},log:"照成績把阿哲排到前面",res:[[null,"阿哲在第二排，品妤在第一排靠門，試聽生在第三排靠窗。"]]},
+    {label:"照原本的座位，不動",fx:{hp:2},log:"座位不動",res:[[null,"阿哲還是最後一排靠窗。窗外看得到網咖的招牌。"]]},
+    {label:"讓學生自己選",fx:{stu:2,par:-4},set:{freeSeat:1},log:"讓學生自己選座位",res:[[null,"你寫在白板上：「先到先選」。你已經知道最後一排會被誰搶走。"]]}]},
+  {id:"j_bento",chapter:{t:"17:20",title:"到班",sub:"國中生陸續到班。先刷卡，再吃晚餐。",status:"到班中"},
+   t:"17:25",target:{spot:"lockers"},goal:"收晚餐便當的錢",action:"拿出便當單",npc:{pinyu:C9("pinyu"),qing:C9("qing")},
+   pages:G=>[[null,"便當單上：雞腿 6、排骨 4、素食 1。錢收了 9 份，便當訂了 11 個。"],["qing","老師，阿翔說他的先幫他墊……他等一下就到。"],[null,"還有一份沒付錢的，是阿哲的。他還沒到。"]],
    choices:G=>[
-    {label:"道歉，把門關上",fx:{stu:-2,par:2},log:"跟 B 班道歉關門",res:[["pinyu","謝謝老師。"],[null,"C 班安靜了。安靜到有人開始打瞌睡。"]]},
-    {label:"把搶答改成寫在白板上",note:"一樣好玩，比較安靜",fx:{voice:4,stu:4},set:{boardQuiz:1},log:"搶答改成寫白板",res:[[null,"學生排隊衝上台寫答案。沒有人喊，但每個人都想寫。"]]},
-    {label:"「國中生也在上課啊。」",fx:{stu:4,par:-4},set:{talkback:1},log:"跟 B 班說國中生也在上課",res:[["pinyu","……喔，好。"],[null,"品妤走回去的時候，你聽到 B 班有人說：「國中部好吵。」"]]}]},
-  {id:"j_qing",chapter:{t:"19:50",title:"下課",sub:"國中生下課最快衝出去。",status:"下課"},
-   t:"19:55",target:{npc:"qing"},goal:"子晴在門口等你",npc:{qing:PJ.qingHall},after:{qing:PJ.qingSeat},
-   pages:G=>[["qing","老師，學校要我參加英文演講比賽。"],["qing","可是練習時間是週四晚上……就是補習的時間。我媽說會考比較重要。"]],
+    {label:"先墊，記在聯絡本上請家長補",fx:{par:4,hp:-1},set:{paidFor:1},log:"先幫兩個人墊便當錢",res:[[null,"你在兩本聯絡本上寫：「今日便當 85 元，老師先代墊。」"]]},
+    {label:"沒付錢的不訂，讓他們自己買",fx:{stu:-4,par:-2,pat:3},log:"沒付錢的便當退掉",res:[[null,"便當店老闆在電話那頭說：「已經做好了耶。」"]]}]},
+  {id:"j_roll",chapter:{t:"17:50",title:"確認到班",sub:"上課前十分鐘。沒到的要打給家長。",status:"到班中"},
+   t:"17:50",target:{spot:"c9door"},goal:"確認誰還沒到",action:"拿點名表",npc:{zhe:C9("zhe"),trial:C9("trial")},
+   pages:G=>[[null,"刷卡紀錄和教室對一次。十二個人裡，有兩個還沒到。"]],
    choices:G=>[
-    {label:"支持她去比賽，課另外補",fx:{hp:-5,stu:8},set:{speech:1},log:"支持子晴去比演講",res:[["qing","真的可以嗎？"],["me","演講也是英文。而且這種機會，國三就沒有了。"]]},
-    {label:"「會考比較重要。」",fx:{par:5,stu:-5},log:"勸子晴以會考為重",res:[["qing","……嗯，我知道。"]]},
-    {label:"「我幫你跟媽媽說。」",fx:{par:2,stu:5,hp:-3},set:{talkMom:1},log:"答應幫子晴跟媽媽談",res:[["qing","老師你人好好！"]]}]},
-  {id:"j_line",t:"20:20",auto:true,goal:"手機一直震",
-   pages:G=>[[null,"學生在寫複習卷。你的手機震個不停，是子晴媽媽。"],[null,"「老師，子晴這次段考英文 98，可是全班排第三。請問她還要加強什麼？」"]],
+    {label:"照刷卡紀錄一個一個點",mini:"roll",fx:r=>({stu:r.miss?1:4,pat:-2}),set:{rollDone:1},log:r=>`確認到班，點錯 ${r.miss} 次`,res:r=>[[null,r.miss?"點錯了一次，被阿哲說：「老師我在這啦。」":"阿翔、子涵沒到。"],[null,"子涵的媽媽早上就傳過請假訊息。阿翔沒有。"]]},
+    {label:"在群組發一則「還沒到的請回覆」",fx:{par:-2,hp:2},log:"在群組請家長回覆",res:[[null,"群組安靜了三分鐘。然後子涵媽媽回：「早上有請假喔」。阿翔家沒有回。"]]}]},
+  {id:"j_callma",t:"17:55",auto:true,goal:"打給阿翔媽媽",
+   pages:G=>[[null,"你撥了阿翔媽媽的電話。背景很吵，有小孩的聲音。"],["xiangma","老師？我在你們樓下接小宇啊。阿翔沒到？他五點就說他出門了……"],[null,"電話那頭安靜了一下。你們都想到同一個地方：學校旁邊那間網咖。"]],
    choices:G=>[
-    {label:"挑三件事回她",mini:"summary",fx:r=>({par:r.v>=7?10:r.v>=4?4:-4}),log:r=>`回子晴媽媽的訊息（${r.v>=7?"說到重點":r.v>=4?"還可以":"沒說到重點"}）`,
-     res:r=>r.v>=7?[[null,"五分鐘後，子晴媽媽回：「原來她有在練演講，我都不知道。謝謝老師。」"]]:[[null,"子晴媽媽回了一個「👍」。你不知道那是什麼意思。"]]},
-    {label:"「下課後回您。」",fx:{par:-3},log:"家長訊息下課再回",res:[[null,"你把手機翻過去。螢幕又亮了一次。"]]}]},
-  {id:"j_score",t:"20:45",target:{spot:"jhpodium"},goal:"登段考成績",action:"打開成績單",
-   pages:G=>[[null,"主任說今天要把段考成績登進系統。三張成績單，總分是學生自己算的。"]],
+    {label:"「我下樓跟您當面說。」",fx:{hp:-3,par:10},set:{metXiangma:1},log:"下樓跟阿翔媽媽當面談",res:[[null,"你搭電梯下樓。阿翔媽媽一手牽著小宇，一手在撥阿翔的手機。"],["xiangma","老師對不起……他最近都這樣。我先去網咖找他。"]]},
+    {label:"「我先打給阿翔看看。」",fx:{stu:3,pat:-2},set:{calledXiang:1},log:"直接打給阿翔",res:[[null,"第三通，阿翔接了：「……我在路上啦。」背景有鍵盤聲。"]]},
+    {label:"「我記下來，到了再跟您說。」",fx:{hp:2,par:-4},log:"記下阿翔缺席",res:[["xiangma","……好。"],[null,"她掛電話的聲音很重。"]]}]},
+  {id:"j_xiang",chapter:{t:"18:00",title:"第一節",sub:"18:00–19:25・數學・許老師",status:"上課中"},
+   t:"18:15",target:{npc:"xiang"},goal:"阿翔到了",npc:{xiang:[...PJ.xiangHall,DOOR],teacher:PJ.teacherPodium},after:{xiang:SEAT("c9","xiang")},
+   pages:G=>[[null,"十八點十五分，阿翔出現在教室門口。他身上有一股網咖的菸味，手機還握在手上。"],["xiang","……老師，我等一下就交手機。"]],
    choices:G=>[
-    {label:"一張一張核對",mini:"jhscore",fx:r=>({par:r.hits>=2?6:-4,hp:-2}),log:r=>`核對段考成績，抓到 ${r.hits}/3 個錯`,res:r=>r.hits>=2?[[null,"錯的地方都圈出來了。系統裡的數字是對的。"]]:[[null,"有一張漏看了。明天大概會有家長打來問。"]]},
-    {label:"照學生寫的登",fx:{hp:3,par:-6},log:"段考成績照抄",res:[[null,"很快就登完了。"]]}]},
-  {id:"j_after",chapter:{t:"21:15",title:"下課",sub:"家長在樓下等。",status:"收拾中"},
-   t:"21:18",target:{spot:"jhdoor"},goal:"阿翔的媽媽來了",
-   after:{xiang:null},
-   pages:G=>{const c=jhPrev(G),l=[[null,"阿翔的媽媽站在 C 班門口，手上提著小宇的書包。"]];
-     if(c&&c.pickupOk)l.push([null,"「下午他舅舅去接小宇，安親班老師有先打給我確認。我覺得你們很細心。」"]);
-     else if(c&&c.handedMi)l.push([null,"「聽說下午安親班有小朋友被名單外的人接走？……我們家的接送名單，我想再確認一次。」"]);
-     else if(c)l.push([null,"「下午他舅舅說在門口等了好久。下次我會先講。」"]);
-     l.push([null,"「老師，阿翔會考……還有救嗎？」"]);return l;},
+    {label:"在門口小聲問他去哪了",fx:{stu:5,hp:-2},set:{askedXiang:1},log:"小聲問阿翔遲到的原因",res:[["xiang","……我只是不想一直被比。我媽一直說小宇乖。"],[null,"他把手機放進籃子，走進教室。你在聯絡本上沒有寫「網咖」兩個字。"]]},
+    {label:"「手機交出來，下課再說。」",fx:{stu:-2,par:3},log:"收手機，下課再談",res:[[null,"他把手機丟進籃子。下課的時候，他是第一個衝去電梯的。"]]},
+    {label:"傳訊息告訴媽媽他到了",fx:{par:6},set:{toldMaArrived:1},log:"通知阿翔媽媽他已到班",res:[[null,"阿翔媽媽回了一大段話，最後一行是：「謝謝老師，真的。」"]]}]},
+  {id:"j_zhe",chapter:{t:"19:25",title:"下課十分鐘",sub:"簽聯絡本、上廁所、搶電梯。",status:"下課"},
+   t:"19:26",target:{npc:"zhe"},goal:"阿哲在走廊等你",npc:{zhe:PJ.zheHall},after:{zhe:SEAT("c9","zhe")},
+   pages:G=>[["zhe","老師……退費單要去哪裡拿？"],[null,"他沒有看你，一直在摳書包的拉鍊。"],["zhe","我媽說繳了一整年。可是我從國一就聽不懂了。"]],
    choices:G=>[
-    {label:"說實話：單字要每天背",fx:{par:5,stu:3},log:"跟阿翔媽媽說要每天背單字",res:[[null,"「每天？他連牙都不一定每天刷。」"],[null,"她笑了一下。阿翔在旁邊翻白眼，但沒有反駁。"]]},
-    {label:"說他今天有舉手",fx:{par:8},log:"跟阿翔媽媽說他今天的表現",res:[[null,"「真的？他在家都不講話的。」"]]},
-    ...(G.f.deal?[{label:"說他今天手機有自己交",note:"你們的約定",fx:{par:6,stu:6},log:"稱讚阿翔遵守手機約定",res:[[null,"阿翔的耳朵紅了。"]]}]:[])]},
-  {id:"j_boss",t:"21:30",target:{npc:"boss"},goal:"去主任室",
-   pages:G=>{const l=[["boss","今天辛苦了。投影機的事，不好意思。"]];
-     if(G.f.talkback)l.push(["boss","還有，許老師說 C 班今天有點吵……"]);
-     if(G.f.cutQueue)l.push(["boss","小芸說你插隊印講義？我是沒差啦，只是許老師的講義晚了。"]);
-     l.push(["boss","國中部這學期人數多了三個。你有什麼想法？"]);return l;},
+    {label:"「先跟我說，你卡在哪裡。」",fx:{stu:8,pat:-4},set:{zheTalk:1},log:"陪阿哲聊他卡在哪裡",res:[["zhe","……分數。國一的分數我就不會了。後面全部都是分數。"],[null,"上課鐘響了。他說：「老師，不要跟我媽說我想退。」"]]},
+    {label:"告訴他退費單在櫃台",fx:{hp:2},set:{refundForm:1},log:"告訴阿哲退費單在櫃台",res:[["zhe","喔。謝謝。"]]},
+    {label:"「這件事要跟媽媽一起談。」",fx:{par:5,stu:-3},log:"請阿哲和媽媽一起談",res:[["zhe","……喔。"],[null,"他走回教室，坐下就趴著了。"]]}]},
+  {id:"j_qing",t:"19:31",target:{npc:"qing"},goal:"子晴拿著聯絡本過來",npc:{qing:PJ.qingHall},after:{qing:SEAT("c9","qing")},
+   pages:G=>[["qing","老師，聯絡本要簽……還有，學校要我參加英文演講比賽。"],["qing","練習時間是週四晚上，就是這裡上課的時間。我媽說段考比較重要。"]],
    choices:G=>[
-    {label:"提出：排一張教室和設備的使用表",fx:{par:4,stu:4,hp:-3},set:{roomPlan:1},log:"提議排教室設備使用表",res:[["boss","好主意。高三、國中、安親，誰什麼時候用什麼，寫清楚。"],[null,"你回家前在白紙上畫了第一版。影印機那一格寫得最大。"]]},
-    {label:"申請 C 班自己的投影機",fx:{stu:3},set:{ownProjector:1},log:"申請 C 班投影機",res:[["boss","我寫進總部的申請……不保證喔。"]]},
-    {label:"「沒什麼，今天這樣就好。」",fx:{hp:4},log:"沒提國中部的需求",res:[["boss","好，早點回去。"]]}]}
+    {label:"「週四的課我幫你錄影，你去比。」",fx:{stu:8,hp:-3},set:{speech:1},log:"支持子晴去比賽、課另外補",res:[["qing","真的可以嗎？"],["me","演講也是英文。九年級之後，這種機會就少了。"]]},
+    {label:"「我幫你跟媽媽說。」",fx:{par:3,stu:5,hp:-3},set:{talkMom:1},log:"答應幫子晴跟媽媽談",res:[["qing","老師你人好好！"]]},
+    {label:"「段考比較重要，先準備段考。」",fx:{par:4,stu:-5},log:"勸子晴先顧段考",res:[["qing","……嗯，我知道。"]]}]},
+  {id:"j_note",chapter:{t:"19:35",title:"第二節",sub:"19:35–21:00・數學・許老師",status:"上課中"},
+   t:"19:50",target:{spot:"c9back"},goal:"後排在傳紙條",action:"走過去",
+   pages:G=>[[null,"許老師在講一元二次方程式。後排兩個人在傳紙條，一個在笑。"],[null,"試聽生坐在第三排，也在看。"]],
+   choices:G=>[
+    {label:"走過去，把紙條收走，不說話",fx:{stu:3,pat:-2},log:"安靜收走紙條",res:[[null,"紙條上寫著：「段考完要不要去唱歌」。你把它折好，放進口袋。"]]},
+    {label:"在後面輕輕敲桌子",fx:{stu:2},log:"敲桌子提醒",res:[[null,"他們坐正了。試聽生轉回去看白板。"]]},
+    {label:"當場唸出來",fx:{stu:-6,par:2},set:{readNote:1},log:"當眾唸出紙條",res:[[null,"全班笑了，許老師的課停了一分鐘。傳紙條的那個人整節課都沒抬頭。"]]}]},
+  {id:"j_boss",t:"20:20",target:{npc:"boss"},goal:"下樓找主任談人手",npc:{boss:PC.bossDesk},
+   pages:G=>[["boss","鄭老師？上課中怎麼下來了。"],[null,"你把下午的事講了一遍：影印機、便當、阿翔、退費單、子晴的比賽。"],["boss","……所以你想要什麼？"]],
+   choices:G=>[
+    {label:"「下課時段需要一個人顧三樓走廊。」",fx:{par:3,hp:-2},set:{askHelp:1},log:"跟主任要下課時段的人手",res:[["boss","我讓阿宏下課時站一下走廊。先這樣，下個月再看。"]]},
+    {label:"「阿哲的事，要不要先跟媽媽談基礎班？」",fx:{stu:5,par:3},set:{bossKnowsZhe:1},log:"跟主任談阿哲的退費",res:[["boss","從國一就沒跟上？那他要的是基礎班，不是退費。我明天打給林媽媽。"]]},
+    {label:"「沒事，來看一下。」",fx:{hp:2},log:"沒提需求",res:[["boss","好，那你上去吧。"]]}]},
+  {id:"j_out",chapter:{t:"21:00",title:"放學",sub:"刷卡、等家長、搶電梯。",status:"放學"},
+   t:"21:03",target:{npc:"pinyu"},goal:"品妤還坐在位子上",npc:{pinyu:SEAT("c9","pinyu"),zhe:null,qing:null,xiang:null,trial:null,teacher:null},
+   pages:G=>[[null,"大家都走了。品妤還坐在位子上，手放在肚子上。"],["pinyu","老師，我胃有點痛……沒事，可能是太緊張。我媽說要我段考考進前三。"]],
+   choices:G=>[
+    {label:"陪她下樓，順便跟來接的媽媽說一聲",fx:{hp:-3,par:6,stu:4},set:{pinyuMa:1},log:"陪品妤下樓、跟媽媽說她胃痛",res:[[null,"品妤媽媽聽完，沉默了一下：「……她都沒跟我說。」"]]},
+    {label:"給她一杯溫水，問她最近睡得怎樣",fx:{stu:6,hp:-2},set:{pinyuSleep:1},log:"問品妤最近睡得好不好",res:[["pinyu","兩點睡，六點起來。我覺得還好……應該還好吧。"],[null,"你把這句話寫進了聯絡本的最後一行。"]]},
+    {label:"「早點回家休息。」",fx:{hp:2},log:"叫品妤早點回家",res:[["pinyu","嗯。老師晚安。"]]}]},
+  {id:"j_close",t:"21:15",target:{spot:"hrdesk"},goal:"簽聯絡本、登今天的考卷",action:"坐下來",
+   pages:G=>[[null,"十二本聯絡本，十二張考卷。今天的事，要寫成家長看得懂的三行字。"]],
+   choices:G=>[
+    {label:"每本都寫一句今天的事",fx:{par:8,hp:-6},set:{notesAll:1},log:"每本聯絡本都寫一句話",res:[[null,"寫到阿哲那本，你停了很久，最後寫：「今天有問問題。」"]]},
+    {label:"只寫成績，簽名",fx:{hp:3,par:-2},log:"聯絡本只寫成績",res:[[null,"二十分鐘寫完。你關燈的時候，三樓只剩電梯的聲音。"]]}]}
  ],
  ending(G){
-  const s=G.s,dead=s.voice<=0||s.hp<=0,f=G.f;
+  const s=G.s,dead=s.hp<=0||s.pat<=0,f=G.f;
   let t;
-  if(dead)t=s.voice<=0?["國中部的老師失聲了","第二節的單字，你是用寫的。學生說老師今天好安靜。"]:["搶了一晚上，累倒了","影印機、投影機、教室。你今天什麼都在搶，最後連力氣都沒了。"];
-  else if(f.roomPlan&&s.stu>=65)t=["讓國中部被看見","一張使用表，讓走廊最裡面的 C 班，也有一格是自己的。"];
-  else if(s.stu>=72)t=["C 班的單字王","沒有投影機也沒關係。今天 C 班的人，都記得了五個單字。"];
-  else if(s.par>=72)t=["家長群組的定心丸","子晴媽媽、阿翔媽媽，今天都安心了一點。"];
-  else if(f.talkback)t=["走廊最裡面的教室","你替國中部說了話。代價是，B 班現在覺得國中部很吵。"];
-  else t=["平安下課","國中部的大部分晚上，就是在高三的影子裡把課上完。"];
-  return {title:t[0],desc:t[1],dead,big:[[f.roomPlan?"有":"沒有","教室設備使用表"],[G.minis.vocab?`${G.minis.vocab.right}/5`:"—","單字搶答"]]};
+  if(dead)t=["班導先倒了","你在國中辦公室的桌上趴著睡著了。主任叫醒你的時候，十點半了。"];
+  else if((f.askedXiang||f.metXiangma)&&(f.zheTalk||f.bossKnowsZhe)&&s.stu>=68)t=["每個人的事都有人接住","阿翔為什麼去網咖、阿哲為什麼想退費。今天有人聽完了。"];
+  else if(s.par>=72)t=["家長群組的定心丸","便當、到班、聯絡本，家長今天每一件都收到了。"];
+  else if(s.stu>=72)t=["學生會找的班導","下課十分鐘，你的桌前排了三個人。"];
+  else if(f.readNote)t=["那張紙條","全班笑了一分鐘。那個人，今天一直沒有抬頭。"];
+  else t=["平安放學","印完、登完、點完、簽完。班導的大部分晚上，就是這樣過的。"];
+  return {title:t[0],desc:t[1],dead,big:[[f.askedXiang?"有":"沒有","知道阿翔為什麼去網咖"],[f.zheTalk?"知道":"不知道","阿哲卡在哪裡"]]};
  }
 };
 
-/* ---------- 國中部的小遊戲 ---------- */
-MINIS.vocab={
-  head:"C 班・單字搶答",zone:"國中 C 班",title:"會考單字搶答",cost:5,
-  intro:"五個會考常見單字，選出正確的中文意思。",
-  qs:[["environment",["環境","娛樂","設備"],0],["necessary",["附近的","必要的","緊張的"],1],["decide",["決定","描述","裝飾"],0],["several",["嚴重的","幾個","分開的"],1],["borrow",["借入","煩惱","邊界"],0]],
-  mount(el,done){let i=0,right=0;const self=this;
-    function draw(){const q=self.qs[i];
-      el.innerHTML=`<div class="paper"><div class="q">第 ${i+1} / ${self.qs.length} 題</div><div style="font-size:1.6rem;font-weight:700;font-family:var(--mono)">${q[0]}</div></div><div class="choices">${q[1].map((o,k)=>`<button class="choice" data-k="${k}">${o}</button>`).join("")}</div><p class="feed" aria-live="polite"></p><div class="actions" hidden><button class="go" data-next>下一題</button></div>`;
-      const feed=el.querySelector(".feed"),act=el.querySelector(".actions");
-      el.querySelectorAll("[data-k]").forEach(b=>b.addEventListener("click",()=>{if(!act.hidden)return;const k=+b.dataset.k;
-        if(k===q[2]){right++;feed.textContent="台下：「我就說吧！」";}else feed.textContent=`台下：「蛤～」答案是「${q[1][q[2]]}」。`;
-        el.querySelectorAll("[data-k]").forEach((x,j)=>{x.disabled=true;if(j===q[2])x.style.borderColor="var(--green)";});act.hidden=false;
-        act.querySelector("[data-next]").onclick=()=>{if(i<self.qs.length-1){i++;draw();}else{el.innerHTML=`<p class="feed">五題，全班答對 ${right} 題。</p>`;done({right});}};}));}
-    draw();}
+/* ---------- 班導的小遊戲 ---------- */
+MINIS.roll={
+  head:"九年級・確認到班",zone:"九年級教室",title:"誰沒到？",
+  intro:"刷卡紀錄和教室對一次。十二個人，在名單上點出還沒到的兩個。點錯會被學生笑。",
+  names:["品妤","阿哲","阿翔","子晴","子涵","宇軒","思妤","冠廷","詠晴","家豪","佳穎","柏翰"],absent:["阿翔","子涵"],
+  mount(el,done){const self=this;const present=this.names.filter(n=>!this.absent.includes(n)).sort(()=>Math.random()-.5);let found=0,miss=0;
+    const seats=[...present,"",""].sort(()=>Math.random()-.5);
+    el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0">${seats.map(n=>`<div style="border:1px solid var(--rule);border-radius:3px;padding:6px 2px;text-align:center;font-size:.82rem;background:${n?"var(--surface)":"var(--tray)"};color:${n?"var(--ink)":"var(--muted)"}">${n||"空位"}</div>`).join("")}</div>
+      <div class="lbl">名單</div><div style="display:flex;flex-wrap:wrap;gap:6px">${[...this.names].sort(()=>Math.random()-.5).map(n=>`<button class="choice" data-n="${n}" style="padding:6px 10px">${n}</button>`).join("")}</div><p class="feed" aria-live="polite"></p>`;
+    const feed=el.querySelector(".feed");
+    el.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;const n=b.dataset.n;b.disabled=true;
+      if(self.absent.includes(n)){found++;b.style.borderColor="var(--green)";feed.textContent=`${n}：沒到。`;}else{miss++;b.style.borderColor="var(--red)";feed.textContent=`${n}：「我在這裡啦！」`;}
+      if(found===2){feed.textContent=`找到了：${self.absent.join("、")}沒到。點錯 ${miss} 次。`;el.querySelectorAll("[data-n]").forEach(x=>x.disabled=true);done({miss});}}));}
 };
 MINIS.jhscore={...MINIS.grade,
-  head:"段考成績・核對",zone:"國中 C 班",title:"找出算錯的那一行",
-  intro:"三張成績單，總分是學生自己加的。點出第一個算錯的那一行。",
+  head:"小考成績・核對",zone:"國中辦公室",title:"找出算錯的那一行",
+  intro:"三張小考卷，總分是學生自己加的。點出第一個算錯的那一行。",
   papers:[
-   {who:"阿翔",q:"國文 72、英文 58、數學 64",lines:["72 + 58 = 130","130 + 64 = 184","總分 184，平均 61.3"],bad:1,why:"130 + 64 = 194。總分 194，平均 64.7。"},
-   {who:"子晴",q:"國文 91、英文 98、數學 88",lines:["91 + 98 = 189","189 + 88 = 267","總分 267，平均 89"],bad:1,why:"189 + 88 = 277。總分 277，平均 92.3。"},
-   {who:"小班長",q:"國文 85、英文 77、數學 90",lines:["85 + 77 = 152","152 + 90 = 242","總分 242，平均 80.7"],bad:0,why:"85 + 77 = 162。總分 252，平均 84。"}
+   {who:"阿翔",q:"第一大題 32、第二大題 18、第三大題 24",lines:["32 + 18 = 50","50 + 24 = 64","總分 64"],bad:1,why:"50 + 24 = 74。總分 74。"},
+   {who:"子晴",q:"第一大題 38、第二大題 29、第三大題 27",lines:["38 + 29 = 67","67 + 27 = 84","總分 84"],bad:1,why:"67 + 27 = 94。總分 94。"},
+   {who:"阿哲",q:"第一大題 12、第二大題 6、第三大題 9",lines:["12 + 6 = 18","18 + 9 = 27","總分 72"],bad:2,why:"總分是 27，不是 72。他把數字寫反了——還是故意的？"}
   ]};
-/* 晚上其他位子：國中部的人也在 */
-function placeJuniorHigh(L){if(!["teacher","yun","boss"].includes(L.id))return;setNPC("amy",PJ.amyPodium,true);setNPC("xiang",PJ.xiangSeat,true);setNPC("qing",PJ.qingSeat,true);}

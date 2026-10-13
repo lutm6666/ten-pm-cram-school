@@ -24,7 +24,7 @@ function newGame(lineId,day=1){
   endQuake();nextEntryAt=0;
   const L=lineOf(lineId,day),name=(store.get("name","")||"").trim();
   const sur=name?(/^[一-鿿]/.test(name)?name[0]:name+" "):"許";
-  G={line:L,idx:0,s:{},h:{...L.hidden},f:{},log:[],items:[],sidesDone:{},tName:lineId==="teacher"?sur+"老師":"許老師",pName:name||({yun:"小芸",boss:"何主任",care:"蔡老師"}[lineId]||"你"),name,tipShown:false,status:"",time:"17:20",chapterTitle:""};
+  G={line:L,idx:0,s:{},h:{...L.hidden},f:{},log:[],items:[],sidesDone:{},tName:lineId==="teacher"?sur+"老師":"許老師",pName:name||({yun:"小芸",boss:"何主任",care:"蔡老師",jh:"鄭老師"}[lineId]||"你"),name,tipShown:false,status:"",time:"17:20",chapterTitle:""};
   for(const k in L.stats)G.s[k]=L.stats[k][1];
   G.day=day;const outAll=store.get("out",{});G.prevAll=outAll;G.prev=day===2?((outAll[lineId]||{}).f||{}):{};
   G.steps=buildSteps(L);G.minis={};G.chatUsed=[];G.chatWith=[];G.hard=doneLines.has(lineId);G.clock=toMin(G.steps[0].t);G.lates=0;G.lateMin=0;
@@ -35,7 +35,7 @@ function newGame(lineId,day=1){
   Object.values(itemMarks).forEach(m=>scene.remove(m));for(const k in itemMarks)delete itemMarks[k];
   syncItems();
   for(const id in sideMarks){scene.remove(sideMarks[id]);delete sideMarks[id];}
-  setBoard(L.board);setDaylight(!!L.daylight);placeJuniorHigh(L);
+  for(const r in (L.boards||{}))setBoard(L.boards[r],r);setDaylight(G.clock<T("17:40"));showFloor(floorOf(L.start[0]));staffLast={};tickStaff(true);
   crowdPhase=null;setCrowd(phaseOf(),true);FX.shake=FX.dark=0;
   path=null;enterStep();
 }
@@ -69,6 +69,18 @@ function activateStep(){
 }
 function nextStep(){if(!stepReady())return;if(G.idx===0)store.set("tipWalk",true);const st=step();if(st?.onClose)st.onClose();if(st&&st.after)for(const id in st.after)setNPC(id,val(st.after[id],G));G.idx++;path=null;enterStep();}
 
+/* ---------- 換樓層 ---------- */
+const FLOOR_LABEL=["1F　大廳・櫃台・主任室・美語","2F　國小安親","3F　國中部"];
+function openFloorPicker(kind){const f=floorOf(player.position.x),opts=[];for(let g=0;g<FLOOR_N;g++){if(g===f)continue;if(kind==="stairs"&&Math.abs(g-f)!==1)continue;opts.push(g);}
+  openSheet(kind==="elev"?"電梯":"樓梯",`<div class="choices">${opts.map(g=>`<button class="choice" data-floor="${g}">${esc(FLOOR_LABEL[g])}</button>`).join("")}</div>`);
+  document.querySelectorAll("#sheet [data-floor]").forEach(b=>b.addEventListener("click",()=>{const g=+b.dataset.floor,pt=[FLX(g,CORE[kind][0]),CORE[kind][1]];pt.via=kind;closeSheet();path=null;portalHop(player,pt);}));}
+/* 換樓層要花時間：樓梯每層半分鐘；電梯要等，放學時間等更久 */
+function floorCost(via,from,to){if(!G)return;const n=Math.abs(to-from);let m=via==="stairs"?.5*n:(.6+Math.random()*.8);
+  if(via==="elev"&&G.clock>=17*60+25&&G.clock<=18*60+5)m+=1.5;spend(m);
+  if(via==="stairs"&&G.s.hp!=null&&n>0){G.s.hp=Math.max(1,G.s.hp-n);}
+  showBanner(FLOOR_LABEL[to],via==="elev"?(m>2?"電梯等了好久，每層都有人按。":"電梯門開了。"):"你走樓梯"+(to>from?"上樓":"下樓")+"。");renderHud();}
+onFloorChange=floorCost;
+
 /* ---------- 目標與附近的東西 ---------- */
 function guideTarget(t){const m=targetOf(t);if(t&&t.npc){const u=npcs[t.npc].userData;if(u.path&&u.anchor)return{...m,x:u.anchor[0],z:u.anchor[1]};}return m;}
 function targetOf(t){if(!t)return null;if(t.npc){const n=npcs[t.npc];return{x:n.position.x,z:n.position.z,h:n.userData.top+.8,name:CHARS[t.npc].name,kind:"npc",id:t.npc};}
@@ -86,12 +98,14 @@ function nearest(){
   const chatIds=new Set(chatTargets()),mainId=m&&m.kind==="npc"?m.id:null;
   for(const id in npcs){const n=npcs[id];if(!n.visible||id===mainId||chatIds.has(id)||id===G.line.id)continue;const dn=d(n.position.x,n.position.z);if(dn<1.4)c.push({dist:dn+1.2,type:"greet",p:n,id,label:"打招呼"});}
   for(const e of extras){if(!e.p.visible)continue;const de=d(e.p.position.x,e.p.position.z);if(de<1.1)c.push({dist:de+1.2,type:"greet",p:e.p,kind:e.kind,label:"打招呼"});}
+  // 樓梯、電梯：自己走過去也能換樓層
+  {const f=floorOf(px),lx=px-f*FLOOR_GAP;for(const kind of ["elev","stairs"]){const [cx,cz]=CORE[kind];const dk=Math.hypot(lx-cx,pz-cz);if(dk<1.2)c.push({dist:dk+.9,type:"portal",kind,label:kind==="elev"?"搭電梯":"走樓梯"});}}
   if(c.length){c.sort((a,b)=>a.dist-b.dist);return c[0];}
   for(const inf of INFO){if(d(inf.pos[0],inf.pos[1])<1.6)return{type:"info",inf,label:"看說明"};}
   return null;
 }
 function interact(){if(mode!=="walk"||!near)return;
-  if(near.type==="main")openStep();else if(near.type==="side")openSide(near.sd);else if(near.type==="item")pickItem(near.it);else if(near.type==="info")openInfo(near.inf);else if(near.type==="chat")openChat(near.id);else if(near.type==="greet")greet(near);}
+  if(near.type==="main")openStep();else if(near.type==="side")openSide(near.sd);else if(near.type==="item")pickItem(near.it);else if(near.type==="info")openInfo(near.inf);else if(near.type==="chat")openChat(near.id);else if(near.type==="greet")greet(near);else if(near.type==="portal")openFloorPicker(near.kind);}
 
 /* 打招呼：不花時間，對方回一句 */
 const GREET={kid:["老師好！","你看我的恐龍！","我寫完了！（沒有）","老師你好高","可以去玩了嗎？"],class:["老師好","好累……","明天要考試","（點頭）","今天好熱"],jh:["Hi～","我手機有交喔","老師好","段考好難","（拔下耳機）蛤？"],study:["噓……","我在算題目","嗯？","（揮揮手）"]};
@@ -114,7 +128,7 @@ function otMin(){return G?Math.max(0,Math.floor(G.clock-endMin())):0;}
 function dueText(){if(!G)return"";if(step()&&!G.stepReady&&mode!=="end")return announced(step())?`下一件事 ${esc(step().t)}・可自由探索`:"空檔・可自由探索";if(otMin()&&mode!=="end"){const r=mode==="walk"&&G.due!=null?Math.floor(G.due-G.clock):null;return `<span class="ot">已加班 ${otMin()} 分</span>`+(r==null?"":r>=0?`<span class="due ${r<=3?"warn":""}">剩 ${r} 分</span>`:`<span class="due late">晚 ${-r} 分</span>`);}return dueText0();}
 function dueText0(){if(mode==="walk"&&G.due!=null){const r=Math.floor(G.due-G.clock);return r>=0?`<span class="due ${r<=3?"warn":""}">${fmt(G.due)} 前・剩 ${r} 分</span>`:`<span class="due late">已經晚了 ${-r} 分</span>`;}return `${esc(G.chapterTitle||"")}・${esc(G.line.role)}`;}
 let lastClockMin=-1;
-function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}saveGame();if(!lessonSkip())activateStep();}else activateStep();}
+function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}saveGame();tickStaff(false);{const dl=G.clock<T("17:40");if(dl!==MUSIC_DAY)setDaylight(dl);}if(!lessonSkip())activateStep();}else activateStep();}
 function checkBell(){if(!G)return;const ph=phaseOf();if(ph===crowdPhase)return;const prev=crowdPhase;setCrowd(ph);G.status=statusOf();renderHud();
   const B=G.line.bells||{class:["上課鐘響了","學生陸續回到座位。"],break:["下課了","下課 15 分鐘，20:05 上第二節。"],leave:["下課了","今天的課上完了，學生陸續離開。"]};
   if(ph==="class"){chime();showBanner(...B.class);}else if(ph==="break"){chime();showBanner(...B.break);}else if(ph==="leave"&&prev!=="close"){chime();showBanner(...B.leave);}}
@@ -348,7 +362,7 @@ function resumeGame(){
   Object.values(itemMarks).forEach(m=>scene.remove(m));for(const k in itemMarks)delete itemMarks[k];
   syncItems();
   for(const id in sideMarks){scene.remove(sideMarks[id]);delete sideMarks[id];}
-  setBoard(L.board);setDaylight(!!L.daylight);placeJuniorHigh(L);
+  for(const r in (L.boards||{}))setBoard(L.boards[r],r);setDaylight(G.clock<T("17:40"));showFloor(floorOf(sv.pos[0]));staffLast={};tickStaff(true);
   crowdPhase=null;setCrowd(phaseOf(),true);FX.shake=FX.dark=0;path=null;
   near=null;lastNearKey="";lastClockMin=-1;
   mode="walk";renderAll();if(G.chapterPending)showChapter(st.chapter);else if(G.stepReady&&st.auto)openStep();
@@ -449,16 +463,12 @@ function settleScene(){
   for(const n of Object.values(npcs)){const u=n.userData;
     if(u.entrySpec){const s=u.entrySpec;u.entrySpec=null;n.visible=true;agentPlace(n,s[0],s[1],s[2]??Math.PI);continue;}
     if(n.visible&&u.path&&u.path.length){const end=u.path[u.path.length-1],cb=u.onArrive;agentPlace(n,end[0],end[1],u.endRot);cb&&cb();}}
-  extras.forEach(e=>{const p=e.p,u=p.userData;
-    if(e.state==="clockWait"&&G.clock>=(e.arriveClock??Infinity))e.state="toArrive";
-    if(e.state==="toArrive"||e.state==="arriving"){p.visible=true;agentPlace(p,...e.home);e.state="seat";u.act=null;}
-    else if(e.state==="leaving"||e.state==="exiting"){p.visible=false;u.path=null;u.moving=false;e.state="gone";}
-    else if(p.visible&&u.path&&u.path.length){const end=u.path[u.path.length-1],cb=u.onArrive;agentPlace(p,end[0],end[1],u.endRot);cb&&cb();}});
+  crowdSettle();staffLast={};tickStaff(true);
 }
 /* 等待中只預告「本來就排定」的事（課表、約好的人）；突發事件連時間都不說。 */
 function announced(st){return !!st&&!st.isEvent&&!st.auto&&!/^ot_/.test(st.id);}
 /* 上課中的老師不能晃出教室：空檔直接上完這段課，停在下一件事或下課鐘。 */
-const TEACHING={teacher:"podium",jh:"jhpodium"};
+const TEACHING={teacher:"c9podium"};
 function teachingNow(){return !!(G&&TEACHING[G.line.id]&&phaseOf()==="class");}
 function lessonSkip(){
   if(!G||mode!=="walk"||stepReady()||!teachingNow())return false;
@@ -484,7 +494,9 @@ function tickTips(){if(!G||mode!=="walk")return;
   if(!store.get("tipSide",false)&&activeSides().length){store.set("tipSide",true);showBanner("有人頭上出現「？」","那是支線。可以繞過去看看，也可以不理它。");}
   if(!store.get("tipItem",false)&&ITEMS.some(it=>itemMarks[it.id]&&Math.hypot(it.pos[0]-player.position.x,it.pos[1]-player.position.z)<5)){store.set("tipItem",true);showBanner("地上有東西在發光","走過去可以撿起來。撿東西會花一點時間。");}}
 const _pv=new THREE.Vector3();
-function tickEdge(){const a=$("edgeArrow");if(!G||mode!=="walk"||!stepReady()){a.hidden=true;return;}const m=targetOf(step()?.target);if(!m){a.hidden=true;return;}
+function tickEdge(){const a=$("edgeArrow");if(!G||mode!=="walk"||!stepReady()){a.hidden=true;return;}let m=targetOf(step()?.target);if(!m){a.hidden=true;return;}
+  // 目標在別層：箭頭指向這層的電梯
+  if(floorOf(m.x)!==curFloor)m={...m,x:FLX(curFloor,CORE.elev[0]),z:CORE.elev[1]};
   _pv.set(m.x,1,m.z).project(camera);const W=innerWidth,H=innerHeight;let sx=(_pv.x+1)/2*W,sy=(1-_pv.y)/2*H;const behind=_pv.z>1;
   const nx=$("next"),nb=nx&&!nx.hidden?nx.getBoundingClientRect().bottom:0,top=Math.max(document.querySelector(".hud").offsetHeight+90,nb+34),l=34,r=W-34;let bot=H-40;
   for(const sel of [".dpad","#actBtn",".camreset"]){const e=document.querySelector(sel);if(e&&e.offsetParent){const b=e.getBoundingClientRect();if(b.height)bot=Math.min(bot,b.top-32);}}
@@ -499,6 +511,7 @@ function simulateFrame(dt,t){
     if(mode==="walk"){
       let dx=0,dz=0,pathDistance=Infinity;const ix=(keys.r?1:0)-(keys.l?1:0),iz=(keys.d?1:0)-(keys.u?1:0);
       if(ix||iz){const cy=Math.cos(CAM.yaw),sy=Math.sin(CAM.yaw);dx=ix*cy+iz*sy;dz=-ix*sy+iz*cy;}
+      if(!dx&&!dz&&path&&path.length&&path[0].via){portalHop(player,path.shift());}
       if(!dx&&!dz&&path&&path.length){const [px,pz]=path[0],vx=px-player.position.x,vz=pz-player.position.z,dd=Math.hypot(vx,vz);if(dd<.01)path.shift();else{dx=vx/dd;dz=vz/dd;pathDistance=dd;}}
       if(dx||dz){const l=Math.hypot(dx,dz);dx/=l;dz/=l;const ox=player.position.x,oz=player.position.z,travel=Math.min(3.4*dt,pathDistance);stepPlayer(ox+dx*travel,oz+dz*travel);
         player.userData.stepDistance=Math.hypot(player.position.x-ox,player.position.z-oz);
@@ -515,7 +528,7 @@ function simulateFrame(dt,t){
     if(mode==="walk"){const z=zoneAt(player.position.x,player.position.z);if(z&&z[0]!==G.zone){G.zone=z[0];if(!G.zonesSeen)G.zonesSeen={};if(!G.zonesSeen[z[0]]){G.zonesSeen[z[0]]=1;showBanner(z[0],(G.line.zoneText&&G.line.zoneText[z[0]])||z[5]);}}}
     const m=stepReady()?targetOf(step()?.target):null;marker.visible=mode==="walk"&&!!m;if(m)marker.position.set(m.x,m.h+Math.sin(t*3)*.12,m.z);
     tickItemMarks(t);tickEdge();tickTips();
-    tickClock(dt);p2StoryUpdate();tickNight(dt);tickRain(dt);
+    tickClock(dt);tickNight(dt);tickRain(dt);
     const quakeDialog=step()?.id==='ev_quake'&&mode==='dialog';
     if(!quakeDialog){moveNPCs(dt);tickCrowd();if(mode!=="title")tickAmbient(dt);}else if(quakeScene&&!quakeScene.covered&&D?.choices)FX.shake=1;
     tickFX(dt);
@@ -535,5 +548,5 @@ function tick(){
   // at <=50ms while rendering once; cap long background/resume gaps at 500ms.
   const elapsed=Math.min(.5,clockT.getDelta()),count=Math.max(1,Math.ceil(elapsed/.05)),dt=elapsed/count;
   for(let i=0;i<count;i++)simulateFrame(dt,clockT.elapsedTime-elapsed+dt*(i+1));
-  camera.lookAt(camLook);renderer.render(scene,camera);requestAnimationFrame(tick);
+  floorCullAll();camera.lookAt(camLook);renderer.render(scene,camera);requestAnimationFrame(tick);
 }

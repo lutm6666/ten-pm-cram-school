@@ -183,8 +183,8 @@ function artHallDetails(){
 }
 
 function artDecorateWorld(){
-  artAddBaseboards();artAddDoorThresholds();artFrontDesk();artOfficeDetails();artLoungeDetails();
-  artClassroomDetails();artStudyDetails();artJuniorDetails();artHallDetails();
+  // 新格局（layout.js）：只保留依牆面資料產生的踢腳板；各房間細節等新格局美術重做。
+  artAddBaseboards();
 }
 
 /* ---------- 建世界：保留原版色調，限制像素倍率並加入實體細節 ---------- */

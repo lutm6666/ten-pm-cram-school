@@ -67,30 +67,6 @@ MINIS.calls={
     draw();}
 };
 
-/* 續班名單：主任 */
-MINIS.renew={
-  head:"主任室・續班名單",zone:"主任室",title:"今晚打給誰",
-  intro:"六個還沒續班的學生。今晚只有時間親自打三通。打給「還在猶豫、而且有理由能說服」的家長，最有用。",
-  list:[
-   {n:"品妤",info:"模考退步 3 級分，家長很焦慮",v:3,res:"家長聽到你們會加強向量，當場說要續。"},
-   {n:"阿哲",info:"模考 3 級分，媽媽這週打了三通電話",v:2,res:"林媽媽說再想想，但語氣軟了很多。"},
-   {n:"小安",info:"已經轉去對面補習班",v:0,res:"家長客氣地說已經報了別家。"},
-   {n:"柏翰",info:"成績穩定，每期都續，還沒繳費而已",v:0,res:"家長說本來就要續，不用特別打來。"},
-   {n:"佳穎",info:"說學費太貴，在考慮自修",v:2,res:"你提了分期付款，家長說會考慮。"},
-   {n:"子涵",info:"嫌班上太吵，想換到小班",v:3,res:"你答應幫她調到前排、小考另外批，家長說要續。"}
-  ],
-  mount(el,done){const pick=new Set();const self=this;
-    el.innerHTML=`<div class="choices">${this.list.map((s,i)=>`<button class="choice" data-i="${i}" aria-pressed="false"><b>${s.n}</b><small>${s.info}</small></button>`).join("")}</div><p class="feed" aria-live="polite">選 3 個人。</p><div class="actions" hidden><button class="go" data-call>打電話</button></div>`;
-    const feed=el.querySelector(".feed"),act=el.querySelector(".actions");
-    el.querySelectorAll("[data-i]").forEach(b=>b.addEventListener("click",()=>{const i=+b.dataset.i;if(act.dataset.done)return;
-      if(pick.has(i))pick.delete(i);else if(pick.size<3)pick.add(i);
-      el.querySelectorAll("[data-i]").forEach(x=>{const on=pick.has(+x.dataset.i);x.setAttribute("aria-pressed",on);x.style.borderColor=on?"var(--ink)":"";x.style.background=on?"var(--surface)":"";});
-      feed.textContent=`已選 ${pick.size} / 3。`;act.hidden=pick.size!==3;}));
-    act.querySelector("[data-call]").onclick=()=>{act.dataset.done=1;act.hidden=true;let v=0;const lines=[...pick].map(i=>{const s=self.list[i];v+=s.v;return `<li><b>${s.n}</b>：${s.res}</li>`;});
-      feed.innerHTML=`<ul style="margin:0;padding-left:1.2em">${lines.join("")}</ul><p style="margin-top:6px">這三通電話的效果：${v>=7?"很好":v>=4?"還可以":"幾乎沒有"}。</p>`;done({v});};
-  }
-};
-
 /* 擦白板：由上往下擦，下面先擦乾淨的話，上面擦下來的墨粉會掉下去 */
 MINIS.erase={
   head:"白板・板擦",zone:"B 班教室・講台",title:"擦白板",
@@ -129,9 +105,9 @@ MINIS.calm={
   head:"電話・林媽媽",zone:"櫃台電話",title:"安撫林媽媽",
   intro:"林媽媽的火氣很大。每一輪選一句回話，讓她的怒氣降下來。",
   rounds:[
-   {say:"「他模考 3 級分！我們繳了一整年的錢！」",opts:[["媽媽您先別急，我們先看他哪幾題寫對了。",-25],["3 級分確實很危險。",15],["這要看他自己有沒有用功。",25]]},
-   {say:"「他說上課都聽不懂，是不是老師教太快？」",opts:[["可能是，我們會注意。",-5],["其他同學都聽得懂。",25],["他是從高一的基礎就沒跟上，不是他不努力。",-25]]},
-   {say:"「那現在到底要怎麼辦？」",opts:[["先觀察看看。",10],["我們排一個基礎補強，每週多半小時。",-25],["要不要考慮退費？",20]]}
+   {say:"「他段考數學又是 C！我們繳了一整年的錢！」",opts:[["媽媽您先別急，我們先看他哪幾題寫對了。",-25],["C 確實很危險。",15],["這要看他自己有沒有用功。",25]]},
+   {say:"「他說上課都聽不懂，是不是老師教太快？」",opts:[["可能是，我們會注意。",-5],["其他同學都聽得懂。",25],["他是從國一的分數就沒跟上，不是他不努力。",-25]]},
+   {say:"「那現在到底要怎麼辦？」",opts:[["先觀察看看。",10],["我們排一個分數的基礎補強，每週多半小時。",-25],["要不要考慮退費？",20]]}
   ],
   mount(el,done){let r=0,anger=70;const self=this;
     function draw(){const R=self.rounds[r];
@@ -171,4 +147,42 @@ MINIS.roster={
       cnt.forEach((c,k)=>{if(c>2)v.push(`${ppl[k]} 排了 ${c} 天`);});
       el.querySelectorAll("[data-d]").forEach(b=>b.disabled=true);el.querySelector("[data-submit]").disabled=true;
       feed.innerHTML=v.length?`有 ${v.length} 個問題：<br>${v.join("<br>")}`:"完美的班表，沒有人有意見。";done({bad:v.length});};}
+};
+
+/* ---------- 挑三件事、排順序 ---------- */
+/* 只講三件事：從六件裡挑三件 */
+MINIS.summary={
+  head:"只講三件事",zone:"三行",title:"挑三件最重要的",cost:4,
+  get intro(){return {teacher:"林媽媽在電話那頭。她記不住太多事，你只講三件。挑對她最有用的三件。",yun:"螢幕邊框上有六張便利貼。今天先處理三張，挑最急的。",boss:"總部只看三行。挑三件最能說明這間補習班現在需要什麼的事。",care:"林老師只有一分鐘聽你交接。挑明天最需要知道的三件事。",jh:"子晴媽媽在等你回覆。挑三件最能說明子晴狀況的事。"}[G&&G.line.id]||"挑三件。";},
+  sets:{
+   yun:[["阿翔媽媽：今天五點半接小宇，要提醒二樓",3],["上週請假的三個國中生：補課還沒排",3],["子晴媽媽：段考前想多一次小考",2],["影印機：碳粉剩 10%",1],["冷氣遙控器：阿宏要",0],["上週的收據要歸檔",0]],
+   teacher:[["他今天自己算出一題分數",3],["他的基礎要從國一的分數補起",3],["下週開始提早半小時來",2],["他上課會畫畫，畫得很像",1],["他上課手機沒關聲音",0],["段考數學 C，全班最低",0]],
+   jh:[["英文 A，但作文扣分最多，可以多練寫作",3],["她被學校選去參加英文演講比賽",3],["上課很認真，常幫同學解釋單字",2],["班上排第三，前兩名差一分",1],["這次段考比較簡單",0],["其他同學也都考得不錯",0]],
+   care:[["李阿嬤明天中午會晚十分鐘",3],["張媽媽下週一要帶孩子來試讀",3],["小米媽媽今天會晚到",2],["小宇的數習第二題要訂正",1],["點心布丁剩三個",0],["下午影印機沒有卡紙",0]],
+   boss:[["櫃台只有一個人，放學高峰顧不過來",3],["有學生從國一就跟不上，需要基礎班",3],["影印機老舊，每天卡紙影響上課",2],["對面打八折，家長在比價",1],["本週續班率比上週低",0],["老師們都很努力",0]]},
+  mount(el,done){const list=this.sets[G.line.id]||this.sets.teacher,pick=new Set(),order=list.map((_,i)=>i).sort(()=>Math.random()-.5);
+    el.innerHTML=`<div class="choices">${order.map(i=>`<button class="choice" data-i="${i}" aria-pressed="false">${esc(list[i][0])}</button>`).join("")}</div><p class="feed" aria-live="polite">選 3 件。</p><div class="actions" hidden><button class="go" data-call>就講這三件</button></div>`;
+    const feed=el.querySelector(".feed"),act=el.querySelector(".actions");
+    el.querySelectorAll("[data-i]").forEach(b=>b.addEventListener("click",()=>{const i=+b.dataset.i;if(act.dataset.done)return;
+      if(pick.has(i))pick.delete(i);else if(pick.size<3)pick.add(i);
+      el.querySelectorAll("[data-i]").forEach(x=>{const on=pick.has(+x.dataset.i);x.setAttribute("aria-pressed",on);x.style.borderColor=on?"var(--ink)":"";x.style.background=on?"var(--surface)":"";});
+      feed.textContent=`已選 ${pick.size} / 3。`;act.hidden=pick.size!==3;}));
+    act.querySelector("[data-call]").onclick=()=>{act.dataset.done=1;act.hidden=true;let v=0;pick.forEach(i=>v+=list[i][1]);
+      el.querySelectorAll("[data-i]").forEach(x=>{const w=list[+x.dataset.i][1];if(w>=2)x.style.borderColor="var(--green)";x.disabled=true;});
+      feed.textContent=v>=7?"三件都說到重點了。":v>=4?"有說到一些重點。綠框的是最重要的。":"重點好像沒說到。綠框的才是最重要的。";done({v});};}
+};
+/* 排順序：依序點，點的順序就是答案 */
+MINIS.order={
+  head:"排順序",zone:"順序",title:"照順序點",cost:4,
+  get intro(){return {teacher:"五題例題，由淺到深點一次。點的順序就是上課的順序。",yun:"五通要回的電話，最急的先點。點的順序就是回電的順序。",jh:"把字照正確的句子順序點一次。"}[G&&G.line.id]||"照順序點。";},
+  sets:{teacher:["分數的通分","一元一次方程式","因式分解","配方法","一元二次方程式應用題"],
+        yun:["王媽媽：已經在樓下等","陳爸爸：九點要接小柏","林媽媽：退費進度","高二家長：問講義","廠商：影印機保養"]},
+  mount(el,done){const list=this.sets[G.line.id]||this.sets.teacher,seq=[],order=list.map((_,i)=>i).sort(()=>Math.random()-.5);
+    el.innerHTML=`<div class="choices">${order.map(i=>`<button class="choice" data-n="${i}"><span class="ord"></span>${esc(list[i])}</button>`).join("")}</div><p class="feed" aria-live="polite">點第 1 個。</p>`;
+    const feed=el.querySelector(".feed");
+    el.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;b.disabled=true;seq.push(+b.dataset.n);b.querySelector(".ord").textContent=seq.length+"．";
+      if(seq.length<list.length){feed.textContent=`點第 ${seq.length+1} 個。`;return;}
+      const right=seq.filter((v,k)=>v===k).length;
+      el.querySelectorAll("[data-n]").forEach(x=>{const k=seq.indexOf(+x.dataset.n);x.style.borderColor=k===+x.dataset.n?"var(--green)":"var(--red)";});
+      feed.innerHTML=`${right} / ${list.length} 個放對位置。正確順序：${list.map((s,i)=>`${i+1}. ${esc(s)}`).join("　")}`;done({right});}));}
 };

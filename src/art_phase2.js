@@ -21,7 +21,7 @@ person=function(color,opts={}){
 chair=function(x,z,ry){
   CHAIRS.push([x,z]);
   const g=new THREE.Group();
-  const zone=x>=28?'jh':(z>=11?'study':'class');
+  const fl=typeof floorOf==='function'?floorOf(x):0,zone=fl===2?'jh':fl===1?'study':'class';
   const plastic=zone==='jh'?p2Std('chairJh',0x668b8d,.72,.01):zone==='study'?p2Std('chairStudy',0x65736e,.75,.01):p2Std('chairClass',0x586878,.72,.01);
   const metal=p2Std('chairMetal',0x49515a,.36,.52);
   const seat=p2Mesh(fmChamferGeo(.46,.075,.43,.055),plastic,g,0,.43,0);
