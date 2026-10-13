@@ -129,11 +129,11 @@ function p2RoomIdentity(){
   const wood=fmMat('p2env:wallWood',{map:p2WoodPanelTex(),rough:.74,metal:0});
   fmBox(3.7,.42,.045,wood,6.65,.36,.225);
   p2CabinetUnit(7.65,1.05,1.05,1.35,.42,p2Std('officeCab',0x6b7479,.62,.15),p2Std('officeCabDoor',0x81898e,.65,.10));
-  wallSign('續班追蹤\n本週待聯絡',6.25,1.48,.235,0,2.2,.72,'#3d3126','#d6ba8a',42);
+  wallSign('續班追蹤\n本週待聯絡',8.05,1.68,.235,0,1.45,.56,'#3d3126','#d6ba8a',36);
 
   // 講師休息室：上櫃、公告板，空間變成「工作休息區」而非另一間教室。
   [2.1,3.35,4.60].forEach(x=>p2CabinetUnit(x,5.38,1.05,.72,.30,p2Std('loungeUpper',0xb7afa4,.82,0),p2Std('loungeUpperDoor',0xd3ccc1,.86,0)));
-  wallSign('代課・請假・影印提醒',5.75,1.45,5.13,0,2.2,.48,'#3d4b55','#f0e4c8',38);
+  wallSign('代課・請假・影印提醒',.22,1.45,7.0,Math.PI/2,2.2,.48,'#3d4b55','#f0e4c8',38);
 
   // B 班：右側教材櫃 + 公告欄。
   p2CabinetUnit(27.25,8.55,.75,1.18,.42,p2Std('classCab',0x7b858b,.60,.14),p2Std('classCabDoor',0x9da6aa,.66,.10),null,-Math.PI/2);

@@ -33,7 +33,10 @@ function p2BuildLocalLighting(){
   p2Point('lounge',4.2,1.8,7.0,0xffe2bd,.12,4.8);
 }
 function p2ApplyLocalLighting(day){
-  P2_LOCAL_LIGHTS.forEach(l=>{l.intensity=l.userData.nightIntensity*(day?.18:1);});
+  // 白天直接關掉（不是調暗）：每盞 PointLight 都會加在每個像素的光照計算上。
+  // 手機（窄螢幕）也不開：這幾盞燈強度很低，畫面差異小，但在手機 GPU 上大約多吃三成像素成本。
+  const phone=innerWidth<600||(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
+  P2_LOCAL_LIGHTS.forEach(l=>{l.visible=!day&&!phone;l.intensity=l.userData.nightIntensity;});
 }
 
 const P2_LIGHT_BASE_BUILDWORLD=buildWorld;

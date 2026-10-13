@@ -15,6 +15,7 @@ const server=http.createServer((req,res)=>{
   res.setHeader('Content-Type','text/html; charset=utf-8');res.end(html);
 });
 const results=[];
+const toMinute=t=>{const [h,m]=t.split(':').map(Number);return h*60+m;};
 function check(label,detail){results.push({label,...detail});console.log('PASS',label,detail?JSON.stringify(detail):'');}
 (async()=>{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -234,6 +235,22 @@ function check(label,detail){results.push({label,...detail});console.log('PASS',
     await page.reload();await page.locator('[data-act="resume"]').click();const legacyWait=await state();
     assert.strictEqual(legacyWait.clock,17*60+38);assert.strictEqual(legacyWait.idx,crossed.idx);assert.strictEqual(legacyWait.ready,false);assert.strictEqual(legacyWait.due,null);assert.strictEqual(legacyWait.mode,'walk');
     await blockedBeforeTime();check('legacy save shape: active and waiting readiness inferred without clock jump',{active:legacyActive.time,waiting:legacyWait.time});
+    // 「等到 HH:MM」：等待中可直接快轉。時鐘落在排定時間、步驟啟動，路上的人都已到位。
+    for(const line of ['teacher','yun','boss','care','jh']){
+      await start(line);await finishMain(({teacher:2,yun:1,boss:1,care:1,jh:0})[line]);
+      const before=await state();assert.strictEqual(before.ready,false,line+' waits after early completion');
+      assert(await page.isVisible('[data-act="waitNext"]'),line+' shows the wait button while waiting');
+      const target=toMinute(await page.evaluate(()=>__clockQA.step().t));
+      await page.locator('[data-act="waitNext"]').click();
+      if(await page.isVisible('[data-act="chapterGo"]'))await page.locator('[data-act="chapterGo"]').click();
+      await drain();
+      const after=await state();
+      assert(after.clock>=target&&after.clock<target+15,line+' clock lands on the scheduled start, not beyond: '+after.time);
+      assert(after.ready||after.idx>before.idx,line+' next task activates');
+      const stale=await page.evaluate(()=>__clockQA.extras.filter(e=>(e.state==='clockWait'&&__clockQA.G.clock>=(e.arriveClock??Infinity))||e.state==='arriving').length);
+      assert.strictEqual(stale,0,line+' background arrivals are caught up after skipping');
+      check('wait skip: '+line,{from:before.time,to:after.time,id:after.id});
+    }
     assert.deepStrictEqual(errors,[],'Browser game logic must not throw');
     console.log(`Continuous-clock regression passed: ${results.length} scenario groups; five production role transitions.`);
   }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

@@ -31,14 +31,14 @@
 舊螢幕中心 y=1、厚高 .32，底部 .84；新版桌面頂 .845。該螢幕沒有底座，且與筆電重複。
 修正：移除 `src/world.js` 的舊螢幕，保留 `src/art.js` 的完整筆電。
 重新建置、重新開始主任角色後確認只剩筆電，桌面完整。
-證據：[修正前](phase2-evidence/office-before.jpg)、[修正後](phase2-evidence/office-after.jpg)。
+證據：修正前、修正後。
 
 ### 2. 窄視窗沒有方向鍵
 
 重現：桌面指標環境將視窗設為 390×844 → 進入遊戲；仍顯示 WASD 文字，左下沒有方向鍵。
 修正：`renderDock` 在粗指標或寬度小於 600 時顯示方向鍵；resize 時刷新 dock。
 重新建置後在 390px 按住右方向鍵，實際移動離開許老師身邊；375px 方向鍵及互動鈕也可見。
-证據：[修正前](phase2-evidence/phone-before.jpg)、[375px 修正後](phase2-evidence/phone-375-after.jpg)。
+证據：修正前、375px 修正後。
 
 ### 3. 時鐘列背景模糊遮住任務字
 
@@ -46,7 +46,7 @@
 DOM bounds 原本沒有相交，但瀏覽器畫面可重現背景模糊向下溢出。
 修正：只移除 HUD 的 backdrop-filter，保留背景色、陰影與其他卡片樣式。
 重新建置並重新載入，安親及國中角色的任務文字可讀；375px 畫面未再出現該模糊帶。
-證據：[修正前](phase2-evidence/classroom.jpg)、[修正後](phase2-evidence/ui-after.jpg)。
+證據：修正前、修正後。
 
 ## 實際生效的建模程式
 
@@ -71,4 +71,6 @@ DOM bounds 原本沒有相交，但瀏覽器畫面可重現背景模糊向下溢
 - 國中 C 班與自習室的人工完整走訪。
 - 本報告提交當下的 GitHub Actions 發布結果及遠端修正預覽；需以後續執行結果補充。
 
-其餘證據：[休息室](phase2-evidence/lounge-before.jpg)、[430px 對話](phase2-evidence/phone-430-dialog.jpg)。
+其餘證據：休息室、430px 對話。
+
+> 證據截圖已移出 repo，改由 CI artifact（art-preview-screenshots）保存。

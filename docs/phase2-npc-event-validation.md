@@ -23,10 +23,10 @@
 
 | 項目 | 修正前 | 修正後 |
 |---|---|---|
-| 18:02 地震 | [前](phase2-regression-evidence/before-quake-1802.png) | [後](phase2-regression-evidence/after-quake-1802.png) |
-| 入場隊列 | [前](phase2-regression-evidence/before-arrival-queue.png) | [後](phase2-regression-evidence/after-arrival-queue.png) |
-| 置物櫃朝向 | [前](phase2-regression-evidence/before-lockers.png) | [後](phase2-regression-evidence/after-lockers.png) |
-| 主入口 | [前](phase2-regression-evidence/before-entrance.png) | [後](phase2-regression-evidence/after-entrance.png) |
+| 18:02 地震 | 前 | 後 |
+| 入場隊列 | 前 | 後 |
+| 置物櫃朝向 | 前 | 後 |
+| 主入口 | 前 | 後 |
 
 入場抽樣檢查：背景角色間距至少 0.64（實測約 0.66 或更大），有腿部步态，未穿牆；七名 C 班背景生都坐定、阿翔及子晴到定點，沒有殘留行走路徑。另測對向會車、桌角脫困、停止時步態相位不推進，以及上課地震三種選項及姿勢清理。
 
@@ -44,3 +44,5 @@
 ## 尚未驗證
 
 沒有實體 iPhone、Safari、Android、真實觸控、雙指操作或行動 GPU 效能驗收；窄螢幕 Chromium 不能替代這些結果。没有逐條人工玩完所有職業／選項或所有 NPC 姿勢與視角。GitHub Actions 與遠端預覽結果須以推送後對應修正 SHA 的執行結果確認。
+
+> 證據截圖已移出 repo，改由 CI artifact（art-preview-screenshots）保存。

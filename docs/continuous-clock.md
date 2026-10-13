@@ -24,6 +24,16 @@ the task index never advances `G.clock`.
 - A side dialogue or minigame can spend time across a scheduled start. Pending
   main activation waits until walking resumes, so it cannot replace that dialogue.
 
+## Skipping a wait
+
+While a task is pending, the next card offers 「等到 HH:MM」. `skipWait()` sets
+`G.clock` to the task's scheduled start (never beyond), runs the normal bell,
+message and crowd updates, then `settleScene()` places anyone still walking on
+real-time seconds (background arrivals, departures, named NPC entries and
+in-progress paths) at their destinations before `activateStep()`. Waiting stays
+optional: players may still explore, chat or do side tasks until the start.
+`tests/continuous-clock.js` covers the skip on all five day-one roles.
+
 ## Regression coverage
 
 `npm test` builds the stub page and runs the existing navigation, narrative,

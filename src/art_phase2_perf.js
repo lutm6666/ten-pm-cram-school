@@ -52,3 +52,67 @@ function p2PerfAudit(){
   return summary;
 }
 window.__p2PerfAudit=p2PerfAudit;
+
+/* ================= 靜態場景合併 =================
+   家具、牆、地板裝飾在整場遊戲中不會動，依「材質 × 9m 區塊」合併成一個 mesh，
+   把 draw call 與 scene graph 的走訪量降到原本的一小部分。
+   會動、會換、會切換顯示的東西都排除：人物、車、夜景燈、課桌上的個人物品、
+   點擊用的地板、半透明材質、白板（setBoard 會整塊換掉）。 */
+function p2MergeStatic(){
+  if(!scene||!THREE.BufferGeometry)return 0;
+  const skip=new Set();
+  const addTree=o=>o&&o.traverse&&o.traverse(c=>skip.add(c));
+  Object.values(npcs).forEach(addTree);extras.forEach(e=>addTree(e.p));if(typeof player!=='undefined')addTree(player);
+  if(typeof cars!=='undefined')cars.forEach(addTree);
+  if(typeof NIGHT_PARTS!=='undefined'){NIGHT_PARTS.glows.forEach(addTree);NIGHT_PARTS.ground.forEach(([m])=>addTree(m));}
+  if(typeof P2_STORY_PROPS!=='undefined')P2_STORY_PROPS.forEach(s=>addTree(s.belongings));
+  if(typeof ground!=='undefined')addTree(ground);if(typeof boardSign!=='undefined')addTree(boardSign);
+  scene.updateMatrixWorld(true);
+  const visibleChain=o=>{for(let c=o;c;c=c.parent)if(c.visible===false)return false;return true;};
+  const buckets=new Map();
+  scene.traverse(o=>{
+    if(!o.isMesh||skip.has(o)||o.isSkinnedMesh||o.isInstancedMesh)return;
+    const m=o.material,g=o.geometry;
+    if(!m||Array.isArray(m)||m.transparent||m.vertexColors||o.renderOrder)return;
+    if(!g||!g.isBufferGeometry||!g.attributes.position||!g.attributes.normal||(g.groups&&g.groups.length>1))return;
+    if(!visibleChain(o)){return;}
+    if(o.matrixWorld.determinant()<0)return;
+    const p=new THREE.Vector3().setFromMatrixPosition(o.matrixWorld);
+    const key=m.uuid+'|'+Math.floor(p.x/9)+'|'+Math.floor(p.z/9);
+    if(!buckets.has(key))buckets.set(key,{mat:m,list:[]});buckets.get(key).list.push(o);
+  });
+  const nm=new THREE.Matrix3();let removed=0;
+  for(const {mat,list} of buckets.values()){
+    if(list.length<2)continue;
+    const useUv=list.every(o=>o.geometry.attributes.uv);
+    let vCount=0,iCount=0;
+    list.forEach(o=>{const g=o.geometry;vCount+=g.attributes.position.count;iCount+=g.index?g.index.count:g.attributes.position.count;});
+    const pos=new Float32Array(vCount*3),nor=new Float32Array(vCount*3),uv=useUv?new Float32Array(vCount*2):null;
+    const idx=vCount>65535?new Uint32Array(iCount):new Uint16Array(iCount);
+    let vo=0,io=0;const v=new THREE.Vector3();
+    list.forEach(o=>{const g=o.geometry,P=g.attributes.position,N=g.attributes.normal,U=g.attributes.uv;
+      nm.getNormalMatrix(o.matrixWorld);
+      // 鏡像縮放會把三角形翻面；這種少見情況就保留原物件。
+      for(let i=0;i<P.count;i++){
+        v.fromBufferAttribute(P,i).applyMatrix4(o.matrixWorld);pos[(vo+i)*3]=v.x;pos[(vo+i)*3+1]=v.y;pos[(vo+i)*3+2]=v.z;
+        v.fromBufferAttribute(N,i).applyMatrix3(nm).normalize();nor[(vo+i)*3]=v.x;nor[(vo+i)*3+1]=v.y;nor[(vo+i)*3+2]=v.z;
+        if(uv){uv[(vo+i)*2]=U.getX(i);uv[(vo+i)*2+1]=U.getY(i);}
+      }
+      if(g.index){for(let i=0;i<g.index.count;i++)idx[io+i]=g.index.getX(i)+vo;io+=g.index.count;}
+      else{for(let i=0;i<P.count;i++)idx[io+i]=vo+i;io+=P.count;}
+      vo+=P.count;
+    });
+    const mg=new THREE.BufferGeometry();
+    mg.setAttribute('position',new THREE.BufferAttribute(pos,3));mg.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+    if(uv)mg.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+    mg.setIndex(new THREE.BufferAttribute(idx,1));mg.computeBoundingSphere();mg.computeBoundingBox();
+    const merged=new THREE.Mesh(mg,mat);merged.name='p2-static-merged';merged.matrixAutoUpdate=false;
+    merged.castShadow=list.some(o=>o.castShadow);merged.receiveShadow=list.some(o=>o.receiveShadow);
+    scene.add(merged);
+    list.forEach(o=>{o.parent&&o.parent.remove(o);removed++;});
+  }
+  // 合併後變空的群組也拿掉，scene graph 走訪更輕。
+  const empty=[];scene.traverse(o=>{if(o.isGroup&&!skip.has(o)&&o.children.length===0)empty.push(o);});
+  empty.forEach(o=>o.parent&&o.parent.remove(o));
+  return removed;
+}

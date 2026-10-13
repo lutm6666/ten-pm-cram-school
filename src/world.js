@@ -147,7 +147,7 @@ function buildWorld(){
   furn([8.2,16.7,8.75,17.5],1.1,0xdfe6ea);box(.12,.12,.06,0x3b82f6,8.36,.85,16.66);box(.12,.12,.06,0xe11d48,8.6,.85,16.66);
   wallSign("歡迎試聽\n高三學測衝刺班",2.2,1.9,9.12,0,2.2,.9,"#ffd166","#1c2633",50);
   wallSign("去年學測榜單\n頂標 3・前標 11",.22,1.6,15.6,Math.PI/2,2.2,1.1,"#c9302a","#fff6e8",46);
-  wallSign("學測衝刺班 熱烈招生中",4.5,2.55,17.78,Math.PI,3,.5,"#c9302a","#ffffff",46);
+  wallSign("學測衝刺班 熱烈招生中",8.2,1.7,17.78,Math.PI,3,.5,"#c9302a","#ffffff",46);
   const plant=new THREE.Mesh(new THREE.SphereGeometry(.38,8,6),new THREE.MeshLambertMaterial({color:0x5f8a4f}));plant.position.set(.65,.65,9.6);scene.add(plant);solids.push([.25,9.2,1.05,10.0]);
 
   // 主任室

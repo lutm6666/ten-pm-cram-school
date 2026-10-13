@@ -68,10 +68,10 @@ function artThreshold(x,z,w,d,color=0x77818b){artBox(w,.02,d,color,x,.012,z,null
 function artAddDoorThresholds(){
   // Explicit open entry: the old continuous perimeter wall hid the doorway.
   const entry=new THREE.Group();entry.name='p2-main-entrance';scene.add(entry);
-  [3.25,5.75].forEach(x=>artBox(.12,2.20,.18,0x647481,x,1.1,17.87,entry));
-  artBox(2.62,.13,.18,0x647481,4.5,2.20,17.87,entry);
+  // 牆只有 1.1m 高（俯視切面），門框跟牆頂齊平、不加門楣，否則從鏡頭看像一個空心框。
+  [3.25,5.75].forEach(x=>artBox(.14,1.14,.2,0x647481,x,.57,17.87,entry));
   artThreshold(4.5,17.84,2.35,.25);
-  const sign=wallSign('入口 / 出口',4.5,2.04,17.73,Math.PI,1.25,.25,'#ffffff','#386657',34);sign.material.side=THREE.DoubleSide;
+  const sign=wallSign('入口 / 出口',2.2,.78,17.73,Math.PI,1.1,.24,'#ffffff','#386657',32);sign.material.side=THREE.DoubleSide;
   // Open classroom jambs make the C-class entrance readable from both sides.
   [29.54,31.66].forEach(x=>artBox(.10,1.45,.18,0x657985,x,.725,11));
   artThreshold(30.6,11,1.9,.30);

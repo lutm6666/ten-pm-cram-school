@@ -122,7 +122,7 @@ function spend(min){if(G){G.clock+=min;checkBell();}}
 function renderNext(){
   const el=$("next");if(mode!=="walk"){el.hidden=true;return;}el.hidden=false;
   const hint=G.idx===0&&!store.get("tipWalk",false)?`<div class="in"><p class="nexthint">按「帶我去」會自己走過去。想自己走：用左下的方向鍵，或點地板。頭上有紅色「！」的就是要找的對象。</p></div>`:"";
-  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${!stepReady()?"下一件事 "+esc(step().t):G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${esc(val(step().goal,G))}${!stepReady()?"・尚未開始，可自由探索":""}</span>${stepReady()&&!step().auto?'<button data-act="guide">帶我去</button>':""}</div></div>${hint}`;
+  el.innerHTML=`<div class="in"><div class="nextcard"><span class="tag">${!stepReady()?"尚未開始":G.due!=null?fmt(G.due)+" 前":"下一步"}</span><span class="g">${esc(val(step().goal,G))}</span>${stepReady()&&!step().auto?'<button data-act="guide">帶我去</button>':!stepReady()?`<button data-act="waitNext">等到 ${esc(step().t)}</button>`:""}</div></div>${hint}`;
   $("next").style.top=document.querySelector(".hud").offsetHeight+8+"px";
 }
 function renderDock(){
@@ -385,6 +385,7 @@ document.addEventListener("click",e=>{
   else if(act==="dnext")dNext();else if(act==="dchat")dChat();else if(act==="dskip")dSkip();
   else if(act==="closeSheet")closeSheet();else if(act==="closeTerm")$("termPop").hidden=true;
   else if(act==="camReset"){CAM.yaw=0;CAM.tilt=1;CAM.zoom=1;saveCam();}
+  else if(act==="waitNext")skipWait();
   else if(act==="guide"&&stepReady()){const t=guideTarget(step().target);if(t){path=findPath(t.x,t.z);guiding=true;}}
   else if(act==="codex")openCodex();
   else if(act==="sound"){soundOn=!soundOn;store.set("sound",soundOn);renderHud();if(soundOn){beep("ok");startAmbient();}else stopAmbient();a.setAttribute("aria-pressed",soundOn);if(a.classList.contains("toggle"))a.textContent=soundOn?"開":"關";}
@@ -442,6 +443,25 @@ function syncItems(){if(!G)return;const ph=typeof phaseOf==="function"?phaseOf()
 /* ---------- 手機訊息、教學提示、畫面外箭頭 ---------- */
 let msgT=null;
 function showMsg(from,text){const m=$("msg");m.innerHTML=`<small>${esc(from)}</small><div>${esc(text)}</div>`;const nx=$("next");m.style.top=(nx.hidden?document.querySelector(".hud").offsetHeight+10:nx.offsetTop+nx.offsetHeight+10)+"px";m.hidden=false;beep("side");clearTimeout(msgT);msgT=setTimeout(()=>m.hidden=true,5200);}
+/* 等待中的空檔可以直接快轉到下一件事。時鐘跳過去之後，把「照真實秒數走路」的人
+   直接補到該在的位置，避免劇情時間到了、人還在半路。 */
+function settleScene(){
+  for(const n of Object.values(npcs)){const u=n.userData;
+    if(u.entrySpec){const s=u.entrySpec;u.entrySpec=null;n.visible=true;agentPlace(n,s[0],s[1],s[2]??Math.PI);continue;}
+    if(n.visible&&u.path&&u.path.length){const end=u.path[u.path.length-1],cb=u.onArrive;agentPlace(n,end[0],end[1],u.endRot);cb&&cb();}}
+  extras.forEach(e=>{const p=e.p,u=p.userData;
+    if(e.state==="clockWait"&&G.clock>=(e.arriveClock??Infinity))e.state="toArrive";
+    if(e.state==="toArrive"||e.state==="arriving"){p.visible=true;agentPlace(p,...e.home);e.state="seat";u.act=null;}
+    else if(e.state==="leaving"||e.state==="exiting"){p.visible=false;u.path=null;u.moving=false;e.state="gone";}
+    else if(p.visible&&u.path&&u.path.length){const end=u.path[u.path.length-1],cb=u.onArrive;agentPlace(p,end[0],end[1],u.endRot);cb&&cb();}});
+}
+function skipWait(){
+  if(!G||mode!=="walk"||stepReady())return;const st=step();if(!st)return;
+  const to=toMin(st.t);if(G.clock<to){G.clock=to;path=null;guiding=false;}
+  checkBell();checkMsgs();tickCrowd();settleScene();
+  lastClockMin=-1;G.status=statusOf();
+  if(!activateStep())renderAll();
+}
 function checkMsgs(){if(!G||mode!=="walk")return;const list=G.line.msgs||[];G.msgIdx=G.msgIdx||0;
   while(G.msgIdx<list.length&&toMin(list[G.msgIdx][0])<=G.clock){const [at,from,text]=list[G.msgIdx++];if(G.clock-toMin(at)<20){showMsg(from,val(text,G));break;}}}
 function tickTips(){if(!G||mode!=="walk")return;
