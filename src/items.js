@@ -17,7 +17,7 @@ ITEMS.push(
  {id:"sticker",phases:["pre","class"],lines:["care"],icon:"🦕",name:"恐龍貼紙",rarity:"常見",pos:SP("reading",1.4,.6),where:"2F・閱讀角",
   desc:"一張還沒撕開的恐龍貼紙，暴龍的那一隻已經被撕走了。",use:"給作業寫完的小朋友當獎勵。耐心 +3。",fx:{pat:3},set:{sticker:1},hint:"閱讀角的地墊上"},
  {id:"shoe",phases:["pre"],lines:["care"],icon:"👟",name:"一隻小室內鞋",rarity:"常見",pos:SP("wash",1.3,.8),where:"2F・洗手台旁",
-  desc:"比二年級的還小一號。鞋底用簽字筆寫著「1-小安」。",use:"可以拿去問一年級的林老師。",hint:"洗手台旁邊的小鞋子"},
+  desc:"比四年級的大一號。鞋底用簽字筆寫著「5-小安」。",use:"可以拿去問五年級的林老師。",hint:"洗手台旁邊的小鞋子"},
  {id:"crayon",phases:["class","leave"],lines:["care"],icon:"🖍️",name:"一支紅色蠟筆",rarity:"少見",pos:SP("snack",-1.5,.8),where:"2F・點心區",
   desc:"斷成兩截的紅色蠟筆。小米畫恐龍的時候，一直在找紅色。",use:"還給小米，她會很開心。",set:{crayon:1},hint:"點心區桌腳邊"},
  {id:"umbrella",phases:["class","break"],lines:["yun","boss"],icon:"☂️",name:"一把沒有名字的傘",rarity:"常見",pos:SP("shoes",.9,-.8),where:"1F・鞋櫃旁",

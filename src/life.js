@@ -14,13 +14,13 @@ function statusOf(){const ph=phaseOf();return (G&&G.line.phaseStatus&&G.line.pha
    劇情時鐘跳過時（快轉、讀檔），直接補到該在的位置。 */
 const KID_COLORS=[0xf59f00,0x4dabf7,0x69db7c,0xff8787,0xb197fc,0x63e6be,0xffa94d,0x74c0fc],JH_COLORS=[0x1971c2,0x2f9e44,0x5f3dc4,0xe8590c,0x0c8599,0x495057,0xc2255c,0x364fc7],PARENT_COLORS=[0x8d7b68,0x5c6b7a,0x9c6644,0x6d597a,0x4a6670,0xa0785a];
 /* 每班有幾個座位留給有名字的角色（由劇情控制） */
-const NAMED_SEATS={g2:{yu:0,anan:4,mi:6},c9:{zhe:11,pinyu:1,xiang:7,qing:2,trial:9},c8:{bo:6}};
+const NAMED_SEATS={g4:{yu:0,anan:4,mi:6},c9:{zhe:11,pinyu:1,xiang:7,qing:2,trial:9},c8:{bo:6}};
 function buildCrowd(){
   const add=(kind,room,seat,opts={})=>{const s=seatsOf(room)[seat];if(!s)return;const kid=kind==="kid"||kind==="eng";
     const p=person((kind==="jh"?JH_COLORS:KID_COLORS)[(seat*3+room.length)%8],{hair:[0x2a2421,0x3b2b20,0x151515,0x5a3a22][seat%4],kid});
     if(kind==="jh")p.userData.rig.scale.setScalar(.92);p.visible=false;extras.push({p,kind,room,home:s,state:"away",idx:extras.length,...opts});};
   const fill=(room,kind,n)=>{const taken=new Set(Object.values(NAMED_SEATS[room]||{}));let k=0;seatsOf(room).forEach((_,i)=>{if(k<n&&!taken.has(i)){add(kind,room,i);k++;}});};
-  fill("g1","kid",6);fill("g2","kid",5);fill("g34","kid",7);
+  fill("g5","kid",6);fill("g4","kid",5);fill("g6","kid",7);
   fill("c7","jh",7);fill("c8","jh",8);fill("c9","jh",7);
   fill("english","eng",6);
   // 接送家長：在大廳出現一下就帶小孩走
@@ -60,12 +60,12 @@ function setCrowd(ph,instant){crowdPhase=ph;if(typeof syncItems==="function")syn
    不是這條線主角的職員，照這張表在補習班裡移動；劇情步驟用 npc 指定時會覆蓋到下一個行程點。
    [時刻, 地點]；地點是 SPOTS 名稱（站在旁邊）或 null（不在班上）。 */
 const STAFF_DAY={
- lin:[["11:30","g1podium"],["15:20","door"],["15:58","g1podium"],["18:40",null]],
- wu:[["11:30","g34podium"],["15:20","door"],["15:58","g34podium"],["18:40",null]],
+ lin:[["11:30","g5podium"],["15:20","door"],["15:58","g5podium"],["18:40",null]],
+ wu:[["11:30","g6podium"],["15:20","door"],["15:58","g6podium"],["18:40",null]],
  amy:[["16:30","engpodium"],["20:10",null]],
  hong:[["17:00","tutor"],["21:20",null]]
 };
-const STAFF_DAY2={lin:[["11:30","g1podium"],["12:20","door"],["12:52","g1podium"],["18:40",null]],wu:[["11:30","g34podium"],["12:20","door"],["12:52","g34podium"],["18:40",null]]};
+const STAFF_DAY2={lin:[["11:30","g5podium"],["12:20","door"],["12:52","g5podium"],["18:40",null]],wu:[["11:30","g6podium"],["12:20","door"],["12:52","g6podium"],["18:40",null]]};
 function staffSpec(id){const sch=((G&&G.day===2&&STAFF_DAY2[id])||STAFF_DAY[id]);if(!sch)return undefined;let at=null;for(const [t,s] of sch){if(G.clock>=T(t))at=s;}
   if(!at)return null;const s=SPOTS[at];return[s.pos[0]+(at.endsWith("podium")?0:.6),s.pos[1]+(at.endsWith("podium")?0:.4),at.endsWith("podium")?0:Math.PI];}
 let staffLast={};
@@ -86,7 +86,7 @@ function tickAmbient(dt){
       else if(e.kind==="jh"&&jhClass){const r=Math.random();if(r<.3){u.act="raise";u.actUntil=now+2.5;emote(e.p,pick(["老師這題考嗎？","我不懂","可以再講一次嗎？"]),2.4);}else if(r<.5){u.act="sleep";u.actUntil=now+4;}else if(r<.7){u.act="chat";u.actUntil=now+2.5;emote(e.p,pick(["（小聲）","欸借我抄","段考完要去哪？"]),2);}else{u.act="stretch";u.actUntil=now+1.6;}}
       else if(e.kind==="jh"){u.act=pick(["game","chat","phone"]);u.actUntil=now+3;if(Math.random()<.4)emote(e.p,pick(["好餓","你寫完沒","我昨天打到鑽石了","段考完要去哪？","手搖要不要？"]),2.2);}
       else if(e.kind==="eng"){u.act="raise";u.actUntil=now+2;emote(e.p,pick(["Apple!","Teacher!","I know!"]),2);}
-      else if(e.kind==="parent"){emote(e.p,pick(["我來接小孩","請問二年級在幾樓？","我要繳費","作業寫完了嗎？"]),2.2);}
+      else if(e.kind==="parent"){emote(e.p,pick(["我來接小孩","請問四年級在幾樓？","我要繳費","作業寫完了嗎？"]),2.2);}
     }}
   // 會走動的職員：主任在主任室踱步、課輔老師在課輔室
   npcAmbT-=dt;if(npcAmbT<=0&&mode==="walk"){npcAmbT=4+Math.random()*4;
@@ -106,7 +106,7 @@ function npcAct(id,n,t){
   const u=n.userData;if(u.moving)return null;const c=G?G.clock:0,jhClass=c>=T("18:00")&&c<T("21:00")&&!(c>=T("19:25")&&c<T("19:35"));
   if(id==="yun"&&near2(n,"counterIn",1.2))return (t%12)<7?"type":"phone";
   if(id==="teacher"&&jhClass&&near2(n,"c9podium",1.4))return "board";
-  if((id==="lin"||id==="wu"||id==="cai")&&(near2(n,"g1podium",1.4)||near2(n,"g2podium",1.4)||near2(n,"g34podium",1.4)))return (t%10)<4?"board":null;
+  if((id==="lin"||id==="wu"||id==="cai")&&(near2(n,"g5podium",1.4)||near2(n,"g4podium",1.4)||near2(n,"g6podium",1.4)))return (t%10)<4?"board":null;
   if(id==="amy"&&near2(n,"engpodium",1.4))return "board";
   if(id==="boss"&&near2(n,"bossdesk",2.6))return (t%16)<5?"phone":null;
   if(id==="zhe"){if(u.seated&&jhClass)return "sleep";if(u.seated)return "game";}

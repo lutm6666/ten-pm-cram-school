@@ -11,12 +11,13 @@ for(const name of names)vm.runInContext(read('src/'+name),sandbox,{filename:name
 vm.runInContext('buildWorld();globalThis.api={ROOMS,SPOTS,WALLS,PORTALS,CLASS_SEATS,CHAIRS,scene,solids,seatsOf,floorOf,blockedAt,findPathFrom,floorTravelQuote,person,setPose,agentPlace,agentGo,moveAgent,ART_LAYOUT_DETAILS};',sandbox);
 const A=sandbox.api;
 // The story's spatial contract must exactly equal the agreed source commit.
+// 2026-10-14：四～六年級改版、櫃台後牆、安親老師桌取代講台（使用者試玩回饋，Claude 調整）。
 const expectedHashes={
-  "ROOMS": "84696e3c349b77bec900622e33e3ed55f112d12a432c1631d862481465c0603e",
-  "SPOTS": "a16d951e3c4c8716a90a826e4f4709b6d84b04eaf8204645ee5d752b2bedc7fd",
-  "WALLS": "227099e1f56bb85659ce078d824f41f9b25d22a3adbda794678aa97b98c7a4da",
+  "ROOMS": "4dfc074e6be3945cad30ad55df9f5d877ef88d7739dfedc4477b8dd0dc1b7d5c",
+  "SPOTS": "c5437821e81d3f27699efdcfdf56b26216a681ad665ad2321490f4b6f3988d42",
+  "WALLS": "5938f1abd38a0d28a40ee09c72fba064e4c55694ce3ebf88e38fd21aa2b0200d",
   "PORTALS": "837eec11315cd6d540a33c9d4c9f83e677921f272752c00e40a3fd7bf5284c48",
-  "CLASS_SEATS": "cdef4868dd8191dd330f6706e9c2221efaa78c1dcb68e9e0b27ea0efc59735fc"
+  "CLASS_SEATS": "142a342bfa1435633d52761aff8a1fb46b96b698bdb9ee4788ae8239b21f0deb"
 };
 for(const [k,hash]of Object.entries(expectedHashes))assert.equal(crypto.createHash('sha256').update(JSON.stringify(A[k])).digest('hex'),hash,k+' changed without coordinate review');
 const bad=[],door=A.SPOTS.door.pos;let samples=0;
@@ -29,7 +30,7 @@ for(const [id,s]of Object.entries(A.SPOTS)){
   }
   assert.ok(Math.hypot(cursor[0]-s.pos[0],cursor[1]-s.pos[1])<1.6,id+' final approach');
 }
-const doorOf={g1:'g1door',g2:'g2door',g34:'g34door',c7:'c7door',c8:'c8door',c9:'c9door',english:'engdoor'};let seatCount=0;
+const doorOf={g5:'g5door',g4:'g4door',g6:'g6door',c7:'c7door',c8:'c8door',c9:'c9door',english:'engdoor'};let seatCount=0;
 for(const [id,seats]of Object.entries(A.CLASS_SEATS)){
   const kid=!!seats.kid||id==='english',person=A.person(0x667788,{kid}),d=A.SPOTS[doorOf[id]].pos;
   for(const [x,z,ry]of A.seatsOf(id)){

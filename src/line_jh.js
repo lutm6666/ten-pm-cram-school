@@ -21,7 +21,7 @@ LINES.jh={
  chats:["pinyu","zhe","xiang","qing","teacher","boss","yun","hong","cai"],
  start:[FLX(0,4.5),16.6],dead:G=>G.s.hp<=0||G.s.pat<=0,
  me:G=>({name:"你",title:`${G.pName}・九年級班導`,abbr:"導",color:"#2f5d8a"}),
- npcs:{yun:PC.yunDesk,boss:PC.bossDesk,teacher:null,cai:AT("g2podium",0,0,0),lin:PC.lin,wu:PC.wu,hong:null,amy:null,pinyu:null,zhe:null,xiang:null,qing:null,trial:null,parent:null,xiangma:null,bo:null,chenba:null,hr:null},
+ npcs:{yun:PC.yunDesk,boss:PC.bossDesk,teacher:null,cai:AT("g4podium",0,0,0),lin:PC.lin,wu:PC.wu,hong:null,amy:null,pinyu:null,zhe:null,xiang:null,qing:null,trial:null,parent:null,xiangma:null,bo:null,chenba:null,hr:null},
  steps:[
   {id:"j_arrive",chapter:{t:"13:30",title:"到班",sub:"段考倒數六天。班務清單比平常長一倍。",status:"準備中",rush:["數學、英文、理化的考卷要印。","昨天的小考還沒登。","教室還沒掃。"]},
    t:"13:30",target:{spot:"hrdesk"},goal:"上三樓，看今天的班務",action:"打開班務本",
@@ -29,8 +29,8 @@ LINES.jh={
    choices:G=>[
     {label:"先印考卷，影印機下午會塞",fx:{ord:0,hp:-2,stu:2},set:{printFirst:1},log:"先下樓印考卷",res:[[null,"你抱著三份原稿下樓。電梯在一樓不動。"]]},
     {label:"先把昨天的成績登完",fx:{par:3},log:"先登成績",res:[[null,"你登到第五個人的時候，想起影印機。下午兩點以後，安親和美語都會來排。"]]}]},
-  {id:"j_copy",t:"13:45",target:{spot:"copier"},goal:"下樓印考卷",action:"開始印",npc:{cai:AT("copier",1,.4,Math.PI/2)},after:{cai:AT("g2podium",0,0,0)},
-   pages:G=>[[null,"影印機前，二年級的蔡老師抱著一疊評量原稿。"],["cai","鄭老師也要印？我只有八張……"],[null,"你手上的考卷，加起來一百二十張。影印機發出「嗶——」的一聲，卡紙燈亮了。"]],
+  {id:"j_copy",t:"13:45",target:{spot:"copier"},goal:"下樓印考卷",action:"開始印",npc:{cai:AT("copier",1,.4,Math.PI/2)},after:{cai:AT("g4podium",0,0,0)},
+   pages:G=>[[null,"影印機前，四年級的蔡老師抱著一疊評量原稿。"],["cai","鄭老師也要印？我只有八張……"],[null,"你手上的考卷，加起來一百二十張。影印機發出「嗶——」的一聲，卡紙燈亮了。"]],
    choices:G=>[
     {label:"自己拉卡紙",mini:"jam",fx:r=>({hp:-3-2*Math.min(4,r.tears),pat:r.tears?-3:2}),log:r=>r.tears?`修影印機，撕破 ${r.tears} 次`:"修好影印機",res:r=>r.tears?[[null,"碎紙卡在滾輪裡，蔡老師拿鑷子幫你夾。"],["cai","我先去樓上用手寫好了。"]]:[[null,"四張紙完整拉出來。"],["cai","好厲害！那你先印，我等。"]]},
     {label:"讓蔡老師先印，八張很快",fx:{pat:3,hp:1},set:{letCai:1},log:"讓安親先用影印機",res:[["cai","謝謝謝謝！"],[null,"八張評量印完，輪到你的時候，影印機開始卡紙。你拉了十分鐘。"]]},

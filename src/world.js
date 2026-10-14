@@ -48,7 +48,7 @@ function wallSign(text,x,y,z,ry,w=2.4,h=.9,fg="#1c2633",bg="#ffffff",size=56){
 }
 /* 各教室白板上的字（依劇情更新） */
 const BOARDS={},BOARD_TEXT={};
-function setBoard(text,room="g2"){const b=BOARDS[room];if(!b||!text||BOARD_TEXT[room]===text)return;BOARD_TEXT[room]=text;const parent=b.parent||scene;parent.remove(b);
+function setBoard(text,room="g4"){const b=BOARDS[room];if(!b||!text||BOARD_TEXT[room]===text)return;BOARD_TEXT[room]=text;const parent=b.parent||scene;parent.remove(b);
   const n=wallSign(text,b.position.x,b.position.y,b.position.z,b.rotation.y,b.userData.w,b.userData.h,"#1d4fc4","#ffffff",60);n.userData={w:b.userData.w,h:b.userData.h};if(parent!==scene){scene.remove(n);parent.add(n);}BOARDS[room]=n;}
 function limb(w,h,d,color,px,py,pz,parent){const pv=new THREE.Group();pv.position.set(px,py,pz);const m=new THREE.Mesh(bgeo(w,h,d),mat(color));m.position.y=-h/2;pv.add(m);parent.add(pv);return pv;}
 function person(color,opts={}){
@@ -143,11 +143,16 @@ function buildWorld(){
 /* 依房間種類擺家具（樓層內座標 → 全域座標） */
 function furnishRoom(r){
   const f=r.f,o=f*FLOOR_GAP,R4=(a,b,c,d)=>[o+a,b,o+c,d],[x0,z0,x1,z1]=r.rect,cx=(x0+x1)/2;
-  const classroom=(kid)=>{const top=z0===0,bz=top?.25:17.75,ry=top?0:Math.PI,bw=x1-x0-3;
-    box(bw+.2,1.3,.06,C.frame,o+cx,1.55,bz);box(bw,1.18,.07,C.board,o+cx,1.55,top?bz+.02:bz-.02);
-    const b=wallSign({g1:"今日作業\n國習 p.12・生字一行",g2:"今日作業\n數習 p.32・國習 p.18",g34:"今日作業\n數學評量 第三回",c7:"段考範圍\n數學 1-1～2-2",c8:"段考範圍\n理化 第一章～第三章",c9:"會考倒數 210 天\n段考：下週二、三",english:"Unit 3\nWhat's your name?"}[r.id]||"",o+cx,1.6,top?bz+.07:bz-.07,ry,Math.min(4.2,bw-.6),.9,"#1d4fc4","#ffffff",56);
+  const classroom=(kid,deskOnly)=>{const top=z0===0,bz=top?.25:17.75,ry=top?0:Math.PI;
+    // 安親教室的白板往左讓出右前角放老師桌（桌子不擋白板前的動線）
+    const bw=deskOnly?x1-x0-5:x1-x0-3,bcx=deskOnly?cx-1:cx;
+    box(bw+.2,1.3,.06,C.frame,o+bcx,1.55,bz);box(bw,1.18,.07,C.board,o+bcx,1.55,top?bz+.02:bz-.02);
+    const b=wallSign({g5:"評量進度\n數學 第5回・社會 第3回",g4:"評量進度\n數學 第4回・國語 第3回",g6:"評量進度\n數學 第6回・私中模擬卷",c7:"段考範圍\n數學 1-1～2-2",c8:"段考範圍\n理化 第一章～第三章",c9:"會考倒數 210 天\n段考：下週二、三",english:"Unit 3\nWhat's your name?"}[r.id]||"",o+bcx,1.6,top?bz+.07:bz-.07,ry,Math.min(4.2,bw-.6),.9,"#1d4fc4","#ffffff",56);
     b.userData={w:Math.min(4.2,bw-.6),h:.9};BOARDS[r.id]=b;
-    const pz=top?1.6:16.4;furn([o+cx-.6,pz-.3,o+cx+.6,pz+.3],1.0,0x6b4f39);
+    const pz=top?1.6:16.4;
+    // 國小安親：沒有講台。老師的辦公桌在白板右側前角（改評量、看聯絡簿），老師坐在桌後面對學生。
+    if(deskOnly){const dx=x1-1.35,dz=top?1.25:16.75;furn([o+dx-1,dz-.32,o+dx+1,dz+.32],.74,C.desk,C.deskTop);box(.32,.18,.24,0xf1ede4,o+dx-.55,.83,dz);box(.3,.1,.22,0x4c6ef5,o+dx+.35,.79,dz-.05);box(.3,.06,.22,0xfa5252,o+dx+.35,.87,dz+.05);chair(o+dx,top?.6:17.4,top?0:Math.PI);}
+    else furn([o+cx-.6,pz-.3,o+cx+.6,pz+.3],1.0,0x6b4f39);
     seatsOf(r.id).forEach(([x,z,rot])=>{const dz=rot===Math.PI?-.62:.62;furn([x-.5,z+dz-.25,x+.5,z+dz+.25],kid?.53:.72,C.desk,C.deskTop);chair(x,z,rot,kid);solids.push([x-.28,z-.25,x+.28,z+.25]);});
   };
   switch(r.id){
@@ -160,7 +165,7 @@ function furnishRoom(r){
    case"core1":case"core2":case"core3":
      furn(R4(30.3,.3,32.7,2.8),2.4,0x8b949c);box(1.2,2,.05,0xb6bec6,o+31.5,1,2.83);
      furn(R4(33.2,.3,35.8,2.8),.2,0x9aa3ab);for(let i=1;i<6;i++)box(2.6,.2,.4,0xa7afb7,o+34.5,.1+i*.2,2.8-i*.45);break;
-   case"lobby":furn(R4(2,10.4,8,11),1.0,C.counter,0xe9e4d8);box(.5,.35,.05,0x222831,o+3,1.25,10.55);box(.32,.12,.22,0x222222,o+6.6,1.12,10.7);
+   case"lobby":furn(R4(2,10.8,8,11.4),1.0,C.counter,0xe9e4d8);box(.5,.35,.05,0x222831,o+3,1.25,10.95);box(.32,.12,.22,0x222222,o+6.6,1.12,11.1);
      chair(o+3,10,Math.PI);chair(o+6,10,Math.PI);
      furn(R4(6.6,16.6,7.2,17.0),1.2,0x3d4650);box(.3,.2,.04,0x7fd1ff,o+6.9,1.1,16.58);
      furn(R4(.3,13,.9,17.4),1.1,0xb59a72);
@@ -172,8 +177,8 @@ function furnishRoom(r){
      break;
    case"english":classroom(true);break;
    case"store":furn(R4(32,10,35.7,10.8),1.6,C.shelf);furn(R4(35,11.5,35.7,17.4),1.6,C.shelf);break;
-   case"g1":case"g2":case"g34":classroom(true);break;
-   case"careoffice":furn(R4(1,12,4.5,13),.74,0xcfc6b5,0xe9e2d4);chair(o+2.75,11.5,0);furn(R4(6.8,10,7.7,11.4),1.5,0xe6e9ec);box(.3,.24,.06,0xe03131,o+7.25,1.2,11.43);furn(R4(.3,15,1.2,17.6),1.4,C.shelf);break;
+   case"g5":case"g4":case"g6":classroom(true,true);break;
+   case"careoffice":furn(R4(.3,10,1.2,17.6),1.6,C.shelf);furn(R4(2.5,17,7.7,17.7),1.4,C.shelf);furn(R4(6.8,10,7.7,11.4),1.5,0xe6e9ec);box(.3,.24,.06,0xe03131,o+7.25,1.2,11.43);furn(R4(3,12.6,4.6,13.4),.5,0x4dabf7);break;
    case"wash":furn(R4(8.3,10.3,8.9,17.4),.7,0xdfe6ea);break;
    case"reading":furn(R4(12.3,17.1,21.7,17.7),1.2,C.shelf);rbox(R4(14,12,20,15.5),.03,0x9ac0a5);break;
    case"snack":furn(R4(23,12.6,29,13.4),.6,0xcfc6b5,0xe9e2d4);break;

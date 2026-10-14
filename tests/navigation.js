@@ -23,7 +23,7 @@ const fs=require('fs'),assert=require('assert');
 
   const seats=await p.evaluate(()=>{const q=__nav,bad=[];let n=0;const a=q.extras.find(e=>e.kind==='jh').p,kid=q.extras.find(e=>e.kind==='kid').p;
     q.extras.forEach(e=>e.p.visible=false);Object.values(q.npcs).forEach(x=>x.visible=false);
-    const doorOf={g1:'g1door',g2:'g2door',g34:'g34door',c7:'c7door',c8:'c8door',c9:'c9door',english:'engdoor'};
+    const doorOf={g5:'g5door',g4:'g4door',g6:'g6door',c7:'c7door',c8:'c8door',c9:'c9door',english:'engdoor'};
     for(const room in q.CLASS_SEATS){const d=q.SPOTS[doorOf[room]].pos,who=q.CLASS_SEATS[room].kid||room==='english'?kid:a;who.visible=true;
       q.seatsOf(room).forEach(([x,z,r],i)=>{n++;q.agentPlace(who,d[0],d[1],0);q.agentGo(who,x,z,r);let k=0;while(who.userData.path&&k++<4000)q.moveAgent(who,.05);
         const dd=Math.hypot(who.position.x-x,who.position.z-z);if(who.userData.routeFailed||dd>.15)bad.push(`${room}#${i} 停在 ${dd.toFixed(2)}`);});

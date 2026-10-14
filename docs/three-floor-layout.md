@@ -28,7 +28,7 @@
 | 每層尺度 | 30 × 22 | 36 × 18 |
 | 樓層表示 | 局部 x/z，加 y 樓高 | X 偏移 0／48／96；f=0／1／2 |
 | 美語教室 | 二樓 | 一樓 `english`；沿用基準，不自行搬動 |
-| 二年級主教室 | `care2`／`careBoard` | `g2`／`g2door`／`g2podium` |
+| 二年級主教室 | `care2`／`careBoard` | `g4`／`g4door`／`g4podium` |
 | 九年級主教室 | `grade9`／`podium` | `c9`／`c9door`／`c9podium` |
 | 家長等候 | `parentWait` | 既有 `sofa`／`lobby` |
 | 接送核對 | 額外 `pickup` 點 | 使用現有劇情目標，不新增地點 |

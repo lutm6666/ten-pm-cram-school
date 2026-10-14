@@ -173,7 +173,7 @@ LINES2.yun={...LINES.yun,day:2,
    choices:G=>[
     {label:"一件一件處理",mini:"rush",fx:r=>{const b=pa(G,"boss").bossDesk?3:0;return {par:r.ok*2-8-(r.wrong||0)*2+b,ord:r.ok>=7?6:r.ok>=5?2:-4,pat:-6+b,missed:r.drop};},log:r=>`放學高峰處理好 ${r.ok} 件${r.wrong?`，弄錯 ${r.wrong} 件`:""}，漏掉 ${r.drop} 件`,
      res:r=>r.ok>=7?[[null,"十八點整，大廳空了一半。你喝了一口阿嬤的綠豆湯。"]]:[[null,"有幾件沒顧到。便利貼又多了兩張。"]]},
-    {label:"先廣播，再一個一個來",fx:{ord:4,pat:-3,par:-2},log:"先廣播再處理家長",res:[[null,"「二年級安安，媽媽來接囉。」二樓傳來一聲很大的「耶——」。"]]}]},
+    {label:"先廣播，再一個一個來",fx:{ord:4,pat:-3,par:-2},log:"先廣播再處理家長",res:[[null,"「四年級安安，媽媽來接囉。」二樓傳來一聲很大的「耶——」。"]]}]},
   {id:"y2_trial",t:"17:52",target:{npc:"parent"},goal:"王媽媽到了",npc:{parent:AT("counter",-.9,.8)},after:{parent:G=>pv(G).retry?AT("sofa",0,.2,Math.PI):null},
    pages:G=>{const p=pv(G),b=pa(G,"boss"),l=[];
      if(p.retry)l.push(["parent","我們來第二次試聽了。他昨天回家說，數學老師講配方法像搬家具。"]);
@@ -241,18 +241,18 @@ LINES2.boss={...LINES.boss,day:2,
   {id:"b2_pickup",t:"12:20",target:G=>pv(G).bossPickup?{spot:"door"}:{npc:"yun"},goal:G=>pv(G).bossPickup?"跟安親老師一起去接人":"櫃台的電話一直響",action:G=>pv(G).bossPickup?"出發":null,
    npc:{yun:G=>pv(G).yunEarly||!pv(G).bossPickup?PC.yunDesk:null},
    pages:G=>{const p=pv(G);
-     if(p.bossPickup)return [["lin","主任真的來了！你負責中年級的隊伍尾巴，看到有人脫隊就喊。"],[null,"國小門口擠滿機車和家長。吳老師舉著牌子，你站在最後面。"],[null,"一個中年級的小朋友回頭看你：「你是誰的爸爸？」"]];
-     return [["yun","主任，三個安親老師都出去了，電話一直來改接送……"],[null,"櫃台前面站著一位阿公：「我孫子二年級，今天我來接，他在哪？」"]];},
+     if(p.bossPickup)return [["lin","主任真的來了！你負責六年級的隊伍尾巴，看到有人脫隊就喊。"],[null,"國小門口擠滿機車和家長。吳老師舉著牌子，你站在最後面。"],[null,"一個六年級的小朋友回頭看你：「你是誰的爸爸？」"]];
+     return [["yun","主任，三個安親老師都出去了，電話一直來改接送……"],[null,"櫃台前面站著一位阿公：「我孫子四年級，今天我來接，他在哪？」"]];},
    choices:G=>{const p=pv(G);
      if(p.bossPickup)return [
-      {label:"一路點人數，過馬路時站在車道那一側",fx:{calm:-5,morale:10,rep:4},set:{walkedKids:1},log:"跟安親老師一起接中年級",res:[[null,"十二個人，點了四次。過馬路時，一台機車在你面前停下來。"],["wu","主任，你剛剛那一步，比我們站得還前面。"]]},
+      {label:"一路點人數，過馬路時站在車道那一側",fx:{calm:-5,morale:10,rep:4},set:{walkedKids:1},log:"跟安親老師一起接六年級",res:[[null,"十二個人，點了四次。過馬路時，一台機車在你面前停下來。"],["wu","主任，你剛剛那一步，比我們站得還前面。"]]},
       {label:"「我在後面，你們放心。」",fx:{calm:-2,morale:6},log:"跟在隊伍後面",res:[[null,"你走在最後面，看著三十個書包在前面晃。這是你第一次走這條路。"]]}];
      return [
       {label:"自己接電話，讓小芸處理阿公",fx:{calm:-4,morale:5},log:"主任幫櫃台接電話",res:[[null,"你接了三通。「今天阿嬤接」「小米五點五十」「安安媽媽自己來」。全部寫在接送表上。"]]},
       {label:"「先請阿公坐，我打給蔡老師。」",fx:{calm:-2,rep:2},log:"處理沒登記的接送",res:[[null,"阿公不在接送名單上。蔡老師打給小朋友的媽媽確認：是阿公沒錯。"]]}];}},
-  {id:"b2_ac",t:"13:10",target:{spot:"g2door"},goal:"上二樓看午休",action:"看一下",
+  {id:"b2_ac",t:"13:10",target:{spot:"g4door"},goal:"上二樓看午休",action:"看一下",
    pages:G=>{const p=pv(G);
-     if(p.acFix)return [[null,"二年級教室的冷氣沒有在滴水了。八個小朋友在墊子上睡成一排。"],["cai","（小聲）主任，昨天修好了，今天午休終於不用聽滴水聲。"]];
+     if(p.acFix)return [[null,"四年級教室的冷氣沒有在滴水了。八個小朋友在墊子上睡成一排。"],["cai","（小聲）主任，昨天修好了，今天午休終於不用聽滴水聲。"]];
      return [[null,"冷氣還在滴水。水桶放在兩張午休墊子中間，滴答、滴答。"],["cai","（小聲）主任……小宇說他睡不著，因為那個聲音好像有人在敲門。"]];},
    choices:G=>{const p=pv(G),c=[];
      if(!p.acFix)c.push({label:"現在打給廠商，今天一定要來",fx:{sales:-4,morale:6,calm:-3},set:{acFix2:1},log:"叫冷氣廠商今天來修",res:[[null,"廠商說四點到。你說：「三點半。」他說：「好。」"]]});
@@ -280,7 +280,7 @@ LINES2.boss={...LINES.boss,day:2,
    t:"17:25",target:G=>pv(G).bossDesk?{spot:"counterIn"}:{npc:"yun"},goal:G=>pv(G).bossDesk?"你答應過，放學這一小時下去顧櫃台":"小芸一個人在櫃台",action:G=>pv(G).bossDesk?"站進櫃台":null,
    npc:{yun:PC.yunDesk},
    pages:G=>{const p=pv(G);
-     if(p.bossDesk)return [[null,"你站進櫃台。小芸看了你一眼，把第二支電話推到你面前。"],["yun","主任，二年級安安的媽媽在等，你先廣播。"]];
+     if(p.bossDesk)return [[null,"你站進櫃台。小芸看了你一眼，把第二支電話推到你面前。"],["yun","主任，四年級安安的媽媽在等，你先廣播。"]];
      if(p.yunLeave)return [[null,"小芸一個人在櫃台。她看到你，點了一下頭，又低頭接電話。"],[null,"昨天她說「好」的時候，你就知道不是真的好。"]];
      return [[null,"小芸一個人在櫃台，電話夾在脖子上，手上在找零。"]];},
    choices:G=>{const p=pv(G);

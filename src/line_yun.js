@@ -20,7 +20,7 @@ LINES.yun={
  chats:["boss","cai","hr","teacher","hong","ama","zhangma","xiangma","chenba","parent"],
  start:[FLX(0,4.5),16.6],dead:G=>G.s.hp<=0||G.s.pat<=0,
  me:G=>({name:"你",title:`${G.pName}・櫃台`,abbr:"櫃",color:"#1f9c86"}),
- npcs:{yun:null,boss:PC.bossDesk,hr:null,teacher:null,cai:AT("g2podium",0,0,0),lin:PC.lin,wu:PC.wu,amy:null,hong:null,ama:null,xiangma:null,parent:null,trial:null,chenba:null,bo:null,zhangma:null,deliv:null},
+ npcs:{yun:null,boss:PC.bossDesk,hr:null,teacher:null,cai:AT("g4podium",0,0,0),lin:PC.lin,wu:PC.wu,amy:null,hong:null,ama:null,xiangma:null,parent:null,trial:null,chenba:null,bo:null,zhangma:null,deliv:null},
  steps:[
   {id:"y_arrive",chapter:{t:"13:30",title:"到班",sub:"螢幕邊框上，昨天的便利貼還在。",status:"營業中",rush:["六張便利貼，今天先處理三張。","下午會有家長來問安親。"]},
    t:"13:30",target:{spot:"counterIn"},goal:"坐進櫃台，看昨天的便利貼",action:"看便利貼",
@@ -34,10 +34,10 @@ LINES.yun={
    choices:G=>[
     {label:"約週六上午來做分班測驗",fx:{par:5,ord:3},log:"幫新生約美語分班測驗",res:[[null,"你在行事曆寫下：週六 10:00，三年級，分班測驗。"]]},
     {label:"「請您晚上再打來，美語老師在。」",fx:{pat:2,par:-3,missed:1},log:"請美語家長晚上再打",res:[[null,"對方說：「喔……好。」你知道她今晚不會再打來了。"]]}]},
-  {id:"y_consult",t:"14:30",target:{npc:"zhangma"},goal:"張媽媽來問二年級安親",npc:{zhangma:PC.zhangLobby},after:{zhangma:PC.zhangConsult},
-   pages:G=>[["zhangma","你好，我想問一下二年級的安親……我兒子在對面國小。"],[null,"她手上拿著對面補習班的傳單，摺得很整齊。"]],
+  {id:"y_consult",t:"14:30",target:{npc:"zhangma"},goal:"張媽媽來問四年級安親",npc:{zhangma:PC.zhangLobby},after:{zhangma:PC.zhangConsult},
+   pages:G=>[["zhangma","你好，我想問一下四年級的安親……我兒子在對面國小。"],[null,"她手上拿著對面補習班的傳單，摺得很整齊。"]],
    choices:G=>[
-    {label:"請她到諮詢室，叫二年級的蔡老師下來說明",fx:{par:6,hp:-2},set:{callCai:1},log:"請安親老師下樓說明",res:[[null,"你打電話上二樓。蔡老師說：「我馬上下去。」"],["zhangma","有老師親自說明，真好。"]]},
+    {label:"請她到諮詢室，叫四年級的蔡老師下來說明",fx:{par:6,hp:-2},set:{callCai:1},log:"請安親老師下樓說明",res:[[null,"你打電話上二樓。蔡老師說：「我馬上下去。」"],["zhangma","有老師親自說明，真好。"]]},
     {label:"自己說明安親時間和學費",fx:{par:2,ord:3},log:"自己說明安親",res:[["zhangma","學費我了解了……那老師會幫忙看應用題嗎？"],[null,"這題你答不出來。"]]},
     {label:"請主任出來談",fx:{pat:-3,par:3},log:"請主任接待",res:[[null,"主任在講總部的電話，讓張媽媽在沙發等了十分鐘。"]]}]},
   {id:"y_watch",chapter:{t:"15:20",title:"安親老師去接人了",sub:"二樓空了，大廳只剩你。",status:"營業中"},
