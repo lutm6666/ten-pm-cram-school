@@ -37,7 +37,7 @@ SIDES.care=[
   pages:G=>[["me","數習寫完、訂正完，這張給你。"],["yu","三角龍！我最喜歡三角龍！"],[null,"他把貼紙貼在聯絡簿封面上，又回去把最後一題看了一次。"]],
   fx:{pat:3,ord:2},log:"用恐龍貼紙鼓勵小宇"},
  {id:"crayon",from:"c_snack",until:"c_late",target:{npc:"mi"},title:"紅色蠟筆",action:"拿蠟筆給小米",avail:G=>G.items.includes("crayon"),
-  pages:G=>[["me","你是不是在找紅色？"],["mi","……恐龍要有紅色的嘴巴。"],[null,"她把斷成兩截的蠟筆，一截給兔子，一截自己用。"]],
+  pages:G=>[["me","你是不是在找紅色？"],["mi","……恐龍要有紅色的嘴巴。"],[null,"她把斷成兩截的蠟筆，一截放進鉛筆盒，一截拿來畫恐龍的嘴巴。"]],
   fx:{par:3,pat:2},set:{miCrayon:1},log:"把紅色蠟筆還給小米"}
 ];
 SIDES.yun=[

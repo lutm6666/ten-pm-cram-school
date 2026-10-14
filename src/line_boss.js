@@ -66,7 +66,7 @@ LINES.boss={
     {label:"直接給早鳥折扣",fx:{trial:14,sales:-8,rep:-3},set:{discount:1},log:"直接給試聽家長折扣",res:[["parent","這樣啊……那我們先聽聽看。"]]}]},
   {id:"b_patrol",chapter:{t:"18:00",title:"巡堂",sub:"國中上課了。",status:"國中上課中"},
    t:"18:40",target:{spot:"c9door"},goal:"上三樓巡堂",action:"從門上的小窗看",
-   pages:G=>[[null,"從門上的小窗看進去：許老師在白板上畫了一個房間。試聽生坐在第三排，在抄。"],[null,"最後一排，阿哲趴在桌上。後面的鄭老師在幫他撿掉在地上的講義。"]],
+   pages:G=>[[null,"從門上的小窗看進去：許老師在白板上畫了一大一小兩個三角形。試聽生坐在第三排，在抄。"],[null,"最後一排，阿哲趴在桌上。後面的鄭老師在幫他撿掉在地上的講義。"]],
    choices:G=>[
     {label:"拍一張上課照發粉專",note:"招生素材",fx:{sales:5,rep:-5},set:{photo:1},log:"拍上課照發粉專",res:[[null,"照片很好看。半小時後，家長群組有人問：「照片有拍到我小孩耶，有經過同意嗎？」"]]},
     {label:"記下來，下課跟班導談阿哲",fx:{calm:3},set:{noteZhe:1},log:"記下阿哲的狀況",res:[[null,"你在筆記本上寫：阿哲，第一節就睡，媽媽這週打三通。"]]},
@@ -86,7 +86,7 @@ LINES.boss={
     {label:"「下課時段請阿宏站三樓走廊。」",fx:{morale:4,calm:2},set:{hongHall:1},log:"安排課輔老師顧下課走廊",res:[["hr","好，那阿哲的事呢？"],[null,"你說：「明天再說。」"]]}]},
   {id:"b_enroll",chapter:{t:"21:00",title:"國中放學",sub:"王媽媽和兒子走到櫃台前。",status:"放學"},
    t:"21:05",target:{npc:"parent"},goal:"王媽媽要做決定了",npc:{parent:AT("counter",-.9,.8),trial:AT("counter",-.2,1.2),hr:PJ.hrDesk},
-   pages:G=>{const n=enrolledT(G);return [["parent",n?"他說聽得懂。老師說他卡在配方法，從那裡開始講的。":"我們回去再討論看看。對面也約了週四。"]];},
+   pages:G=>{const n=enrolledT(G);return [["parent",n?"他說聽得懂。老師說他卡在找對應邊，從那裡開始檢討的。":"我們回去再討論看看。對面也約了週四。"]];},
    choices:G=>{const n=enrolledT(G),c=[];
     if(n)c.push({label:"親自收報名表",fx:{sales:8,ret:1},set:{enrolled:1},log:"試聽生報名",res:[[null,"你在報名表上蓋了章。報表上的數字跳了一格。"]]});
     else c.push({label:"給她早鳥價，現在報名",fx:G=>G.h.trial>=45?{sales:3,rep:-3,trial:20}:{rep:-3},set:{lastDiscount:1},log:"最後用早鳥價留人",res:G=>G.h.trial>=45?[["parent","這樣的話……好吧，我們報。"]]:[["parent","不是價錢的問題。"]]});

@@ -304,7 +304,7 @@ function epilogue(){
   const any=k=>CA[k]||JH[k]||T[k]||Y[k]||B[k]||C2[k]||J2[k]||T2[k]||Y2[k]||B2[k];
   const P=[];
   /* 國中部 */
-  P.push(["阿哲",any("linSign")||any("baseClass")||any("baseWinter")?"阿哲每週二、四去上分數的基礎班。段考數學從 C 變成 B。他在講義角落畫了一個機器人，手上拿著一個「½」。":any("refunded")?"阿哲沒有再來了。林媽媽辦了退費。有一次在公車站遇到他，他戴著耳機，在畫畫。":any("zheOpen")||any("zheTalk")?"阿哲還坐在後排，但他開始在計算紙上寫題目了。分數的那種。":"阿哲還坐在最後一排。有時候睡覺，有時候畫機器人。沒有人知道他聽懂了多少。"]);
+  P.push(["阿哲",any("linSign")||any("baseClass")||any("baseWinter")?"阿哲每週二、四去上分數的基礎班。段考數學從 42 分進步到 61 分。他在講義角落畫了一個機器人，手上拿著一個「½」。":any("refunded")?"阿哲沒有再來了。林媽媽辦了退費。有一次在公車站遇到他，他戴著耳機，在畫畫。":any("zheOpen")||any("zheTalk")?"阿哲還坐在後排，但他開始在計算紙上寫題目了。分數的那種。":"阿哲還坐在最後一排。有時候睡覺，有時候畫機器人。沒有人知道他聽懂了多少。"]);
   P.push(["品妤",any("toldPinyuMa")||any("pinyuMa")?"段考她第五名，比上次退一名。媽媽沒有說話，帶她去吃了一碗牛肉麵。她說那是這學期最好吃的一餐。":any("stayedPinyu")||any("pinyuBoard")?"段考她考進前三。她在講台上留了一張紙條：「謝謝老師那天留下來。」":"她還是每天念到一點多。段考第三名，黑眼圈比上次深一點。"]);
   P.push(["阿翔",any("heardXiangma")||any("askedXiang")?"阿翔現在每天五點半到，手機自己放進籃子。他跟鄭老師說，會考完想去念汽修。他媽媽說：「好。」":any("metXiangma")||any("calledXiang")?"阿翔沒有再去網咖了，至少週二沒有。他媽媽每天傳訊息問：「到了嗎？」":"阿翔的手機還是常常沒交。不過他開始在籃子旁邊背單字卡了。"]);
   if(Object.keys(JH).length||Object.keys(J2).length)P.push(["子晴",any("heardSpeech")||JH.speech?"子晴的英文演講拿了第二名。題目是「我最想改變的一件事」，她講的是成績單上的排名。":JH.talkMom||J2.callQingMa?"子晴媽媽來補習班找了鄭老師一次。之後，子晴的週四晚上空出來了。":"子晴的報名表沒有交出去。段考英文 99，排第二。"]);
@@ -322,7 +322,7 @@ function epilogue(){
   P.push(["影印機",any("newCopier")||any("explained")?"新的影印機到了。舊的「阿卡」被搬到倉庫，鄭老師在它身上貼了一張便利貼：「謝謝你這八年。」":any("splitCopy")?"影印機旁邊的排班表一直貼著。安親、國中、美語，大家都學會了等。":"影印機還是會卡紙。小芸已經可以閉著眼睛把紙拉出來了。"]);
   P.push(["總部",any("confess")?"區經理來訪那天，看的是真的名單。下一季的目標，第一次沒有往上加。":B.lied?"總部打電話來問：為什麼上週 85%，這週 74%？主任在電話那頭沉默了很久。":B.explained?"總部的回信只有一行：「下季目標維持 85%，請加油。」但附件裡多了一張安親人力的核准單。":"續班率最後停在 78%。沒有達標，也沒有很難看。"]);
   if(any("rankWords"))P.push(["榜單牆","榜單牆換成了學生寫的小卡。最多人寫的一句是：「這裡有人記得我的名字。」旁邊是一張安親小朋友畫的恐龍。"]);
-  if(any("boHook")||any("boFound")||any("boCall"))P.push(["小柏","小柏下課不再溜去 7-11 了。他說他爸週末帶他去工地，用繩子量了一個直角。"]);
+  if(any("boHook")||any("boFound")||any("boCall"))P.push(["小柏","小柏下課不再溜去 7-11 了。他說他爸週末帶他去工地，一起算了一間房間要幾箱地磚。"]);
   if(any("brothers"))P.push(["課輔室","每週三晚上，課輔室角落有一張矮一點的桌子。小宇在那裡寫作業，等哥哥下課。"]);
   const c=$("cover");c.className="cover";c.hidden=false;
   c.innerHTML=`<div class="card report fade"><div class="kick">十一月・同一間補習班</div><h2>一個月後</h2>

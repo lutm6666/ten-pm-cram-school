@@ -27,7 +27,7 @@ ITEMS.push(
  {id:"coupon",phases:["class"],lines:["yun","boss"],icon:"🎟️",name:"對面的折價券",rarity:"少見",pos:SP("door",1.4,-1),where:"1F・門口地上",
   desc:"對面補習班的折價券，會考衝刺班 8 折，期限只到月底。",use:"沒有用處。但你知道他們的折扣撐不了多久。",hint:"上課時，有人從門縫塞了東西"},
  {id:"thanks",phases:["leave","close"],lines:["teacher"],icon:"💌",name:"講台上的小卡",rarity:"稀有",pos:SP("c9podium",1.2,.6),where:"3F・九年級講台",
-  desc:"沒有署名，字很工整：「老師，配方法我懂了一點點了。謝謝。」",use:"體力 +6。下課後才會出現。",fx:{hp:6},hint:"下課後，講台上多了一樣東西"},
+  desc:"沒有署名，字很工整：「老師，我終於知道怎麼找對應邊了。謝謝。」",use:"體力 +6。下課後才會出現。",fx:{hp:6},hint:"下課後，講台上多了一樣東西"},
  {id:"postit",phases:["leave","close"],lines:["jh","yun"],icon:"🗒️",name:"課輔室的便利貼",rarity:"稀有",pos:SP("tutor",1.6,1.2),where:"3F・課輔室最後一張桌子",
   desc:"貼在桌角，字很小：「如果會考數學 A，就跟她說。」",use:"沒有用處。你把它貼回原位。",hint:"課輔室角落有人留了話"}
 );

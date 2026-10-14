@@ -6,7 +6,7 @@ const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
 const SRC=path.join(__dirname,'..','src');
 const CONTENT=fs.readdirSync(SRC).filter(f=>/^(line_|day2)/.test(f)).concat(['events.js','overtime.js','chats.js','items.js','sides.js','rush.js','ach.js','minis.js','common.js','cast.js']);
-const BANNED=['高三','高一','高二','學測','模考','向量','內積','B 班','C 班','自習室','助教'];
+const BANNED=['高三','高一','高二','學測','模考','向量','內積','B 班','C 班','自習室','助教','配方法','一元二次','畢氏','墊子','兔子娃娃','段考數學又是 C'];
 const fails=[];const check=(ok,msg)=>{if(!ok)fails.push(msg);};
 for(const f of CONTENT){const text=fs.readFileSync(path.join(SRC,f),'utf8');
   text.split('\n').forEach((line,i)=>{for(const w of BANNED)if(line.includes(w))fails.push(`${f}:${i+1} 殘留高中版用語「${w}」`);});}

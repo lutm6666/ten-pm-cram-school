@@ -20,7 +20,7 @@ const ACH=[
  {id:"day2all",name:"這週還沒過完",desc:"五個位子的第二天都玩過",test:G=>G.done&&["care","jh","teacher","yun","boss"].every(i=>doneLines.has(i+"@2"))},
  {id:"change",name:"找零高手",desc:"繳費時算對金額，用最少張數找零",test:G=>G.minis.change&&G.minis.change.right&&G.minis.change.exact},
  {id:"carry",name:"十個綁成一捆",desc:"陪小宇把進位的題目都找出來",test:G=>(G.minis.kidgrade&&G.minis.kidgrade.hits===3)||(G.minis.kidgrade2&&G.minis.kidgrade2.hits===3)},
- {id:"quiz8",name:"三、四、五",desc:"八年級暖身五題全對",test:G=>G.minis.quiz8&&G.minis.quiz8.right===5},
+ {id:"quiz8",name:"(a + b)²",desc:"八年級暖身五題全對",test:G=>G.minis.quiz8&&G.minis.quiz8.right===5},
  {id:"heard",name:"先聽完",desc:"讓一位家長把話說完",test:G=>G.f.heardXiangma||G.f.heardBoth||G.f.toldAnma},
  {id:"all5",name:"整棟補習班",desc:"五個位子都玩過",test:G=>G.done&&["teacher","yun","boss","care","jh"].every(i=>doneLines.has(i))},
  {id:"epi",name:"一個月後",desc:"看到一個月後的補習班",test:()=>false}
