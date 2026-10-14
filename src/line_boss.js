@@ -89,7 +89,7 @@ LINES.boss={
    pages:G=>{const n=enrolledT(G);return [["parent",n?"他說聽得懂。老師說他卡在找對應邊，從那裡開始檢討的。":"我們回去再討論看看。對面也約了週四。"]];},
    choices:G=>{const n=enrolledT(G),c=[];
     if(n)c.push({label:"親自收報名表",fx:{sales:8,ret:1},set:{enrolled:1},log:"試聽生報名",res:[[null,"你在報名表上蓋了章。報表上的數字跳了一格。"]]});
-    else c.push({label:"給她早鳥價，現在報名",fx:G=>G.h.trial>=45?{sales:3,rep:-3,trial:20}:{rep:-3},set:{lastDiscount:1},log:"最後用早鳥價留人",res:G=>G.h.trial>=45?[["parent","這樣的話……好吧，我們報。"]]:[["parent","不是價錢的問題。"]]});
+    else c.push({label:"給她早鳥價，現在報名",fx:G=>G.h.trial>=45?{sales:3,rep:-3,trial:20}:{rep:-3},set:{lastDiscount:1},onResolve:G=>{if(G.h.trial>=45)G.f.enrolled=1;},log:"最後用早鳥價留人",res:G=>G.h.trial>=45?[["parent","這樣的話……好吧，我們報。"]]:[["parent","不是價錢的問題。"]]});
     c.push({label:"「讓他自己決定，週四去對面聽完再說。」",fx:{rep:6,calm:3},log:"讓家長回去考慮",res:[["parent","你們是第一間不催我們的。"]]});
     return c;}},
   {id:"b_report",t:"21:12",target:{spot:"bossdesk"},goal:"回辦公室填總部週報",action:"打開週報",npc:{parent:null,trial:null},
@@ -118,7 +118,7 @@ MINIS.renew={
   intro:"六個還沒續班的學生。今天只有時間親自打三通。打給「還在猶豫、而且有理由能說服」的家長，最有用。",
   list:[
    {n:"品妤（九年級）",info:"段考前壓力很大，媽媽在比較兩間",v:3,res:"你說會加開段考前的課輔，媽媽當場說要續。"},
-   {n:"阿哲（九年級）",info:"數學 C，媽媽這週打了三通電話",v:2,res:"林媽媽說再想想，但語氣軟了很多。"},
+   {n:"阿哲（九年級）",info:"數學小考常不及格，媽媽這週打了三通電話",v:2,res:"林媽媽說再想想，但語氣軟了很多。"},
    {n:"小安（八年級）",info:"已經轉去對面補習班",v:0,res:"家長客氣地說已經報了別家。"},
    {n:"柏翰（九年級）",info:"成績穩定，每期都續，只是還沒繳費",v:0,res:"家長說本來就要續，不用特別打來。"},
    {n:"佳穎（七年級）",info:"說學費太貴，在考慮自己念",v:2,res:"你提了分期付款，家長說會考慮。"},

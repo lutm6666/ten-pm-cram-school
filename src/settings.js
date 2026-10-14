@@ -13,7 +13,10 @@ function saveSet(){store.set("set",{...SET});}
 applyFont();
 
 let setReturn=null;
+let setStash=null;
 function openSettings(){
+  // 小遊戲、說明等面板開著時，先把整個面板（含事件）收起來，關掉設定再放回去
+  if(setReturn==null&&!$("sheet").hidden){const s=$("sheet"),fr=document.createDocumentFragment();while(s.firstChild)fr.appendChild(s.firstChild);setStash={fr,onClose:S_onClose,scroll:s.scrollTop};S_onClose=null;}
   if(setReturn==null)setReturn=mode;if(mode==="walk"){mode="info";renderAll();}
   const seg=(key,opts)=>`<div class="seg" role="radiogroup">${opts.map(([v,l])=>`<button role="radio" aria-checked="${SET[key]===v}" data-set="${key}" data-v="${v}">${l}</button>`).join("")}</div>`;
   const rng=(key,label)=>`<label class="srow"><span>${label}</span><input type="range" min="0" max="1" step=".05" value="${SET[key]}" data-range="${key}" aria-label="${label}"><b>${Math.round(SET[key]*100)}</b></label>`;
@@ -26,7 +29,8 @@ function openSettings(){
       <label class="srow"><span>拖曳靈敏度</span><input type="range" min=".4" max="2" step=".1" value="${SET.rot}" data-range="rot" aria-label="拖曳靈敏度"><b>${SET.rot.toFixed(1)}</b></label>
       <label class="srow"><span>鏡頭距離</span><input type="range" min=".55" max="1.8" step=".05" value="${CAM.zoom}" data-range="zoom" aria-label="鏡頭距離"><b>${CAM.zoom.toFixed(2)}</b></label></div>
     <div class="sgroup"><div class="lbl">字體大小</div>${seg("font",FONTS)}</div>
-    <div class="actions"><button class="ghost" data-act="setReset">恢復預設</button></div>`,()=>{if(setReturn==="walk"){mode="walk";renderAll();}setReturn=null;});
+    <div class="actions"><button class="ghost" data-act="setReset">恢復預設</button></div>`,()=>{if(setStash){const s=$("sheet"),st=setStash;setStash=null;s.innerHTML="";s.appendChild(st.fr);s.hidden=false;$("sheetBg").hidden=false;S_onClose=st.onClose;s.scrollTop=st.scroll;}
+    else if(setReturn==="walk"){mode="walk";renderAll();}setReturn=null;});
 }
 document.addEventListener("input",e=>{const r=e.target.closest&&e.target.closest("[data-range]");if(!r)return;const k=r.dataset.range,v=+r.value;
   if(k==="zoom"){CAM.zoom=v;saveCam();r.nextElementSibling.textContent=v.toFixed(2);return;}

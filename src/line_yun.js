@@ -92,7 +92,7 @@ LINES.yun={
    choices:G=>{const n=enrolledT(G),c=[];
     if(n)c.push({label:"拿報名表和收據",fx:{par:5,cash:0},set:{enrolled:1},log:"試聽生報名",res:[[null,"王媽媽填好報名表。試聽生在旁邊偷偷鬆了一口氣。"]]});
     else c.push({label:"約下週再試聽一次",fx:{trial:10,par:3},set:{retry:1},log:"約試聽生再來一次",res:[["parent","好啊，那就明天同一個時間。"],[null,"你在行事曆上寫：王，試聽第二次。"]]});
-    c.push({label:"說名額快滿了",note:"推一把",fx:G=>G.h.trial>=55?{trial:5,par:-3}:{trial:-10,par:-5},set:{pushed:1},log:"跟家長說名額快滿",res:G=>G.h.trial>=55?[["parent","那……我們先報名吧。"]]:[["parent","（皺眉）我們不喜歡被催。"]]});
+    c.push({label:"說名額快滿了",note:"推一把",fx:G=>G.h.trial>=55?{trial:5,par:-3}:{trial:-10,par:-5},set:{pushed:1},onResolve:G=>{if(G.h.trial>=55)G.f.enrolled=1;},log:"跟家長說名額快滿",res:G=>G.h.trial>=55?[["parent","那……我們先報名吧。"]]:[["parent","（皺眉）我們不喜歡被催。"]]});
     return c;}},
   {id:"y_close",chapter:{t:"21:15",title:"日結",sub:"現金、收據、刷卡紀錄。對得起來才能下班。",status:"日結中"},
    t:"21:15",target:{spot:"counterIn"},goal:"日結對帳",action:"打開抽屜",npc:{parent:null,trial:null},

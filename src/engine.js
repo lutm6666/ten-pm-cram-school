@@ -183,7 +183,7 @@ function dChoose(i){const c=D.choices[i],cb=D.onChoice;D=null;$("dlg").hidden=tr
 
 function applyFx(fx){const out=[];for(const k in fx){if(!fx[k])continue;
   if(k in G.s){const b=G.s[k];G.s[k]=clamp(b+fx[k]);const dv=G.s[k]-b;if(dv)out.push(`<span class="d ${dv>0?"up":"down"}">${G.line.stats[k][0]} ${dv>0?"+":""}${dv}</span>`);}
-  else G.h[k]=clamp((G.h[k]??50)+fx[k]);}
+  else G.h[k]=k==="cash"?(G.h[k]??0)+fx[k]:clamp((G.h[k]??50)+fx[k]);}
   return out.join("");}
 function resolveChoice(c,onDone,arg){
   const a=arg!==undefined?arg:G;

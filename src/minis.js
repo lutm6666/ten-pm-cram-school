@@ -83,13 +83,13 @@ MINIS.roll={
   intro:"前兩排應到 10 個人。看座位表，在名單上點出沒來的兩個人。點錯會被學生笑。",
   names:["柏翰","佳穎","子涵","品妤","小安","宇軒","思妤","冠廷","詠晴","家豪"],absent:["小安","柏翰"],
   mount(el,done){const self=this;const present=this.names.filter(n=>!this.absent.includes(n)).sort(()=>Math.random()-.5);let found=0,miss=0;
-    const seats=[...present,"",""].sort(()=>Math.random()-.5);
+    const seats=[...present,...self.absent.map(()=>"")].sort(()=>Math.random()-.5);
     el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:8px 0">${seats.map(n=>`<div style="border:1px solid var(--rule);border-radius:3px;padding:6px 2px;text-align:center;font-size:.82rem;background:${n?"var(--surface)":"var(--tray)"};color:${n?"var(--ink)":"var(--muted)"}">${n||"空位"}</div>`).join("")}</div>
       <div class="lbl">名單</div><div style="display:flex;flex-wrap:wrap;gap:6px">${[...this.names].sort(()=>Math.random()-.5).map(n=>`<button class="choice" data-n="${n}" style="padding:6px 10px">${n}</button>`).join("")}</div><p class="feed" aria-live="polite"></p>`;
     const feed=el.querySelector(".feed");
     el.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;const n=b.dataset.n;b.disabled=true;
       if(self.absent.includes(n)){found++;b.style.borderColor="var(--green)";feed.textContent=`${n}：沒來。`;}else{miss++;b.style.borderColor="var(--red)";feed.textContent=`${n}：「我在這裡啦！」`;}
-      if(found===2){feed.textContent=`找到了：${self.absent.join("、")}沒來。點錯 ${miss} 次。`;el.querySelectorAll("[data-n]").forEach(x=>x.disabled=true);done({miss});}}));}
+      if(found===self.absent.length){feed.textContent=`找到了：${self.absent.join("、")}沒來。點錯 ${miss} 次。`;el.querySelectorAll("[data-n]").forEach(x=>x.disabled=true);done({miss});}}));}
 };
 
 /* ---------- 挑三件事、排順序 ---------- */
