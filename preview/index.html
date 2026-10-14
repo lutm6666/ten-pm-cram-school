@@ -518,7 +518,8 @@ const INFO=[
   body:["學生進出要[[刷卡]]，系統自動傳訊息給家長。","忘了刷卡的人，家長會打來問：「我怎麼沒收到到班通知？」"]},
  {id:"schedule",pos:[FLX(0,10),7.3],h:2.1,zone:"1F 走廊",title:"今日課表",
   body:["走廊的白板，小芸每天下午用三種顏色重寫一次。"],
-  table:()=>[["11:30–19:00","國小[[安親]]","2F・四、五、六年級","y"],["18:30–20:00","國小美語","1F・Amy 老師","g"],["18:00–21:00","國中九年級 數學","3F・許老師","y"],["18:00–21:00","國中七、八年級","3F","g"]]},
+  table:G=>G&&G.day===2?[["11:30–19:00","國小[[安親]]（週三半天）","2F・四、五、六年級","y"],["18:30–20:00","國小美語","1F・Amy 老師","g"],["18:00–19:30","國中八年級 數學","3F・許老師","y"],["18:00–19:30","國中九年級 段考模擬考","3F・鄭老師監考","y"],["19:40–21:00","國中九年級 數學","3F・許老師","y"]]
+   :[["11:30–19:00","國小[[安親]]","2F・四、五、六年級","y"],["18:30–20:00","國小美語","1F・Amy 老師","g"],["18:00–21:00","國中九年級 數學","3F・許老師","y"],["18:00–21:00","國中七、八年級","3F","g"]]},
  {id:"target",pos:SP("bossdesk",.4,-2.9),h:2.2,zone:"主任室",title:"續班目標",
   body:["主任桌子對面的牆上貼著「本期續班目標 85%」。","字是主任自己寫的，寫完又用紅筆把 85 描了兩次。"]},
  {id:"firstaid",pos:SP("careoffice",3,-2.4),h:1.9,zone:"2F・安親儲藏室",title:"急救箱",
@@ -1998,13 +1999,13 @@ MINIS.roll={
   intro:"前兩排應到 10 個人。看座位表，在名單上點出沒來的兩個人。點錯會被學生笑。",
   names:["柏翰","佳穎","子涵","品妤","小安","宇軒","思妤","冠廷","詠晴","家豪"],absent:["小安","柏翰"],
   mount(el,done){const self=this;const present=this.names.filter(n=>!this.absent.includes(n)).sort(()=>Math.random()-.5);let found=0,miss=0;
-    const seats=[...present,"",""].sort(()=>Math.random()-.5);
+    const seats=[...present,...self.absent.map(()=>"")].sort(()=>Math.random()-.5);
     el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:8px 0">${seats.map(n=>`<div style="border:1px solid var(--rule);border-radius:3px;padding:6px 2px;text-align:center;font-size:.82rem;background:${n?"var(--surface)":"var(--tray)"};color:${n?"var(--ink)":"var(--muted)"}">${n||"空位"}</div>`).join("")}</div>
       <div class="lbl">名單</div><div style="display:flex;flex-wrap:wrap;gap:6px">${[...this.names].sort(()=>Math.random()-.5).map(n=>`<button class="choice" data-n="${n}" style="padding:6px 10px">${n}</button>`).join("")}</div><p class="feed" aria-live="polite"></p>`;
     const feed=el.querySelector(".feed");
     el.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;const n=b.dataset.n;b.disabled=true;
       if(self.absent.includes(n)){found++;b.style.borderColor="var(--green)";feed.textContent=`${n}：沒來。`;}else{miss++;b.style.borderColor="var(--red)";feed.textContent=`${n}：「我在這裡啦！」`;}
-      if(found===2){feed.textContent=`找到了：${self.absent.join("、")}沒來。點錯 ${miss} 次。`;el.querySelectorAll("[data-n]").forEach(x=>x.disabled=true);done({miss});}}));}
+      if(found===self.absent.length){feed.textContent=`找到了：${self.absent.join("、")}沒來。點錯 ${miss} 次。`;el.querySelectorAll("[data-n]").forEach(x=>x.disabled=true);done({miss});}}));}
 };
 
 /* ---------- 挑三件事、排順序 ---------- */
@@ -2823,7 +2824,7 @@ LINES.boss={
    pages:G=>{const n=enrolledT(G);return [["parent",n?"他說聽得懂。老師說他卡在找對應邊，從那裡開始檢討的。":"我們回去再討論看看。對面也約了週四。"]];},
    choices:G=>{const n=enrolledT(G),c=[];
     if(n)c.push({label:"親自收報名表",fx:{sales:8,ret:1},set:{enrolled:1},log:"試聽生報名",res:[[null,"你在報名表上蓋了章。報表上的數字跳了一格。"]]});
-    else c.push({label:"給她早鳥價，現在報名",fx:G=>G.h.trial>=45?{sales:3,rep:-3,trial:20}:{rep:-3},set:{lastDiscount:1},log:"最後用早鳥價留人",res:G=>G.h.trial>=45?[["parent","這樣的話……好吧，我們報。"]]:[["parent","不是價錢的問題。"]]});
+    else c.push({label:"給她早鳥價，現在報名",fx:G=>G.h.trial>=45?{sales:3,rep:-3,trial:20}:{rep:-3},set:{lastDiscount:1},onResolve:G=>{if(G.h.trial>=45)G.f.enrolled=1;},log:"最後用早鳥價留人",res:G=>G.h.trial>=45?[["parent","這樣的話……好吧，我們報。"]]:[["parent","不是價錢的問題。"]]});
     c.push({label:"「讓他自己決定，週四去對面聽完再說。」",fx:{rep:6,calm:3},log:"讓家長回去考慮",res:[["parent","你們是第一間不催我們的。"]]});
     return c;}},
   {id:"b_report",t:"21:12",target:{spot:"bossdesk"},goal:"回辦公室填總部週報",action:"打開週報",npc:{parent:null,trial:null},
@@ -2852,7 +2853,7 @@ MINIS.renew={
   intro:"六個還沒續班的學生。今天只有時間親自打三通。打給「還在猶豫、而且有理由能說服」的家長，最有用。",
   list:[
    {n:"品妤（九年級）",info:"段考前壓力很大，媽媽在比較兩間",v:3,res:"你說會加開段考前的課輔，媽媽當場說要續。"},
-   {n:"阿哲（九年級）",info:"數學 C，媽媽這週打了三通電話",v:2,res:"林媽媽說再想想，但語氣軟了很多。"},
+   {n:"阿哲（九年級）",info:"數學小考常不及格，媽媽這週打了三通電話",v:2,res:"林媽媽說再想想，但語氣軟了很多。"},
    {n:"小安（八年級）",info:"已經轉去對面補習班",v:0,res:"家長客氣地說已經報了別家。"},
    {n:"柏翰（九年級）",info:"成績穩定，每期都續，只是還沒繳費",v:0,res:"家長說本來就要續，不用特別打來。"},
    {n:"佳穎（七年級）",info:"說學費太貴，在考慮自己念",v:2,res:"你提了分期付款，家長說會考慮。"},
@@ -3169,13 +3170,13 @@ MINIS.roll={
   intro:"刷卡紀錄和教室對一次。十二個人，在名單上點出還沒到的兩個。點錯會被學生笑。",
   names:["品妤","阿哲","阿翔","子晴","子涵","宇軒","思妤","冠廷","詠晴","家豪","佳穎","柏翰"],absent:["阿翔","子涵"],
   mount(el,done){const self=this;const present=this.names.filter(n=>!this.absent.includes(n)).sort(()=>Math.random()-.5);let found=0,miss=0;
-    const seats=[...present,"",""].sort(()=>Math.random()-.5);
+    const seats=[...present,...self.absent.map(()=>"")].sort(()=>Math.random()-.5);
     el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0">${seats.map(n=>`<div style="border:1px solid var(--rule);border-radius:3px;padding:6px 2px;text-align:center;font-size:.82rem;background:${n?"var(--surface)":"var(--tray)"};color:${n?"var(--ink)":"var(--muted)"}">${n||"空位"}</div>`).join("")}</div>
       <div class="lbl">名單</div><div style="display:flex;flex-wrap:wrap;gap:6px">${[...this.names].sort(()=>Math.random()-.5).map(n=>`<button class="choice" data-n="${n}" style="padding:6px 10px">${n}</button>`).join("")}</div><p class="feed" aria-live="polite"></p>`;
     const feed=el.querySelector(".feed");
     el.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;const n=b.dataset.n;b.disabled=true;
       if(self.absent.includes(n)){found++;b.style.borderColor="var(--green)";feed.textContent=`${n}：沒到。`;}else{miss++;b.style.borderColor="var(--red)";feed.textContent=`${n}：「我在這裡啦！」`;}
-      if(found===2){feed.textContent=`找到了：${self.absent.join("、")}沒到。點錯 ${miss} 次。`;el.querySelectorAll("[data-n]").forEach(x=>x.disabled=true);done({miss});}}));}
+      if(found===self.absent.length){feed.textContent=`找到了：${self.absent.join("、")}沒到。點錯 ${miss} 次。`;el.querySelectorAll("[data-n]").forEach(x=>x.disabled=true);done({miss});}}));}
 };
 MINIS.jhscore={...MINIS.grade,
   head:"小考成績・核對",zone:"國中辦公室",title:"找出算錯的那一行",
@@ -3280,7 +3281,7 @@ LINES.yun={
    choices:G=>{const n=enrolledT(G),c=[];
     if(n)c.push({label:"拿報名表和收據",fx:{par:5,cash:0},set:{enrolled:1},log:"試聽生報名",res:[[null,"王媽媽填好報名表。試聽生在旁邊偷偷鬆了一口氣。"]]});
     else c.push({label:"約下週再試聽一次",fx:{trial:10,par:3},set:{retry:1},log:"約試聽生再來一次",res:[["parent","好啊，那就明天同一個時間。"],[null,"你在行事曆上寫：王，試聽第二次。"]]});
-    c.push({label:"說名額快滿了",note:"推一把",fx:G=>G.h.trial>=55?{trial:5,par:-3}:{trial:-10,par:-5},set:{pushed:1},log:"跟家長說名額快滿",res:G=>G.h.trial>=55?[["parent","那……我們先報名吧。"]]:[["parent","（皺眉）我們不喜歡被催。"]]});
+    c.push({label:"說名額快滿了",note:"推一把",fx:G=>G.h.trial>=55?{trial:5,par:-3}:{trial:-10,par:-5},set:{pushed:1},onResolve:G=>{if(G.h.trial>=55)G.f.enrolled=1;},log:"跟家長說名額快滿",res:G=>G.h.trial>=55?[["parent","那……我們先報名吧。"]]:[["parent","（皺眉）我們不喜歡被催。"]]});
     return c;}},
   {id:"y_close",chapter:{t:"21:15",title:"日結",sub:"現金、收據、刷卡紀錄。對得起來才能下班。",status:"日結中"},
    t:"21:15",target:{spot:"counterIn"},goal:"日結對帳",action:"打開抽屜",npc:{parent:null,trial:null},
@@ -4140,7 +4141,7 @@ function dChoose(i){const c=D.choices[i],cb=D.onChoice;D=null;$("dlg").hidden=tr
 
 function applyFx(fx){const out=[];for(const k in fx){if(!fx[k])continue;
   if(k in G.s){const b=G.s[k];G.s[k]=clamp(b+fx[k]);const dv=G.s[k]-b;if(dv)out.push(`<span class="d ${dv>0?"up":"down"}">${G.line.stats[k][0]} ${dv>0?"+":""}${dv}</span>`);}
-  else G.h[k]=clamp((G.h[k]??50)+fx[k]);}
+  else G.h[k]=k==="cash"?(G.h[k]??0)+fx[k]:clamp((G.h[k]??50)+fx[k]);}
   return out.join("");}
 function resolveChoice(c,onDone,arg){
   const a=arg!==undefined?arg:G;
@@ -4530,7 +4531,10 @@ function saveSet(){store.set("set",{...SET});}
 applyFont();
 
 let setReturn=null;
+let setStash=null;
 function openSettings(){
+  // 小遊戲、說明等面板開著時，先把整個面板（含事件）收起來，關掉設定再放回去
+  if(setReturn==null&&!$("sheet").hidden){const s=$("sheet"),fr=document.createDocumentFragment();while(s.firstChild)fr.appendChild(s.firstChild);setStash={fr,onClose:S_onClose,scroll:s.scrollTop};S_onClose=null;}
   if(setReturn==null)setReturn=mode;if(mode==="walk"){mode="info";renderAll();}
   const seg=(key,opts)=>`<div class="seg" role="radiogroup">${opts.map(([v,l])=>`<button role="radio" aria-checked="${SET[key]===v}" data-set="${key}" data-v="${v}">${l}</button>`).join("")}</div>`;
   const rng=(key,label)=>`<label class="srow"><span>${label}</span><input type="range" min="0" max="1" step=".05" value="${SET[key]}" data-range="${key}" aria-label="${label}"><b>${Math.round(SET[key]*100)}</b></label>`;
@@ -4543,7 +4547,8 @@ function openSettings(){
       <label class="srow"><span>拖曳靈敏度</span><input type="range" min=".4" max="2" step=".1" value="${SET.rot}" data-range="rot" aria-label="拖曳靈敏度"><b>${SET.rot.toFixed(1)}</b></label>
       <label class="srow"><span>鏡頭距離</span><input type="range" min=".55" max="1.8" step=".05" value="${CAM.zoom}" data-range="zoom" aria-label="鏡頭距離"><b>${CAM.zoom.toFixed(2)}</b></label></div>
     <div class="sgroup"><div class="lbl">字體大小</div>${seg("font",FONTS)}</div>
-    <div class="actions"><button class="ghost" data-act="setReset">恢復預設</button></div>`,()=>{if(setReturn==="walk"){mode="walk";renderAll();}setReturn=null;});
+    <div class="actions"><button class="ghost" data-act="setReset">恢復預設</button></div>`,()=>{if(setStash){const s=$("sheet"),st=setStash;setStash=null;s.innerHTML="";s.appendChild(st.fr);s.hidden=false;$("sheetBg").hidden=false;S_onClose=st.onClose;s.scrollTop=st.scroll;}
+    else if(setReturn==="walk"){mode="walk";renderAll();}setReturn=null;});
 }
 document.addEventListener("input",e=>{const r=e.target.closest&&e.target.closest("[data-range]");if(!r)return;const k=r.dataset.range,v=+r.value;
   if(k==="zoom"){CAM.zoom=v;saveCam();r.nextElementSibling.textContent=v.toFixed(2);return;}
