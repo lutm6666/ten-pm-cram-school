@@ -88,9 +88,9 @@ function artDecorateWorld(){
       artRecord(room,'paper',artPaper(.4,.29,o+10,1.11,1.55));
     }
     if(room.id==='lobby'){
-      artRecord(room,'keyboard',artBox(.5,.025,.18,0x303b43,3,1.065,10.77));
-      artRecord(room,'phone',artBox(.35,.1,.2,0x303b43,6,1.105,10.7));
-      artRecord(room,'paper',artPaper(.4,.28,4.4,1.07,10.7));
+      artRecord(room,'keyboard',artBox(.5,.025,.18,0x303b43,5,1.065,10.95));
+      artRecord(room,'phone',artBox(.35,.1,.2,0x303b43,7.3,1.105,11.0));
+      artRecord(room,'paper',artPaper(.4,.28,3.6,1.07,10.98));
     }
     if(room.id==='office'){
       artRecord(room,'paper',artPaper(.45,.28,o+3.3,.845,2.5));

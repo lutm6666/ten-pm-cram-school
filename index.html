@@ -744,8 +744,8 @@ function furnishRoom(r){
    case"core1":case"core2":case"core3":
      furn(R4(30.3,.3,32.7,2.8),2.4,0x8b949c);box(1.2,2,.05,0xb6bec6,o+31.5,1,2.83);
      furn(R4(33.2,.3,35.8,2.8),.2,0x9aa3ab);for(let i=1;i<6;i++)box(2.6,.2,.4,0xa7afb7,o+34.5,.1+i*.2,2.8-i*.45);break;
-   case"lobby":furn(R4(2,10.8,8,11.4),1.0,C.counter,0xe9e4d8);box(.5,.35,.05,0x222831,o+3,1.25,10.95);box(.32,.12,.22,0x222222,o+6.6,1.12,11.1);
-     chair(o+3,10,Math.PI);chair(o+6,10,Math.PI);
+   case"lobby":furn(R4(2,10.8,8,11.4),1.0,C.counter,0xe9e4d8);box(.5,.35,.05,0x222831,o+5,1.25,11.2);box(.32,.12,.22,0x222222,o+6.6,1.12,11.1);
+     chair(o+3,10.15,0);chair(o+5,10.15,0);
      furn(R4(6.6,16.6,7.2,17.0),1.2,0x3d4650);box(.3,.2,.04,0x7fd1ff,o+6.9,1.1,16.58);
      furn(R4(.3,13,.9,17.4),1.1,0xb59a72);
      furn(R4(8.2,15.8,11.6,16.7),.45,C.sofa);rbox(R4(8.2,16.7,11.6,17.0),.85,C.sofa);
@@ -1286,9 +1286,9 @@ function artDecorateWorld(){
       artRecord(room,'paper',artPaper(.4,.29,o+10,1.11,1.55));
     }
     if(room.id==='lobby'){
-      artRecord(room,'keyboard',artBox(.5,.025,.18,0x303b43,3,1.065,10.77));
-      artRecord(room,'phone',artBox(.35,.1,.2,0x303b43,6,1.105,10.7));
-      artRecord(room,'paper',artPaper(.4,.28,4.4,1.07,10.7));
+      artRecord(room,'keyboard',artBox(.5,.025,.18,0x303b43,5,1.065,10.95));
+      artRecord(room,'phone',artBox(.35,.1,.2,0x303b43,7.3,1.105,11.0));
+      artRecord(room,'paper',artPaper(.4,.28,3.6,1.07,10.98));
     }
     if(room.id==='office'){
       artRecord(room,'paper',artPaper(.45,.28,o+3.3,.845,2.5));
