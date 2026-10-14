@@ -118,7 +118,7 @@ function npcAct(id,n,t){
 }
 function tickFX(dt){
   FX.shake=Math.max(0,FX.shake-dt);FX.dark=Math.max(0,FX.dark-dt);
-  const d=FX.dark>0?Math.min(1,FX.dark*2):0,fl=Math.random()<.004?.25:0;const day=G&&G.line.daylight&&(G.clock<T("17:40"))?-.16:0;hemi.intensity=.9+day-.75*d-fl;sun.intensity=.5+day*.5-.45*d;
+  const d=FX.dark>0?Math.min(1,FX.dark*2):0;const day=G&&G.line.daylight&&(G.clock<T("17:40"))?-.16:0;hemi.intensity=.9+day-.75*d;sun.intensity=.5+day*.5-.45*d;
 }
 function startEffect(kind){
   if(kind==="shake"){FX.shake=2.6;extras.concat(Object.values(npcs).map(p=>({p}))).forEach(e=>{if(e.p.visible&&Math.random()<.6)emote(e.p,pick(["！","地震！","哇"]),1.8);});}

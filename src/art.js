@@ -59,7 +59,7 @@ person=function(color,opts={}){
 const ART_LAYOUT_DETAILS=[];
 function artRecord(room,kind,object){object.userData.layoutDetail={room:room.id,floor:room.f,kind};ART_LAYOUT_DETAILS.push(object);return object;}
 function artDecorateWorld(){
-  WALLS.forEach(r=>{const w=r[2]-r[0],d=r[3]-r[1];artBox(w,.07,d,0x98a0a8,(r[0]+r[2])/2,.045,(r[1]+r[3])/2,null,.88,0);});
+  WALLS.forEach(r=>{const w=r[2]-r[0],d=r[3]-r[1];artBox(w+.03,.07,d+.03,0x98a0a8,(r[0]+r[2])/2,.045,(r[1]+r[3])/2,null,.88,0);});
   ROOMS.forEach(room=>{
     const o=FLX(room.f,0),[x0,z0,x1,z1]=room.rect,cx=(x0+x1)/2;
     // Door thresholds and jambs fit inside the existing collision footprint.
@@ -203,7 +203,7 @@ function artRedesignRooms(){
     if(room.id==='jhoffice'){
       sign('班導工作區\n到班紀錄・家長留言',32,1.7,17.78,Math.PI,3,.72);
       record('attendancePaper',artPaper(.44,.3,o+32.5,.817,12.5));
-      books(35.4,1.75,10.8,5,.035);
+      for(let i=0;i<5;i++)detail(.23,.30+(i%3)*.035,.10,[0x648b89,0xc09357,0x8c6d78,0x59758e][i%4],35.35,1.75,10.55+i*.12);
     }
     if(room.id==='lockers'){
       // 國中置物櫃只加面板細節，不搬動國中部家具。

@@ -120,13 +120,13 @@ function animPerson(p,dt,t,st={}){
 const FLOOR_GROUPS=[];let curFloor=0;
 function buildWorld(){
   renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(innerWidth<600?1.5:2,window.devicePixelRatio||1));stage.appendChild(renderer.domElement);
-  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(38,1,.1,200);
+  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(38,1,.5,160);
   hemi=new THREE.HemisphereLight(0xffffff,0x80868e,.9);scene.add(hemi);sun=new THREE.DirectionalLight(0xffffff,.5);sun.position.set(-8,16,10);scene.add(sun);
   ground=new THREE.Mesh(new THREE.PlaneGeometry(W+80,H+80),new THREE.MeshBasicMaterial({visible:false}));ground.rotation.x=-Math.PI/2;ground.position.set(W/2,0,H/2);scene.add(ground);
   const fl=(f,r,c)=>box(r[2]-r[0],.1,r[3]-r[1],c,FLX(f,(r[0]+r[2])/2),-.05,(r[1]+r[3])/2);
   for(let f=0;f<FLOOR_N;f++){fl(f,[0,7,30,9.5],0xcdd2d6);
     // 走廊地板黃線
-    rbox([FLX(f,0),7.05,FLX(f,30),7.1],.015,0xe2b33c);rbox([FLX(f,0),9.4,FLX(f,30),9.45],.015,0xe2b33c);}
+    rbox([FLX(f,0),7.18,FLX(f,30),7.23],.015,0xe2b33c);rbox([FLX(f,0),9.27,FLX(f,30),9.32],.015,0xe2b33c);}
   ROOMS.forEach(r=>fl(r.f,r.rect,r.floor));
   WALLS.forEach(r=>{rbox(r,1.1,C.wall);rbox(r,.04,C.wallTop,1.1);});
   ZONES.forEach(([t,x,z,r])=>floorText(t,x,z,r));
