@@ -12,12 +12,13 @@ vm.runInContext('buildWorld();globalThis.api={ROOMS,SPOTS,WALLS,PORTALS,CLASS_SE
 const A=sandbox.api;
 // The story's spatial contract must exactly equal the agreed source commit.
 // 2026-10-14：四～六年級改版、櫃台後牆、安親老師桌取代講台（使用者試玩回饋，Claude 調整）。
+// 2026-10-14 第二輪：空間太空曠，切出廁所、會議室、清潔間、機房、個別指導室，縮小大廳、美語教室、倉庫、閱讀角（使用者試玩回饋）。
 const expectedHashes={
-  "ROOMS": "4dfc074e6be3945cad30ad55df9f5d877ef88d7739dfedc4477b8dd0dc1b7d5c",
-  "SPOTS": "c5437821e81d3f27699efdcfdf56b26216a681ad665ad2321490f4b6f3988d42",
-  "WALLS": "5938f1abd38a0d28a40ee09c72fba064e4c55694ce3ebf88e38fd21aa2b0200d",
+  "ROOMS": "185f62820a362b96f749c1006776e3a4fb10ce164795d9de9a4f0ce37256a45c",
+  "SPOTS": "0c7d5469094c93a5265109da693c174a0e25722feba8f7578641130ecfe4d9f7",
+  "WALLS": "1ed304f3cc1bf31987d855c2267e4242cd2ef37adfeaf51d3757802e1e30d4db",
   "PORTALS": "837eec11315cd6d540a33c9d4c9f83e677921f272752c00e40a3fd7bf5284c48",
-  "CLASS_SEATS": "142a342bfa1435633d52761aff8a1fb46b96b698bdb9ee4788ae8239b21f0deb"
+  "CLASS_SEATS": "595ba470e04f28b1bfd1f19202cf88172fb4003b72d85985cd541d46c68c659a"
 };
 for(const [k,hash]of Object.entries(expectedHashes))assert.equal(crypto.createHash('sha256').update(JSON.stringify(A[k])).digest('hex'),hash,k+' changed without coordinate review');
 const bad=[],door=A.SPOTS.door.pos;let samples=0;

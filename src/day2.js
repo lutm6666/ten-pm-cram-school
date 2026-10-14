@@ -94,7 +94,7 @@ LINES2.care={...LINES.care,day:2,
     {label:"一件一件跟她說這週的事",note:"聯絡簿、作業、今天的鉛筆",fx:{par:10,hp:-4},set:{toldAnma:1},log:"跟安安媽媽說這週的狀況",res:G=>[["me","她這兩天很想你。聯絡簿沒簽的那天，她自己在下面寫了「媽媽出差」。"],...(G.f.heardBoth?[["me","今天那支鉛筆，她跟同學吵起來，說是你買的。她講得很清楚，沒有亂哭。"]]:[]),["anma","……謝謝您。我以為她都沒有在想我。"]]},
     {label:"「她很乖，都很好。」",fx:{pat:2,par:2},log:"簡單跟安安媽媽說她很好",res:[["anma","那就好。"],[null,"她牽著安安走出大門。安安回頭揮了兩次手。"]]}];
     return c;}},
-  {id:"c2_mima",t:"17:50",target:{npc:"mima"},goal:"小米的媽媽今天準時到了",npc:{mima:PC.mimaLobby,mi:AT("lobby",.9,1.7)},after:{mima:null,mi:null},
+  {id:"c2_mima",t:"17:50",target:{npc:"mima"},goal:"小米的媽媽今天準時到了",npc:{mima:PC.mimaLobby,mi:AT("lobby",.3,.8)},after:{mima:null,mi:null},
    pages:G=>{const p=pv(G),l=[["mima","老師～今天我五點五十就到了！"]];
      if(p.leftMi)l.push(["mima","小米昨天說她坐在櫃台旁邊等我……老師，安親不是到七點嗎？"],[null,"她的語氣不是生氣，是在確認。"]);
      else if(p.waitMi)l.push(["mima","昨天謝謝您陪她排彩色筆。她回家講了一整晚。"]);

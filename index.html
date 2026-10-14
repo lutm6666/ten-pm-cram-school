@@ -336,19 +336,25 @@ const ROOMS=[
  {f:0,id:"office",name:"主任室",rect:[0,0,8,7],door:[6,7.4],floor:0xc6cec4,desc:"主任的辦公桌、續班名單、總部的週報。門通常開著。"},
  {f:0,id:"copyroom",name:"教材室",rect:[8,0,14,7],door:[9,10.4],floor:0xcdd2d6,desc:"影印機、各班的講義和考卷。每天下午最搶的地方。"},
  {f:0,id:"consult",name:"諮詢室",rect:[14,0,20,7],door:[15,16.4],floor:0xd3cbbd,desc:"一張小圓桌、兩把椅子和招生簡章。新生家長在這裡談。"},
- {f:0,id:"staff",name:"員工茶水間",rect:[20,0,30,7],door:[21,22.4],floor:0xd3cbbd,desc:"冰箱、微波爐、熱水壺。所有老師的便當都在這裡。"},
+ {f:0,id:"staff",name:"員工茶水間",rect:[20,0,25,7],door:[21,22.4],floor:0xd3cbbd,desc:"冰箱、微波爐、熱水壺。所有老師的便當都在這裡。"},
+ {f:0,id:"meeting",name:"會議室",rect:[25,0,30,7],door:[26,27.4],floor:0xcdd2d6,desc:"週會、段考檢討、和總部視訊都在這裡。白板上還留著上週的排課表。"},
  {f:0,id:"core1",name:"電梯廳",rect:[30,0,36,7],open:true,floor:0xcdd2d6,desc:"一部電梯、一座樓梯。放學時電梯永遠在別層。"},
- {f:0,id:"lobby",name:"大廳",rect:[0,9.5,16,18],door:[9.6,15.8],floor:0xd9d2c3,desc:"進門就是櫃台和刷卡機。接送時間，家長都在這裡等。"},
- {f:0,id:"english",name:"國小美語教室",rect:[16,9.5,28,18],door:[17,18.4],floor:0xdcd5c6,desc:"國小美語班。牆上貼滿了字母和單字卡。"},
- {f:0,id:"store",name:"倉庫",rect:[28,9.5,36,18],door:[29,30.4],floor:0xc9c2b2,desc:"影印紙、點心、備用的掃具。"},
+ {f:0,id:"lobby",name:"大廳",rect:[0,9.5,12,18],door:[8.6,11.6],floor:0xd9d2c3,desc:"進門就是櫃台和刷卡機。接送時間，家長都在這裡等。"},
+ {f:0,id:"wc1",name:"廁所",rect:[12,9.5,16,18],door:[12.6,13.8],floor:0xcfd6cf,desc:"兩間廁所、一排洗手台。門口貼著「請節約用水」。"},
+ {f:0,id:"english",name:"國小美語教室",rect:[16,9.5,25,18],door:[17,18.4],floor:0xdcd5c6,desc:"國小美語班。牆上貼滿了字母和單字卡。"},
+ {f:0,id:"store",name:"倉庫",rect:[25,9.5,30,18],door:[26,27.4],floor:0xc9c2b2,desc:"影印紙、點心的紙箱、備用的桌椅。"},
+ {f:0,id:"mop",name:"清潔間",rect:[30,9.5,33,18],door:[30.3,31.5],floor:0xc9c2b2,desc:"拖把、水桶、資源回收。最後一個下班的人要把垃圾拿出去。"},
+ {f:0,id:"server",name:"機房",rect:[33,9.5,36,18],floor:0xbfc4c8,desc:"總電源、網路機櫃、冷氣主機的開關。門平常鎖著。"},
  // ---- 2F：國小安親 ----
  {f:1,id:"g5",name:"五年級安親教室",rect:[0,0,10,7],door:[8.2,9.6],floor:0xe3dccb,desc:"五年級。林老師的班，牆上貼著社會科的地圖。"},
  {f:1,id:"g4",name:"四年級安親教室",rect:[10,0,20,7],door:[18.2,19.6],floor:0xe3dccb,desc:"四年級。白板上寫著評量的進度，學校作業每個人不一樣。"},
  {f:1,id:"g6",name:"六年級安親教室",rect:[20,0,30,7],door:[28.2,29.6],floor:0xe3dccb,desc:"六年級。評量疊得最高，有人已經在準備私中考試。"},
  {f:1,id:"core2",name:"電梯廳",rect:[30,0,36,7],open:true,floor:0xcdd2d6,desc:"樓梯口貼著「小朋友不要在樓梯跑」。"},
- {f:1,id:"careoffice",name:"安親儲藏室",rect:[0,9.5,8,18],door:[1,2.4],floor:0xd3cbbd,desc:"評量、教具、急救箱和失物籃。老師的桌子都在自己教室裡。"},
+ {f:1,id:"careoffice",name:"安親儲藏室",rect:[0,9.5,5,18],door:[1,2.4],floor:0xd3cbbd,desc:"評量、教具、急救箱和失物籃。老師的桌子都在自己教室裡。"},
+ {f:1,id:"wc2",name:"廁所",rect:[5,9.5,8,18],door:[5.6,6.8],floor:0xcfd6cf,desc:"小朋友的廁所，馬桶比較矮。下課時門口會排隊。"},
  {f:1,id:"wash",name:"洗手台",rect:[8,9.5,12,18],door:[9,10.4],floor:0xcfd6cf,desc:"一排矮矮的洗手台。午餐後大家在這裡刷牙。"},
- {f:1,id:"reading",name:"閱讀角",rect:[12,9.5,22,18],door:[13,14.4],floor:0xe6dcc6,desc:"地墊、書櫃、幾個懶骨頭。寫完作業才能來。"},
+ {f:1,id:"reading",name:"閱讀角",rect:[12,9.5,18,18],door:[13,14.4],floor:0xe6dcc6,desc:"地墊、書櫃、幾個懶骨頭。寫完作業才能來。"},
+ {f:1,id:"oneone",name:"個別指導室",rect:[18,9.5,22,18],door:[18.6,19.8],floor:0xe3dccb,desc:"一張小桌、兩張椅子。功課落後的小朋友會被帶來這裡一對一。"},
  {f:1,id:"snack",name:"點心區",rect:[22,9.5,30,18],door:[23,24.4],floor:0xe3dccb,desc:"長桌和小椅子。點心時間最吵的地方。"},
  {f:1,id:"cubby",name:"書包櫃",rect:[30,9.5,36,18],door:[31,32.4],floor:0xc9c2b2,desc:"每個小朋友一格，貼著名字。"},
  // ---- 3F：國中部 ----
@@ -378,7 +384,7 @@ const CLASS_SEATS={
  c7:{cols:[1.4,3.6,5.8,8],rows:[2.6,3.9,5.2]},
  c8:{cols:[11.4,13.6,15.8,18],rows:[2.6,3.9,5.2]},
  c9:{cols:[21.4,23.6,25.8,28],rows:[2.6,3.9,5.2]},
- english:{cols:[19,21.5,24,26.5],rows:[15.4,13.9],face:0}
+ english:{cols:[17.9,19.9,21.9,23.9],rows:[15.4,13.9],face:0}
 };
 /* 回傳某班的座位清單（全域座標）：[x,z,rot] */
 function seatsOf(room){const r=ROOMS.find(q=>q.id===room),s=CLASS_SEATS[room];if(!r||!s)return[];const out=[];
@@ -387,15 +393,15 @@ function seatsOf(room){const r=ROOMS.find(q=>q.id===room),s=CLASS_SEATS[room];if
 /* 命名地點：劇情目標用這些名字，不寫死座標。h 是頭上標記的高度。 */
 const SPOT_DEFS={
  // 1F
- door:[0,4.5,17,"門口"],cardreader:[0,6.9,16.2,"刷卡機"],counter:[0,5,11.8,"櫃台"],counterIn:[0,5,10.15,"櫃台內側"],sofa:[0,12,14,"等候沙發"],
+ door:[0,4.5,17,"門口"],cardreader:[0,6.9,16.2,"刷卡機"],counter:[0,5,11.8,"櫃台"],counterIn:[0,5,10.15,"櫃台內側"],sofa:[0,9.9,14.9,"等候沙發"],
  lobby:[0,8.5,14.2,"大廳"],shoes:[0,1.4,15.5,"鞋櫃"],rank:[0,.9,12,"榜單牆"],copier:[0,10,2.9,"影印機"],copyshelf:[0,12.6,3.6,"講義架"],
- bossdesk:[0,3.75,3.7,"主任的桌子"],consult:[0,17,4.4,"諮詢室"],lounge:[0,24.5,5,"茶水間"],fridge:[0,28.6,2.2,"冰箱"],
- engpodium:[0,22,17.2,"美語教室講台"],engdoor:[0,17.7,9.9,"美語教室門口"],store:[0,32,13,"倉庫"],
+ bossdesk:[0,3.75,3.7,"主任的桌子"],consult:[0,17,4.4,"諮詢室"],lounge:[0,22.5,5.3,"茶水間"],fridge:[0,24.2,1.7,"冰箱"],
+ engpodium:[0,20.5,17.2,"美語教室講台"],engdoor:[0,17.7,9.9,"美語教室門口"],store:[0,27.5,13.5,"倉庫"],
  elev1:[0,31.5,3.6,"電梯（1F）"],stairs1:[0,34.5,3.6,"樓梯（1F）"],
  // 2F
  g5door:[1,8.9,7.8,"五年級門口"],g4door:[1,18.9,7.8,"四年級門口"],g6door:[1,28.9,7.8,"六年級門口"],
  g4podium:[1,18.65,.62,"四年級老師桌"],g5podium:[1,8.65,.62,"五年級老師桌"],g6podium:[1,28.65,.62,"六年級老師桌"],
- careoffice:[1,4,14.5,"安親儲藏室"],wash:[1,10,13.5,"洗手台"],reading:[1,17,14,"閱讀角"],snack:[1,26,14,"點心區"],cubby:[1,33,13.5,"書包櫃"],
+ careoffice:[1,2.6,14.5,"安親儲藏室"],wash:[1,10,13.5,"洗手台"],reading:[1,15,14,"閱讀角"],snack:[1,26,14,"點心區"],cubby:[1,33,13.5,"書包櫃"],
  elev2:[1,31.5,3.6,"電梯（2F）"],stairs2:[1,34.5,3.6,"樓梯（2F）"],
  // 3F
  c7door:[2,8.9,7.8,"七年級門口"],c8door:[2,18.9,7.8,"八年級門口"],c9door:[2,28.9,7.8,"九年級門口"],
@@ -412,7 +418,7 @@ const ZONE_RECTS=ROOMS.map(r=>[r.name,FLX(r.f,r.rect[0]),r.rect[1],FLX(r.f,r.rec
 for(let f=0;f<FLOOR_N;f++)ZONE_RECTS.push([`${FLOOR_NAMES[f]} 走廊`,FLX(f,0),7,FLX(f,30),9.5,["接送、送點心、換教室，都要經過這裡。","安親的小朋友不准在這裡跑。","下課時最擠的地方。"][f],f]);
 function zoneAt(x,z){return ZONE_RECTS.find(r=>x>=r[1]&&x<r[3]&&z>=r[2]&&z<r[4]);}
 /* 地板上的大字：只標大空間 */
-const ZONES=[["大廳 LOBBY",FLX(0,8),16.6,0],["電梯 ELEVATOR",FLX(0,33),5.6,0],["電梯 ELEVATOR",FLX(1,33),5.6,0],["電梯 ELEVATOR",FLX(2,33),5.6,0]];
+const ZONES=[["大廳 LOBBY",FLX(0,5.6),13.6,0],["電梯 ELEVATOR",FLX(0,33),5.6,0],["電梯 ELEVATOR",FLX(1,33),5.6,0],["電梯 ELEVATOR",FLX(2,33),5.6,0]];
 
 /* 牆：外牆＋走廊兩側（留門）＋房間之間的隔間。全域座標 [x0,z0,x1,z1]。 */
 const WALLS=[];
@@ -664,7 +670,7 @@ function buildWorld(){
   hemi=new THREE.HemisphereLight(0xffffff,0x80868e,.9);scene.add(hemi);sun=new THREE.DirectionalLight(0xffffff,.5);sun.position.set(-8,16,10);scene.add(sun);
   ground=new THREE.Mesh(new THREE.PlaneGeometry(W+80,H+80),new THREE.MeshBasicMaterial({visible:false}));ground.rotation.x=-Math.PI/2;ground.position.set(W/2,0,H/2);scene.add(ground);
   const fl=(f,r,c)=>box(r[2]-r[0],.1,r[3]-r[1],c,FLX(f,(r[0]+r[2])/2),-.05,(r[1]+r[3])/2);
-  for(let f=0;f<FLOOR_N;f++){fl(f,[0,7,30,9.5],0xcdd2d6);
+  for(let f=0;f<FLOOR_N;f++){fl(f,[0,7,36,9.5],0xcdd2d6);
     // 走廊地板黃線
     rbox([FLX(f,0),7.18,FLX(f,30),7.23],.015,0xe2b33c);rbox([FLX(f,0),9.27,FLX(f,30),9.32],.015,0xe2b33c);}
   ROOMS.forEach(r=>fl(r.f,r.rect,r.floor));
@@ -680,6 +686,10 @@ function buildWorld(){
   marker=label("！","#ffffff","#c9302a",56);marker.scale.multiplyScalar(.75);scene.add(marker);
   resize();window.addEventListener("resize",resize);buildGrid();
 }
+/* 小型擺設：盆栽（有碰撞）、關著的門板（貼在走廊牆外側） */
+function plant(x,z,r=.36){const pot=new THREE.Mesh(new THREE.CylinderGeometry(r*.62,r*.5,.42,10),mat(0x9a6b4f));pot.position.set(x,.21,z);scene.add(pot);
+  const leaf=new THREE.Mesh(new THREE.SphereGeometry(r,8,6),new THREE.MeshLambertMaterial({color:0x5f8a4f}));leaf.position.set(x,.42+r*.85,z);scene.add(leaf);solids.push([x-r,z-r,x+r,z+r]);}
+function closedDoor(x0,x1,z,top){box(x1-x0,1.05,.03,0x8d7f6e,(x0+x1)/2,.53,top?z+.135:z-.135);}
 /* 依房間種類擺家具（樓層內座標 → 全域座標） */
 function furnishRoom(r){
   const f=r.f,o=f*FLOOR_GAP,R4=(a,b,c,d)=>[o+a,b,o+c,d],[x0,z0,x1,z1]=r.rect,cx=(x0+x1)/2;
@@ -697,11 +707,40 @@ function furnishRoom(r){
   };
   switch(r.id){
    case"office":furn(R4(2,2,5.5,3),.78,C.desk,C.deskTop);furn(R4(.3,.3,1.8,.8),1.7,C.shelf);furn(R4(6.3,.3,7.7,.8),1.3,0x6b7479);
-     wallSign("本期續班目標 85%",o+4,1.7,.22,0,2.6,.5,"#c9302a","#ffffff",48);chair(o+3.75,1.4,0);break;
-   case"copyroom":furn(R4(9,1,11,2),1.05,C.copier,0x4a5560);furn(R4(12,.3,13.7,1.3),1.4,C.shelf);furn(R4(11.4,4.3,13.6,5.1),.8,0xbfb6a6,0xe9e2d4);break;
-   case"consult":furn(R4(16.3,2.6,17.7,3.6),.74,0xcfc6b5,0xe9e2d4);chair(o+17,2.1,0);chair(o+17,4.1,Math.PI);furn(R4(18.6,.3,19.7,1.4),1.4,C.shelf);break;
-   case"staff":furn(R4(23,2.6,26,3.6),.74,0xcfc6b5,0xe9e2d4);[23.7,25.3].forEach(x=>{chair(o+x,2.1,0);chair(o+x,4.1,Math.PI);});
-     furn(R4(28,.3,29.6,1.1),1.8,0xe6e9ec);furn(R4(20.4,.3,23,.9),.9,0xbfb6a6);box(.5,.3,.36,0x333a44,o+21.2,1.05,.6);break;
+     wallSign("本期續班目標 85%",o+4,1.7,.22,0,2.6,.5,"#c9302a","#ffffff",48);chair(o+3.75,1.4,0);
+     // 家長來談的小沙發、茶几；右牆是檔案櫃
+     furn(R4(.3,4.4,1.0,6.6),.45,C.sofa);rbox(R4(.3,4.4,.55,6.6),.85,C.sofa);furn(R4(1.5,5,2.3,6),.4,0xb59a72,0xd8c3a0);box(.3,.08,.2,0xf1ede4,o+1.9,.49,5.5);
+     furn(R4(7.2,2,7.7,4.2),1.3,C.metal);[2.55,3.15,3.75].forEach(z=>box(.02,.05,.3,0x4a5560,o+7.19,1.0,z));
+     plant(o+.8,3.6);wallSign("招生月曆\n10月：段考週・續班說明會",o+7.87,1.7,5.6,-Math.PI/2,1.9,.62,"#1c2633","#fff6e8",36);break;
+   case"copyroom":furn(R4(9,1,11,2),1.05,C.copier,0x4a5560);furn(R4(12,.3,13.7,1.3),1.4,C.shelf);furn(R4(11.4,4.3,13.6,5.1),.8,0xbfb6a6,0xe9e2d4);
+     // 一箱箱影印紙、裁紙機、分班的講義格
+     [[8.25,5.2],[8.25,5.75],[8.25,6.3]].forEach(([x,z],i)=>furn(R4(x,z,x+.5,z+.5),.32+(i===1?.3:0),0xd8c7a6));
+     box(.5,.05,.38,0x5f6b75,o+12.1,.88,4.7);box(.04,.08,.4,0xc9302a,o+12.32,.93,4.7);
+     furn(R4(13.2,2,13.7,4),1.2,C.shelf);[2.3,2.8,3.3,3.75].forEach((z,i)=>box(.4,.06,.36,[0xf4eedf,0xffe8a3,0xd0ebff,0xffd8d8][i],o+13.45,1.23,z));
+     wallSign("卡紙請順著出紙方向拉",o+10,1.7,.22,0,2.4,.36,"#1c2633","#ffd43b",38);break;
+   case"consult":furn(R4(16.3,2.6,17.7,3.6),.74,0xcfc6b5,0xe9e2d4);chair(o+17,2.1,0);chair(o+17,4.1,Math.PI);furn(R4(18.6,.3,19.7,1.4),1.4,C.shelf);
+     furn(R4(14.3,.3,15.3,.7),1.3,0xb59a72);[.5,.8,1.1].forEach((y,i)=>box(.9,.2,.02,[0xff8787,0x74c0fc,0xffd43b][i],o+14.8,y,.72));
+     box(.3,.02,.22,0xf4eedf,o+17,.8,3.1);plant(o+19.3,6.3);
+     wallSign("國中會考衝刺班\n招生中・可試聽",o+14.12,1.7,3.6,Math.PI/2,2.2,.62,"#c9302a","#fff6e8",40);break;
+   case"staff":furn(R4(21.2,2.7,23.8,3.7),.74,0xcfc6b5,0xe9e2d4);[21.85,23.15].forEach(x=>{chair(o+x,2.2,0);chair(o+x,4.2,Math.PI);});
+     furn(R4(23.6,.3,24.8,1.1),1.8,0xe6e9ec);furn(R4(20.4,.3,23,.9),.9,0xbfb6a6);box(.5,.3,.36,0x333a44,o+21.2,1.05,.6);
+     box(.22,.28,.22,0xdee2e6,o+22.4,1.04,.6);furn(R4(24.3,5.6,24.8,6.4),1.1,0xd0ebff);box(.36,.06,.36,0x74c0fc,o+24.55,1.13,6);
+     wallSign("便當請寫名字",o+24.2,1.75,.22,0,1.4,.3,"#1c2633","#ffffff",34);break;
+   case"meeting":furn(R4(26.2,2.4,29,4.2),.74,0xcfc6b5,0xe9e2d4);[26.9,28.3].forEach(x=>{chair(o+x,1.9,0);chair(o+x,4.7,Math.PI);});
+     box(3.2,1.2,.06,C.frame,o+27.5,1.55,.25);box(3,1.08,.07,C.board,o+27.5,1.55,.27);
+     wallSign("排課表\n週一～週五 安親・美語・國中",o+27.5,1.6,.32,0,2.6,.7,"#1d4fc4","#ffffff",40);
+     furn(R4(29.3,5.2,29.8,6.6),.9,0x6b7479);box(.08,.5,.9,0x222831,o+29.85,1.35,5.9);plant(o+29.5,.95,.28);break;
+   case"wc1":case"wc2":{const s0=x0+.2,s1=x1-.2,kid=f===1;
+     // 後半是隔間，前半是洗手台；隔間門板貼在隔間前面一點，不與隔間同平面
+     furn(R4(s0,15.6,s1,17.8),2,0xa9bfc7);const n=Math.max(2,Math.round((s1-s0)/1.3));
+     for(let i=0;i<n;i++){const a=s0+(s1-s0)*i/n,b=s0+(s1-s0)*(i+1)/n;box(b-a-.2,1.7,.03,0x7fa5b2,o+(a+b)/2,.95,15.57);box(.06,.06,.03,0xd9480f,o+b-.3,1.1,15.55);}
+     furn(R4(x1-.75,10.4,x1-.2,13.2),kid?.65:.85,0xdfe6ea,0xf1f3f5);box(.03,.7,2.4,0xd0ebff,o+x1-.13,1.5,11.8);
+     wallSign(kid?"上完廁所要洗手":"請節約用水",o+(x0+x1)/2,1.8,15.53,Math.PI,1.6,.32,"#1c2633","#ffffff",34);break;}
+   case"mop":furn(R4(30.3,16.8,31.6,17.7),.6,0xdfe6ea);[[32.3,12],[32.3,12.8],[32.3,13.6]].forEach(([x,z],i)=>furn(R4(x,z,x+.5,z+.6),.8,[0x4dabf7,0x40c057,0xfab005][i]));
+     box(.06,1.3,.06,0x8a6a48,o+30.5,.75,15.8);box(.3,.25,.3,0xadb5bd,o+30.5,.13,15.8);furn(R4(30.3,14.2,31.0,14.9),.5,0x748ffc);
+     wallSign("資源回收\n紙類・塑膠・一般",o+32.87,1.6,14.6,-Math.PI/2,1.6,.5,"#1c2633","#ffffff",34);break;
+   case"server":furn(R4(34.6,14,35.7,17.6),2,0x343a40);for(let i=0;i<6;i++)box(.02,.04,.5,i%2?0x40c057:0x74c0fc,o+34.58,.6+i*.22,15.8);
+     furn(R4(33.3,17.2,34.3,17.7),1.6,0x868e96);closedDoor(o+33.6,o+34.8,9.5,false);wallSign("機房・閒人勿入",o+34.2,1.42,9.38,Math.PI,1.4,.3,"#ffffff","#c9302a",34);break;
    case"core1":case"core2":case"core3":
      furn(R4(30.3,.3,32.7,2.8),2.4,0x8b949c);box(1.2,2,.05,0xb6bec6,o+31.5,1,2.83);
      furn(R4(33.2,.3,35.8,2.8),.2,0x9aa3ab);for(let i=1;i<6;i++)box(2.6,.2,.4,0xa7afb7,o+34.5,.1+i*.2,2.8-i*.45);break;
@@ -709,26 +748,46 @@ function furnishRoom(r){
      chair(o+3,10,Math.PI);chair(o+6,10,Math.PI);
      furn(R4(6.6,16.6,7.2,17.0),1.2,0x3d4650);box(.3,.2,.04,0x7fd1ff,o+6.9,1.1,16.58);
      furn(R4(.3,13,.9,17.4),1.1,0xb59a72);
-     furn(R4(10,15.2,13.6,16.1),.45,C.sofa);rbox(R4(10,16.1,13.6,16.4),.85,C.sofa);
+     furn(R4(8.2,15.8,11.6,16.7),.45,C.sofa);rbox(R4(8.2,16.7,11.6,17.0),.85,C.sofa);
      wallSign("會考榜單\n建中 2・北一女 1・5A++ 4",o+.22,1.6,12,Math.PI/2,2.2,1.1,"#c9302a","#fff6e8",46);
-     wallSign("國小安親・美語　國中課輔・會考衝刺",o+12,1.7,17.78,Math.PI,4,.5,"#c9302a","#ffffff",44);
+     wallSign("國小安親・美語　國中課輔・會考衝刺",o+9.9,1.75,17.78,Math.PI,3.6,.5,"#c9302a","#ffffff",40);
      wallSign("刷卡",o+6.9,1.75,17.73,Math.PI,.6,.26,"#ffffff","#2f5d8a",34);
-     {const plant=new THREE.Mesh(new THREE.SphereGeometry(.38,8,6),new THREE.MeshLambertMaterial({color:0x5f8a4f}));plant.position.set(o+15.2,.65,17);scene.add(plant);solids.push(R4(14.8,16.6,15.6,17.4));}
+     // 飲水機、招生簡章架、公告欄、傘桶、兩盆植物
+     furn(R4(11.2,12.2,11.7,12.7),1.1,0xd0ebff);box(.36,.06,.36,0x74c0fc,o+11.45,1.13,12.45);
+     furn(R4(11.3,13.2,11.7,14.4),1.2,0xb59a72);[.55,.85].forEach(y=>box(.06,.24,1.0,y>.6?0xffd43b:0x74c0fc,o+11.27,y+.3,13.8));
+     wallSign("本週公告\n段考週：國中照常上課\n週三國小半天",o+11.87,1.65,15.4,-Math.PI/2,2,.8,"#1c2633","#fff6e8",36);
+     furn(R4(2.5,17.1,3.0,17.6),.55,0x495057);plant(o+7.7,17.3);plant(o+.85,10.35,.32);
      break;
-   case"english":classroom(true);break;
-   case"store":furn(R4(32,10,35.7,10.8),1.6,C.shelf);furn(R4(35,11.5,35.7,17.4),1.6,C.shelf);break;
+   case"english":classroom(true);furn(R4(24.3,10,24.8,12.6),1.0,C.shelf);[10.4,11,11.6,12.2].forEach((z,i)=>box(.3,.28,.4,[0xff8787,0x74c0fc,0xffd43b,0x8ce99a][i],o+24.55,1.15,z));
+     wallSign("A B C D E F G\nH I J K L M N",o+16.12,1.7,13,Math.PI/2,2.4,.7,"#c2410c","#fff6e8",44);break;
+   case"store":furn(R4(29.2,10,29.8,17.6),1.8,C.shelf);furn(R4(25.3,16.9,28.8,17.7),1.8,C.shelf);
+     [[25.4,12.4,.6],[25.4,13.2,.9],[26.3,12.4,.45],[25.4,14.0,.45]].forEach(([x,z,h])=>furn(R4(x,z,x+.75,z+.7),h,0xc49a6c));
+     [[29.5,11],[29.5,12.6],[29.5,14.2],[29.5,15.8]].forEach(([x,z],i)=>box(.5,.3,.9,[0xd8c7a6,0xf4eedf,0xc49a6c,0xd8c7a6][i],o+x,1.95,z));
+     [[26,1.95,17.3],[27.2,1.95,17.3],[28.2,1.95,17.3]].forEach(([x,y,z],i)=>box(.9,.3,.5,[0xf4eedf,0xc49a6c,0xffe8a3][i],o+x,y,z));break;
    case"g5":case"g4":case"g6":classroom(true,true);break;
-   case"careoffice":furn(R4(.3,10,1.2,17.6),1.6,C.shelf);furn(R4(2.5,17,7.7,17.7),1.4,C.shelf);furn(R4(6.8,10,7.7,11.4),1.5,0xe6e9ec);box(.3,.24,.06,0xe03131,o+7.25,1.2,11.43);furn(R4(3,12.6,4.6,13.4),.5,0x4dabf7);break;
+   case"careoffice":furn(R4(.3,10,1.2,17.6),1.6,C.shelf);furn(R4(1.6,17,4.7,17.7),1.4,C.shelf);furn(R4(3.9,10,4.7,11.4),1.5,0xe6e9ec);box(.3,.24,.06,0xe03131,o+4.3,1.2,11.43);furn(R4(2.4,12.6,4,13.4),.5,0x4dabf7);break;
    case"wash":furn(R4(8.3,10.3,8.9,17.4),.7,0xdfe6ea);break;
-   case"reading":furn(R4(12.3,17.1,21.7,17.7),1.2,C.shelf);rbox(R4(14,12,20,15.5),.03,0x9ac0a5);break;
-   case"snack":furn(R4(23,12.6,29,13.4),.6,0xcfc6b5,0xe9e2d4);break;
+   case"reading":furn(R4(12.3,17.1,17.7,17.7),1.2,C.shelf);rbox(R4(12.8,12,16.6,15.6),.03,0x9ac0a5);
+     furn(R4(17.2,10.4,17.7,13),1.0,C.shelf);[10.8,11.5,12.2].forEach((z,i)=>box(.3,.26,.5,[0xff8787,0x74c0fc,0x8ce99a][i],o+17.45,1.14,z));
+     [[16.9,14.2,0xffa94d],[16.9,15.3,0x748ffc]].forEach(([x,z,c])=>{const b=new THREE.Mesh(new THREE.SphereGeometry(.42,10,8),mat(c));b.scale.y=.6;b.position.set(o+x,.25,z);scene.add(b);solids.push([o+x-.42,z-.42,o+x+.42,z+.42]);});
+     plant(o+12.6,16.5,.3);break;
+   case"oneone":furn(R4(19.3,13,20.7,13.8),.55,C.desk,C.deskTop);chair(o+20,12.45,0,true);chair(o+20,14.35,Math.PI,true);
+     box(1.6,.9,.05,C.frame,o+20,1.4,17.75);box(1.5,.8,.06,C.board,o+20,1.4,17.73);furn(R4(21.2,15.6,21.7,17.6),1.2,C.shelf);
+     box(.3,.02,.22,0xf4eedf,o+19.8,.61,13.4);box(.25,.02,.2,0xffe8a3,o+20.3,.61,13.3);
+     wallSign("一對一・慢慢來",o+18.12,1.7,15,Math.PI/2,1.6,.32,"#36564a","#e5eee1",34);break;
+   case"snack":furn(R4(23,12.6,29,13.4),.6,0xcfc6b5,0xe9e2d4);furn(R4(23,15,29,15.8),.6,0xcfc6b5,0xe9e2d4);
+     furn(R4(29.2,10,29.8,12),.9,0xbfb6a6);box(.5,.3,.36,0x333a44,o+29.5,1.05,11);furn(R4(29.2,16.8,29.8,17.6),1.1,0xd0ebff);box(.36,.06,.36,0x74c0fc,o+29.5,1.13,17.2);
+     [[22.4,0x4dabf7],[22.95,0x40c057],[23.5,0xfab005]].forEach(([x,c])=>furn(R4(x,17.1,x+.45,17.6),.6,c));break;
    case"cubby":furn(R4(33.2,10,35.7,17.5),1.2,0xb59a72);break;
    case"c7":case"c8":case"c9":classroom(false);if(r.id==="c9")wallSign("會考倒數 210 天",o+25,1.7,6.88,Math.PI,2.4,.45,"#2b8a3e","#ffffff",44);break;
-   case"jhlounge":furn(R4(1,12,4.5,13),.74,0xcfc6b5,0xe9e2d4);chair(o+2,11.5,0);chair(o+3.5,13.5,Math.PI);furn(R4(.3,15,.9,17.6),1.6,C.metal);break;
-   case"tutor":furn(R4(9,12,19,12.9),.74,0xc9c2b2,0xe7e1d3);furn(R4(9,15,19,15.9),.74,0xc9c2b2,0xe7e1d3);break;
+   case"jhlounge":furn(R4(1,12,4.5,13),.74,0xcfc6b5,0xe9e2d4);chair(o+2,11.5,0);chair(o+3.5,13.5,Math.PI);furn(R4(.3,15,.9,17.6),1.6,C.metal);
+     furn(R4(7,14.4,7.7,17.4),.45,C.sofa);rbox(R4(7.45,14.4,7.7,17.4),.85,C.sofa);furn(R4(7.2,10,7.7,10.6),1.1,0xd0ebff);box(.36,.06,.36,0x74c0fc,o+7.45,1.13,10.3);plant(o+5,17.3,.3);break;
+   case"tutor":furn(R4(9,12,19,12.9),.74,0xc9c2b2,0xe7e1d3);furn(R4(9,15,19,15.9),.74,0xc9c2b2,0xe7e1d3);
+     furn(R4(8.5,17.1,11.5,17.7),1.6,C.shelf);furn(R4(16.5,17.2,19.5,17.7),.9,C.shelf);plant(o+19.4,10.3,.3);break;
    case"lockers":furn(R4(27.2,10,27.8,17.6),1.5,0x7d8b99);furn(R4(21,16.8,23.6,17.6),.8,0xc9c2b2,0xe7e1d3);box(.5,.18,.35,0xd9480f,o+22.3,.9,17.2);
      wallSign("手機請放籃子",o+24,1.7,17.78,Math.PI,2.2,.42,"#1c2633","#ffd43b",44);break;
-   case"jhoffice":furn(R4(30,12,33.5,13),.74,0xcfc6b5,0xe9e2d4);chair(o+31.75,11.5,0);furn(R4(35,10,35.7,14),1.6,C.shelf);break;
+   case"jhoffice":furn(R4(30,12,33.5,13),.74,0xcfc6b5,0xe9e2d4);chair(o+31.75,11.5,0);furn(R4(35,10,35.7,14),1.6,C.shelf);
+     furn(R4(30,15.4,33.5,16.4),.74,0xcfc6b5,0xe9e2d4);chair(o+31.75,16.9,Math.PI);furn(R4(35,15,35.7,16),1.0,0x6b7479);box(.5,.12,.6,0xdee2e6,o+35.35,1.06,15.5);break;
   }
 }
 /* 建好之後，把靜態物件依位置分進各樓層群組，切樓層時只顯示一層 */
@@ -965,7 +1024,7 @@ function buildCrowd(){
   fill("c7","jh",7);fill("c8","jh",8);fill("c9","jh",7);
   fill("english","eng",6);
   // 接送家長：在大廳出現一下就帶小孩走
-  for(let i=0;i<8;i++){const p=person(PARENT_COLORS[i%6],{hair:[0x2a2421,0x3b2b20,0x8a8a8a][i%3]});p.visible=false;extras.push({p,kind:"parent",room:"lobby",home:[FLX(0,6+((i*1.7)%7)),12.4+(i%3)*1.1,Math.PI],state:"away",idx:extras.length});}
+  for(let i=0;i<8;i++){const p=person(PARENT_COLORS[i%6],{hair:[0x2a2421,0x3b2b20,0x8a8a8a][i%3]});p.visible=false;extras.push({p,kind:"parent",room:"lobby",home:[FLX(0,5.5+((i*1.7)%5.5)),12.4+(i%3)*1.1,Math.PI],state:"away",idx:extras.length});}
 }
 /* 當天的時間表（分鐘） */
 function crowdTimes(e,day){const i=e.idx,j=(i*37)%11;
@@ -1274,19 +1333,19 @@ function artRedesignRooms(){
       sign('聯絡簿・評量分開放',dx,1.69,.32,0,1.7,.32);
     }
     if(room.id==='careoffice'){
-      sign('安親儲藏室\n評量・教具・備品',4.7,1.8,17.77,Math.PI,2.6,.72);
+      sign('安親儲藏室\n評量・教具・備品',3.1,1.8,17.77,Math.PI,2.4,.72);
       // 儲藏櫃內的分類箱：沿既有櫃體的朝向，物件仍在櫃體範圍。
       [10.9,12.5,14.1,15.7,17.0].forEach((z,i)=>{
         detail(.06,.35,.72,[0xc6a578,0x79958c,0x8196ad][i%3],1.22,.93,z);
         sign(['評量','教具','備品','清潔','失物'][i],1.265,.96,z,Math.PI/2,.55,.21);
       });
-      [3.1,4.3,5.5,6.7].forEach((x,i)=>{
+      [2.1,3.15,4.2].forEach((x,i)=>{
         detail(.85,.30,.46,i%2?0x8fa59e:0xc1a886,x,1.56,17.35);
-        sign(['四年級','五年級','六年級','備用紙'][i],x,1.54,17.02,Math.PI,.65,.22);
+        sign(['四年級','五年級','六年級'][i],x,1.54,17.02,Math.PI,.65,.22);
       });
       // 教具箱原本就有碰撞；補上箱蓋與把手，不再留下浮在空中的辦公桌書本。
-      detail(1.62,.055,.82,0x537d99,3.8,.54,13);
-      detail(.3,.055,.035,cream,3.8,.41,13.42);
+      detail(1.62,.055,.82,0x537d99,3.2,.54,13);
+      detail(.3,.055,.035,cream,3.2,.41,13.42);
     }
     if(room.id==='wash'){
       [11.3,13.8,16.3].forEach(z=>{
@@ -1297,11 +1356,11 @@ function artRedesignRooms(){
       sign('洗手・擦乾\n水龍頭記得關',8.23,1.65,13.8,Math.PI/2,1.8,.62);
     }
     if(room.id==='reading'){
-      sign('閱讀角\n書看完，放回原位',17,1.75,17.78,Math.PI,2.7,.72,'#36564a','#e5eee1');
-      [13.1,15.5,18.0,20.4].forEach(x=>books(x,1.36,17.4,5));
+      sign('閱讀角\n書看完，放回原位',15,1.75,17.78,Math.PI,2.7,.72,'#36564a','#e5eee1');
+      [12.8,14.4,16.0].forEach(x=>books(x,1.36,17.4,5));
       // 閱讀地墊上的平面書頁圖案；沒有午休床墊或新增通道障礙。
-      detail(1.15,.012,.72,0xe6e3d3,17,.052,13.7);
-      detail(.025,.013,.72,0x749789,17,.06,13.7);
+      detail(1.15,.012,.72,0xe6e3d3,14.7,.052,13.7);
+      detail(.025,.013,.72,0x749789,14.7,.06,13.7);
     }
     if(room.id==='snack'){
       sign('點心區\n吃完收好・垃圾分類',26,1.7,17.78,Math.PI,2.6,.7);
@@ -1842,7 +1901,7 @@ function p2MergeStatic(){
 const SEAT=(room,id)=>{const s=seatsOf(room)[NAMED_SEATS[room][id]];return [s[0],s[1],s[2]];};
 const kidIn=s=>[s[0],s[1],s[2],DOOR];
 const PC={lin:AT("g5podium",0,0,0),wu:AT("g6podium",0,0,0),yunDesk:AT("counterIn",0,0,0),bossDesk:AT("bossdesk",0,-2.3,0),hrDesk:AT("hrdesk",0,-1.9,0),
-  zhangLobby:AT("sofa",-1.2,0),zhangConsult:AT("consult",0,-2.3,0),amaLobby:AT("counter",.8,.6),miSnack:AT("snack",0,-1.4),xiangmaLobby:AT("counter",-1.4,.9),mimaLobby:AT("lobby",0,1.5)};
+  zhangLobby:AT("sofa",-1.2,0),zhangConsult:AT("consult",0,-2.3,0),amaLobby:AT("counter",.8,.6),miSnack:AT("snack",0,-1.4),xiangmaLobby:AT("counter",-1.4,.9),mimaLobby:AT("lobby",-.6,.6)};
 const PJ={door:DOOR,hrDesk:AT("hrdesk",0,-1.9,0),back:AT("c9back",0,0,Math.PI),teacherPodium:AT("c9podium",0,0,0),xiangHall:AT("c9door",-.6,.4,Math.PI),qingHall:AT("c9door",.8,.5,Math.PI),zheHall:AT("c9door",-1.6,.5,Math.PI)};
 const C9=id=>[...SEAT("c9",id),DOOR];
 
@@ -2438,11 +2497,11 @@ function checkAch(){if(!G)return;ACH.forEach(a=>{try{if(!achSet.has(a.id)&&a.tes
 ITEMS.push(
  {id:"lozenge",phases:["break","class"],lines:["teacher"],icon:"🍬",name:"喉糖",rarity:"常見",pos:SP("jhlounge",1.4,-1),where:"3F・國中老師休息室",
   desc:"一整盒的喉糖，盒子上寫著「大家的」。已經被吃掉一半了。",use:"含一顆，嗓子 +10。連上兩節課的人都知道它的價值。",fx:{voice:10},hint:"休息室裡大家共用的東西"},
- {id:"bento",phases:["pre"],lines:["teacher","jh"],icon:"🍱",name:"雞腿便當",rarity:"常見",pos:SP("fridge",-1.2,1.4),where:"1F・茶水間冰箱旁",
+ {id:"bento",phases:["pre"],lines:["teacher","jh"],icon:"🍱",name:"雞腿便當",rarity:"常見",pos:SP("fridge",.2,1.0),where:"1F・茶水間冰箱旁",
   desc:"還是溫的雞腿便當。蓋子上貼著便利貼：「小芸的，勿動」。",use:"吃掉的話體力 +10。小芸會不會發現，是另一回事。",fx:{hp:10},set:{ateBento:1},hint:"冰箱旁邊，有人的晚餐"},
  {id:"notebook",phases:["pre","class"],lines:["teacher","jh"],icon:"📒",name:"家長通話紀錄",rarity:"少見",pos:SP("counter",1.6,.9),where:"1F・櫃台旁",
   desc:"小芸手寫的家長通話紀錄。林媽媽那一頁寫著：「先講好消息，再講分數」。",use:"之後跟家長談的時候，家長 +5。",fx:{par:5},set:{notebook:1},hint:"櫃台旁邊的手寫紀錄"},
- {id:"form",phases:["pre","leave"],lines:["teacher","yun","boss"],icon:"📝",name:"填一半的報名表",rarity:"常見",pos:SP("sofa",1.2,.7),where:"1F・等候沙發旁",
+ {id:"form",phases:["pre","leave"],lines:["teacher","yun","boss"],icon:"📝",name:"填一半的報名表",rarity:"常見",pos:SP("sofa",1.3,0),where:"1F・等候沙發旁",
   desc:"一張報名表，家長欄填了一半就停了。筆還夾在上面。",use:"主任最想要的東西。順手收好交給櫃台，試聽印象 +5。",fx:{trial:5},hint:"沙發旁有人填到一半"},
  {id:"glasses",phases:["pre","leave","class"],lines:["teacher","yun","care","jh"],icon:"👓",name:"老花眼鏡",rarity:"少見",pos:[FLX(1,22),8.2],where:"2F・走廊",
   desc:"金色細框，鏡腳用透明膠帶纏過。整個補習班只有一個人會戴這種眼鏡。",use:"可以還給失主。",hint:"走廊上有人掉了東西"},
@@ -2450,11 +2509,11 @@ ITEMS.push(
   desc:"只有右耳那一隻。外殼貼了一張很小的貼紙：「8-柏」。",use:"可以拿去問課輔的阿宏。",hint:"課輔室桌子底下"},
  {id:"zhedraw",phases:["break","leave"],lines:["teacher","jh","boss"],icon:"📄",name:"畫滿機器人的計算紙",rarity:"少見",pos:SP("c9back",-2.1,0),where:"3F・九年級教室最後一排",
   desc:"整張紙畫滿了機器人。角落寫了一題分數加法，算到一半，通分的方向是對的。",use:"跟阿哲聊的時候，可以提起它。",set:{zheDraw:1},hint:"教室後排走道上的紙"},
- {id:"sticker",phases:["pre","class"],lines:["care"],icon:"🦕",name:"恐龍貼紙",rarity:"常見",pos:SP("reading",1.4,.6),where:"2F・閱讀角",
+ {id:"sticker",phases:["pre","class"],lines:["care"],icon:"🦕",name:"恐龍貼紙",rarity:"常見",pos:SP("reading",-1.2,.8),where:"2F・閱讀角",
   desc:"一張還沒撕開的恐龍貼紙，暴龍的那一隻已經被撕走了。",use:"給作業寫完的小朋友當獎勵。耐心 +3。",fx:{pat:3},set:{sticker:1},hint:"閱讀角的地墊上"},
  {id:"shoe",phases:["pre"],lines:["care"],icon:"👟",name:"一隻小室內鞋",rarity:"常見",pos:SP("wash",1.3,.8),where:"2F・洗手台旁",
   desc:"比四年級的大一號。鞋底用簽字筆寫著「5-小安」。",use:"可以拿去問五年級的林老師。",hint:"洗手台旁邊的小鞋子"},
- {id:"crayon",phases:["class","leave"],lines:["care"],icon:"🖍️",name:"一支紅色蠟筆",rarity:"少見",pos:SP("snack",-1.5,.8),where:"2F・點心區",
+ {id:"crayon",phases:["class","leave"],lines:["care"],icon:"🖍️",name:"一支紅色蠟筆",rarity:"少見",pos:SP("snack",-3.3,0),where:"2F・點心區",
   desc:"斷成兩截的紅色蠟筆。小米畫恐龍的時候，一直在找紅色。",use:"還給小米，她會很開心。",set:{crayon:1},hint:"點心區桌腳邊"},
  {id:"umbrella",phases:["class","break"],lines:["yun","boss"],icon:"☂️",name:"一把沒有名字的傘",rarity:"常見",pos:SP("shoes",.9,-.8),where:"1F・鞋櫃旁",
   desc:"深藍色的長柄傘，柄上纏了膠帶。已經在這裡放了兩個禮拜。",use:"下雨的時候，總有人需要。",set:{umbrella:1},hint:"鞋櫃旁邊沒人認領的東西"},
@@ -3364,7 +3423,7 @@ LINES2.care={...LINES.care,day:2,
     {label:"一件一件跟她說這週的事",note:"聯絡簿、作業、今天的鉛筆",fx:{par:10,hp:-4},set:{toldAnma:1},log:"跟安安媽媽說這週的狀況",res:G=>[["me","她這兩天很想你。聯絡簿沒簽的那天，她自己在下面寫了「媽媽出差」。"],...(G.f.heardBoth?[["me","今天那支鉛筆，她跟同學吵起來，說是你買的。她講得很清楚，沒有亂哭。"]]:[]),["anma","……謝謝您。我以為她都沒有在想我。"]]},
     {label:"「她很乖，都很好。」",fx:{pat:2,par:2},log:"簡單跟安安媽媽說她很好",res:[["anma","那就好。"],[null,"她牽著安安走出大門。安安回頭揮了兩次手。"]]}];
     return c;}},
-  {id:"c2_mima",t:"17:50",target:{npc:"mima"},goal:"小米的媽媽今天準時到了",npc:{mima:PC.mimaLobby,mi:AT("lobby",.9,1.7)},after:{mima:null,mi:null},
+  {id:"c2_mima",t:"17:50",target:{npc:"mima"},goal:"小米的媽媽今天準時到了",npc:{mima:PC.mimaLobby,mi:AT("lobby",.3,.8)},after:{mima:null,mi:null},
    pages:G=>{const p=pv(G),l=[["mima","老師～今天我五點五十就到了！"]];
      if(p.leftMi)l.push(["mima","小米昨天說她坐在櫃台旁邊等我……老師，安親不是到七點嗎？"],[null,"她的語氣不是生氣，是在確認。"]);
      else if(p.waitMi)l.push(["mima","昨天謝謝您陪她排彩色筆。她回家講了一整晚。"]);

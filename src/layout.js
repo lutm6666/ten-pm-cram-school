@@ -15,19 +15,25 @@ const ROOMS=[
  {f:0,id:"office",name:"主任室",rect:[0,0,8,7],door:[6,7.4],floor:0xc6cec4,desc:"主任的辦公桌、續班名單、總部的週報。門通常開著。"},
  {f:0,id:"copyroom",name:"教材室",rect:[8,0,14,7],door:[9,10.4],floor:0xcdd2d6,desc:"影印機、各班的講義和考卷。每天下午最搶的地方。"},
  {f:0,id:"consult",name:"諮詢室",rect:[14,0,20,7],door:[15,16.4],floor:0xd3cbbd,desc:"一張小圓桌、兩把椅子和招生簡章。新生家長在這裡談。"},
- {f:0,id:"staff",name:"員工茶水間",rect:[20,0,30,7],door:[21,22.4],floor:0xd3cbbd,desc:"冰箱、微波爐、熱水壺。所有老師的便當都在這裡。"},
+ {f:0,id:"staff",name:"員工茶水間",rect:[20,0,25,7],door:[21,22.4],floor:0xd3cbbd,desc:"冰箱、微波爐、熱水壺。所有老師的便當都在這裡。"},
+ {f:0,id:"meeting",name:"會議室",rect:[25,0,30,7],door:[26,27.4],floor:0xcdd2d6,desc:"週會、段考檢討、和總部視訊都在這裡。白板上還留著上週的排課表。"},
  {f:0,id:"core1",name:"電梯廳",rect:[30,0,36,7],open:true,floor:0xcdd2d6,desc:"一部電梯、一座樓梯。放學時電梯永遠在別層。"},
- {f:0,id:"lobby",name:"大廳",rect:[0,9.5,16,18],door:[9.6,15.8],floor:0xd9d2c3,desc:"進門就是櫃台和刷卡機。接送時間，家長都在這裡等。"},
- {f:0,id:"english",name:"國小美語教室",rect:[16,9.5,28,18],door:[17,18.4],floor:0xdcd5c6,desc:"國小美語班。牆上貼滿了字母和單字卡。"},
- {f:0,id:"store",name:"倉庫",rect:[28,9.5,36,18],door:[29,30.4],floor:0xc9c2b2,desc:"影印紙、點心、備用的掃具。"},
+ {f:0,id:"lobby",name:"大廳",rect:[0,9.5,12,18],door:[8.6,11.6],floor:0xd9d2c3,desc:"進門就是櫃台和刷卡機。接送時間，家長都在這裡等。"},
+ {f:0,id:"wc1",name:"廁所",rect:[12,9.5,16,18],door:[12.6,13.8],floor:0xcfd6cf,desc:"兩間廁所、一排洗手台。門口貼著「請節約用水」。"},
+ {f:0,id:"english",name:"國小美語教室",rect:[16,9.5,25,18],door:[17,18.4],floor:0xdcd5c6,desc:"國小美語班。牆上貼滿了字母和單字卡。"},
+ {f:0,id:"store",name:"倉庫",rect:[25,9.5,30,18],door:[26,27.4],floor:0xc9c2b2,desc:"影印紙、點心的紙箱、備用的桌椅。"},
+ {f:0,id:"mop",name:"清潔間",rect:[30,9.5,33,18],door:[30.3,31.5],floor:0xc9c2b2,desc:"拖把、水桶、資源回收。最後一個下班的人要把垃圾拿出去。"},
+ {f:0,id:"server",name:"機房",rect:[33,9.5,36,18],floor:0xbfc4c8,desc:"總電源、網路機櫃、冷氣主機的開關。門平常鎖著。"},
  // ---- 2F：國小安親 ----
  {f:1,id:"g5",name:"五年級安親教室",rect:[0,0,10,7],door:[8.2,9.6],floor:0xe3dccb,desc:"五年級。林老師的班，牆上貼著社會科的地圖。"},
  {f:1,id:"g4",name:"四年級安親教室",rect:[10,0,20,7],door:[18.2,19.6],floor:0xe3dccb,desc:"四年級。白板上寫著評量的進度，學校作業每個人不一樣。"},
  {f:1,id:"g6",name:"六年級安親教室",rect:[20,0,30,7],door:[28.2,29.6],floor:0xe3dccb,desc:"六年級。評量疊得最高，有人已經在準備私中考試。"},
  {f:1,id:"core2",name:"電梯廳",rect:[30,0,36,7],open:true,floor:0xcdd2d6,desc:"樓梯口貼著「小朋友不要在樓梯跑」。"},
- {f:1,id:"careoffice",name:"安親儲藏室",rect:[0,9.5,8,18],door:[1,2.4],floor:0xd3cbbd,desc:"評量、教具、急救箱和失物籃。老師的桌子都在自己教室裡。"},
+ {f:1,id:"careoffice",name:"安親儲藏室",rect:[0,9.5,5,18],door:[1,2.4],floor:0xd3cbbd,desc:"評量、教具、急救箱和失物籃。老師的桌子都在自己教室裡。"},
+ {f:1,id:"wc2",name:"廁所",rect:[5,9.5,8,18],door:[5.6,6.8],floor:0xcfd6cf,desc:"小朋友的廁所，馬桶比較矮。下課時門口會排隊。"},
  {f:1,id:"wash",name:"洗手台",rect:[8,9.5,12,18],door:[9,10.4],floor:0xcfd6cf,desc:"一排矮矮的洗手台。午餐後大家在這裡刷牙。"},
- {f:1,id:"reading",name:"閱讀角",rect:[12,9.5,22,18],door:[13,14.4],floor:0xe6dcc6,desc:"地墊、書櫃、幾個懶骨頭。寫完作業才能來。"},
+ {f:1,id:"reading",name:"閱讀角",rect:[12,9.5,18,18],door:[13,14.4],floor:0xe6dcc6,desc:"地墊、書櫃、幾個懶骨頭。寫完作業才能來。"},
+ {f:1,id:"oneone",name:"個別指導室",rect:[18,9.5,22,18],door:[18.6,19.8],floor:0xe3dccb,desc:"一張小桌、兩張椅子。功課落後的小朋友會被帶來這裡一對一。"},
  {f:1,id:"snack",name:"點心區",rect:[22,9.5,30,18],door:[23,24.4],floor:0xe3dccb,desc:"長桌和小椅子。點心時間最吵的地方。"},
  {f:1,id:"cubby",name:"書包櫃",rect:[30,9.5,36,18],door:[31,32.4],floor:0xc9c2b2,desc:"每個小朋友一格，貼著名字。"},
  // ---- 3F：國中部 ----
@@ -57,7 +63,7 @@ const CLASS_SEATS={
  c7:{cols:[1.4,3.6,5.8,8],rows:[2.6,3.9,5.2]},
  c8:{cols:[11.4,13.6,15.8,18],rows:[2.6,3.9,5.2]},
  c9:{cols:[21.4,23.6,25.8,28],rows:[2.6,3.9,5.2]},
- english:{cols:[19,21.5,24,26.5],rows:[15.4,13.9],face:0}
+ english:{cols:[17.9,19.9,21.9,23.9],rows:[15.4,13.9],face:0}
 };
 /* 回傳某班的座位清單（全域座標）：[x,z,rot] */
 function seatsOf(room){const r=ROOMS.find(q=>q.id===room),s=CLASS_SEATS[room];if(!r||!s)return[];const out=[];
@@ -66,15 +72,15 @@ function seatsOf(room){const r=ROOMS.find(q=>q.id===room),s=CLASS_SEATS[room];if
 /* 命名地點：劇情目標用這些名字，不寫死座標。h 是頭上標記的高度。 */
 const SPOT_DEFS={
  // 1F
- door:[0,4.5,17,"門口"],cardreader:[0,6.9,16.2,"刷卡機"],counter:[0,5,11.8,"櫃台"],counterIn:[0,5,10.15,"櫃台內側"],sofa:[0,12,14,"等候沙發"],
+ door:[0,4.5,17,"門口"],cardreader:[0,6.9,16.2,"刷卡機"],counter:[0,5,11.8,"櫃台"],counterIn:[0,5,10.15,"櫃台內側"],sofa:[0,9.9,14.9,"等候沙發"],
  lobby:[0,8.5,14.2,"大廳"],shoes:[0,1.4,15.5,"鞋櫃"],rank:[0,.9,12,"榜單牆"],copier:[0,10,2.9,"影印機"],copyshelf:[0,12.6,3.6,"講義架"],
- bossdesk:[0,3.75,3.7,"主任的桌子"],consult:[0,17,4.4,"諮詢室"],lounge:[0,24.5,5,"茶水間"],fridge:[0,28.6,2.2,"冰箱"],
- engpodium:[0,22,17.2,"美語教室講台"],engdoor:[0,17.7,9.9,"美語教室門口"],store:[0,32,13,"倉庫"],
+ bossdesk:[0,3.75,3.7,"主任的桌子"],consult:[0,17,4.4,"諮詢室"],lounge:[0,22.5,5.3,"茶水間"],fridge:[0,24.2,1.7,"冰箱"],
+ engpodium:[0,20.5,17.2,"美語教室講台"],engdoor:[0,17.7,9.9,"美語教室門口"],store:[0,27.5,13.5,"倉庫"],
  elev1:[0,31.5,3.6,"電梯（1F）"],stairs1:[0,34.5,3.6,"樓梯（1F）"],
  // 2F
  g5door:[1,8.9,7.8,"五年級門口"],g4door:[1,18.9,7.8,"四年級門口"],g6door:[1,28.9,7.8,"六年級門口"],
  g4podium:[1,18.65,.62,"四年級老師桌"],g5podium:[1,8.65,.62,"五年級老師桌"],g6podium:[1,28.65,.62,"六年級老師桌"],
- careoffice:[1,4,14.5,"安親儲藏室"],wash:[1,10,13.5,"洗手台"],reading:[1,17,14,"閱讀角"],snack:[1,26,14,"點心區"],cubby:[1,33,13.5,"書包櫃"],
+ careoffice:[1,2.6,14.5,"安親儲藏室"],wash:[1,10,13.5,"洗手台"],reading:[1,15,14,"閱讀角"],snack:[1,26,14,"點心區"],cubby:[1,33,13.5,"書包櫃"],
  elev2:[1,31.5,3.6,"電梯（2F）"],stairs2:[1,34.5,3.6,"樓梯（2F）"],
  // 3F
  c7door:[2,8.9,7.8,"七年級門口"],c8door:[2,18.9,7.8,"八年級門口"],c9door:[2,28.9,7.8,"九年級門口"],
@@ -91,7 +97,7 @@ const ZONE_RECTS=ROOMS.map(r=>[r.name,FLX(r.f,r.rect[0]),r.rect[1],FLX(r.f,r.rec
 for(let f=0;f<FLOOR_N;f++)ZONE_RECTS.push([`${FLOOR_NAMES[f]} 走廊`,FLX(f,0),7,FLX(f,30),9.5,["接送、送點心、換教室，都要經過這裡。","安親的小朋友不准在這裡跑。","下課時最擠的地方。"][f],f]);
 function zoneAt(x,z){return ZONE_RECTS.find(r=>x>=r[1]&&x<r[3]&&z>=r[2]&&z<r[4]);}
 /* 地板上的大字：只標大空間 */
-const ZONES=[["大廳 LOBBY",FLX(0,8),16.6,0],["電梯 ELEVATOR",FLX(0,33),5.6,0],["電梯 ELEVATOR",FLX(1,33),5.6,0],["電梯 ELEVATOR",FLX(2,33),5.6,0]];
+const ZONES=[["大廳 LOBBY",FLX(0,5.6),13.6,0],["電梯 ELEVATOR",FLX(0,33),5.6,0],["電梯 ELEVATOR",FLX(1,33),5.6,0],["電梯 ELEVATOR",FLX(2,33),5.6,0]];
 
 /* 牆：外牆＋走廊兩側（留門）＋房間之間的隔間。全域座標 [x0,z0,x1,z1]。 */
 const WALLS=[];
