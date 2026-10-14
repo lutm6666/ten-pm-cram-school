@@ -11,6 +11,7 @@ LINES2.care={...LINES.care,day:2,
  msgs:[["11:42","林老師","今天三間學校同時放，我們 12:20 樓下集合喔"],["13:58","國小家長群","週五戶外教學，回條請明天交給導師"],["16:05","安安媽媽","老師我下午五點多會到，想跟您聊一下安安這週的狀況"],["18:10","小芸","蔡老師，小宇媽媽說她在三樓跟鄭老師談，請你幫忙看一下小宇🙏"]],
  boards:{g4:"午休 13:00–13:30\n評量進度：數學 第5回・國語 第4回"},
  schedule:[["11:30","pre"],["12:50","class"],["17:00","leave"]],
+ busy:[["12:20","13:05","g4door","接回來了","三間學校的小朋友一起走回來。十二點五十進教室，洗手、上廁所、拿出午睡枕。"],["13:32","18:30","g4podium","巡堂","看作業、簽聯絡簿、回答「老師這題怎麼寫」。下午小朋友都在，沒有空檔。"]],
  phaseStatus:{pre:"準備中",class:"午休・寫作業",leave:"放學中",close:"收拾中"},
  bells:{class:["小朋友回來了","洗手、換室內鞋，一點整午休。"],leave:["放學時間","家長陸續來接了。櫃台會廣播誰的家長到了。"]},
  events:["kidfall","schoolcall","pudding"],
@@ -21,12 +22,12 @@ LINES2.care={...LINES.care,day:2,
    t:"11:30",target:{spot:"g4podium"},goal:"上二樓，準備午休",action:"看一下教室",
    pages:G=>{const p=pv(G),l=[];
      l.push([null,p.readyNap?"八個午睡枕排在櫃子上，名字朝外。昨天下班前的你，做了一件好事。":"午睡枕還堆在櫃子最上層。有兩個的名字貼紙掉了。"]);
-     if(p.noCopy)l.push([null,"白板角落還留著昨天手抄的五題。今天的評量，昨天沒有印。"]);
+     if(p.noCopy)l.push([null,"白板角落還留著昨天手抄的五題。練習卷昨天沒有印。"]);
      l.push([null,"四十分鐘後，四年級的八個小朋友就會一起回來。"]);return l;},
    choices:G=>{const p=pv(G),c=[];
      if(!p.readyNap)c.push({label:"把午睡枕發到每個位子、補上名字",fx:{ord:6,hp:-4},set:{napReady:1},log:"準備好午睡枕",res:[[null,"八張桌子上各放一個午睡枕。沒有名字的那兩個，你憑印象寫上「子恩」和「大頭」。"]]});
      else c.push({label:"把午睡枕發到每個位子",fx:{ord:4,hp:-1},set:{napReady:1},log:"發好午睡枕",res:[[null,"昨天排好的，今天三分鐘就發完了。"]]});
-     if(p.noCopy)c.push({label:"下樓把昨天沒印的評量印好",fx:{ord:5,hp:-3},set:{printed:1},log:"補印昨天的評量",res:[[null,"中午的影印機很空。八張評量，一分鐘。"]]});
+     if(p.noCopy)c.push({label:"下樓把昨天沒印的練習卷印好",fx:{ord:5,hp:-3},set:{printed:1},log:"補印昨天的練習卷",res:[[null,"中午的影印機很空。八份練習卷，一分鐘。"]]});
      c.push({label:"先把評量進度寫在白板上",fx:{ord:3,hp:1},log:"先寫好評量進度",res:[[null,"數學第 5 回、國語第 4 回。學校作業每個人不一樣，寫完的人再寫評量。你在旁邊畫了一個睡覺的月亮。"]]});return c;}},
   {id:"c2_brief",t:"11:55",target:{npc:"lin"},goal:"林老師在分配今天接誰",npc:{lin:AT("g4door",-1,.4,Math.PI/2)},after:{lin:PC.lin},
    pages:G=>{const b=pa(G,"boss"),l=[["lin","我們五年級今天兩個請假，隊伍短一點。你們四年級幾個？"]];

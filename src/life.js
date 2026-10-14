@@ -63,11 +63,15 @@ const STAFF_DAY={
  lin:[["11:30","g5podium"],["15:20","door"],["15:58","g5podium"],["18:40",null]],
  wu:[["11:30","g6podium"],["15:20","door"],["15:58","g6podium"],["18:40",null]],
  amy:[["16:30","engpodium"],["20:10",null]],
- hong:[["17:00","tutor"],["21:20",null]]
+ hong:[["17:00","tutor"],["21:20",null]],
+ boss:[["13:00","bossdesk"],["21:30",null]],
+ yun:[["13:30","counterIn"],["21:30",null]]
 };
+/* 同一個地點有好幾位老師時錯開站，不要疊在一起 */
+const STAFF_OFF={door:{lin:[-1,-.5],wu:[1,-.5]}};
 const STAFF_DAY2={lin:[["11:30","g5podium"],["12:20","door"],["12:52","g5podium"],["18:40",null]],wu:[["11:30","g6podium"],["12:20","door"],["12:52","g6podium"],["18:40",null]]};
 function staffSpec(id){const sch=((G&&G.day===2&&STAFF_DAY2[id])||STAFF_DAY[id]);if(!sch)return undefined;let at=null;for(const [t,s] of sch){if(G.clock>=T(t))at=s;}
-  if(!at)return null;const s=SPOTS[at];return[s.pos[0]+(at.endsWith("podium")?0:.6),s.pos[1]+(at.endsWith("podium")?0:.4),at.endsWith("podium")?0:Math.PI];}
+  if(!at)return null;if(at==="bossdesk")return AT("bossdesk",0,-2.3,0);if(at==="counterIn")return AT("counterIn",0,0,0);const off=STAFF_OFF[at]&&STAFF_OFF[at][id];if(off)return AT(at,off[0],off[1],Math.PI);const s=SPOTS[at];return[s.pos[0]+(at.endsWith("podium")?0:.6),s.pos[1]+(at.endsWith("podium")?0:.4),at.endsWith("podium")?0:Math.PI];}
 let staffLast={};
 function tickStaff(instant){if(!G)return;for(const id of (G.line.staff||[])){if(G.line.self===id||!STAFF_DAY[id])continue;
   const sp=staffSpec(id),key=JSON.stringify(sp);if(staffLast[id]===key)continue;staffLast[id]=key;setNPC(id,sp,instant);}}

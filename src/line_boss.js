@@ -28,11 +28,11 @@ LINES.boss={
      res:r=>r.v>=7?[[null,"三通都打在點上。你在名單上打了兩個勾。"]]:r.v>=4?[[null,"有一通有用。剩下的，下週再說。"]]:[[null,"打了三通，好像都不是最需要打的那三個。"]]},
     {label:"先把支出單整理好",fx:{calm:4,morale:-2},log:"先整理支出",res:[[null,"影印機維修費，三次加起來，差不多可以買半台新的。"]]}]},
   {id:"b_copier",t:"13:50",target:{spot:"copier"},goal:"教材室傳來「嗶——」",action:"過去看",npc:{hr:AT("copier",.9,.3,Math.PI/2),cai:AT("copier",-.9,.5,-Math.PI/2)},after:{hr:PC.hrDesk,cai:AT("g4podium",0,0,0)},
-   pages:G=>[[null,"影印機前站著兩個人：九年級的鄭老師，和四年級的蔡老師。卡紙燈在閃。"],["hr","主任，我段考複習卷還有一百多張……"],["cai","我只有八張評量，下午三點二十前要印好。"]],
+   pages:G=>[[null,"影印機前站著兩個人：九年級的鄭老師，和四年級的蔡老師。卡紙燈在閃。"],["hr","主任，我段考複習卷還有一百多張……"],["cai","我只有八份練習卷，下午三點二十前要印好。"]],
    choices:G=>[
     {label:"當場下訂新的影印機",fx:{sales:-10,morale:12},set:{newCopier:1},log:"下訂新影印機",res:[["cai","真的嗎？！"],[null,"鄭老師在影印機上貼了一張便利貼：「阿卡，謝謝你這八年。」"],[null,"總部那邊，你要想怎麼寫。"]]},
     {label:"捲起袖子自己拉",mini:"jam",fx:r=>({calm:r.tears?-6:-2,morale:5}),log:r=>r.tears?`主任修影印機，撕破 ${r.tears} 次`:"主任親手修好影印機",res:r=>r.tears?[[null,"紙拉出來了，袖子黑了。"]]:[[null,"四張紙完整拉出來。兩個老師在旁邊拍手。"]]},
-    {label:"「安親的先印，國中的分兩批。」",fx:{calm:2,morale:3},set:{splitCopy:1},log:"排定影印機的順序",res:[[null,"八張評量先印好。鄭老師的考卷分兩批，第二批四點前印完。"]]}]},
+    {label:"「安親的先印，國中的分兩批。」",fx:{calm:2,morale:3},set:{splitCopy:1},log:"排定影印機的順序",res:[[null,"安親的練習卷先印好。鄭老師的考卷分兩批，第二批四點前印完。"]]}]},
   {id:"b_consult",t:"14:45",target:{npc:"zhangma"},goal:"諮詢室：張媽媽在等你談學費",npc:{zhangma:PC.zhangConsult},after:{zhangma:null},
    pages:G=>[["zhangma","剛剛蔡老師說得很清楚。那……學費大概多少？"],[null,"她手上的對面傳單寫著：「安親月費 6,200，報名送書包」。你們是 6,800。"]],
    choices:G=>[

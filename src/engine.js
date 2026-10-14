@@ -468,8 +468,17 @@ function announced(st){return !!st&&!st.isEvent&&!st.auto&&!/^ot_/.test(st.id);}
 /* 上課中的老師不能晃出教室：空檔直接上完這段課，停在下一件事或下課鐘。 */
 const TEACHING={teacher:"c9podium"};
 function teachingNow(){return !!(G&&TEACHING[G.line.id]&&phaseOf()==="class");}
+/* 忙碌時段（例如安親老師 16:00–18:30）：做完一件事不留「空檔」，直接接到下一件事。
+   line.busy：[開始, 結束, 站回的地點, 標題, 說明]。 */
+function busyNow(){if(!G||!G.line.busy)return null;return G.line.busy.find(b=>G.clock>=toMin(b[0])&&G.clock<toMin(b[1]))||null;}
+function busySkip(){
+  const b=busyNow(),st=step();if(!b||!st)return false;const to=Math.min(toMin(st.t),toMin(b[1]));if(to<=G.clock)return false;
+  const sp=SPOTS[b[2]];if(sp){player.position.set(sp.pos[0],0,sp.pos[1]);player.rotation.y=Math.PI;if(floorOf(sp.pos[0])!==curFloor)showFloor(floorOf(sp.pos[0]));}
+  const from=fmt(G.clock);skipTo(to);showBanner(b[3],`${from}–${fmt(to)}　${b[4]}`);return true;
+}
 function lessonSkip(){
-  if(!G||mode!=="walk"||stepReady()||!teachingNow())return false;
+  if(!G||mode!=="walk"||stepReady())return false;
+  if(!teachingNow())return busySkip();
   const st=step();if(!st)return false;let to=toMin(st.t);
   for(const [at,ph] of (G.line.schedule||SCHEDULE)){const m=toMin(at);if(m>G.clock&&ph!=="class"){to=Math.min(to,m);break;}}
   if(to<=G.clock)return false;

@@ -29,7 +29,7 @@ SIDES.jh=[
  sideBento("bentoTalk","j_boss","j_close")
 ];
 SIDES.care=[
- sideGlasses("glasses","c_open","c_close",{par:3},[["boss","四年級的冷氣我有在處理。小朋友熱不熱？"]]),
+ sideGlasses("glasses","c_copy","c_close",{par:3},[["boss","四年級的冷氣我有在處理。小朋友熱不熱？"]]),
  {id:"shoe",from:"c_open",until:"c_pickup",target:{npc:"lin"},title:"小安的室內鞋",action:"拿給林老師",avail:G=>G.items.includes("shoe"),
   pages:G=>[["me","林老師，洗手台撿到一隻小鞋子，上面寫「5-小安」。"],["lin","是小安的！他早上哭著說鞋子被偷了，原來是自己脫在洗手台。"],["lin","謝謝。下午接人的時候，我們的隊伍你幫我看一下尾巴喔。"]],
   fx:{ord:3},log:"把室內鞋還給林老師"},
