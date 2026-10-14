@@ -3,7 +3,14 @@ const C={floorLobby:0xd9d2c3,floorOffice:0xc6cec4,floorLounge:0xd3cbbd,floorHall
  desk:0xb08355,deskTop:0xd8b688,counter:0x34506a,copier:0x98a1a9,board:0xffffff,frame:0xa8afb5,sofa:0x7b5e57,shelf:0x8a6a48,metal:0x8b949c};
 
 let renderer,scene,camera,player,ground,marker,hemi,sun;const CHAIRS=[];
-function chair(x,z,ry){CHAIRS.push([x,z]);const c=new THREE.Group();const seat=new THREE.Mesh(bgeo(.44,.06,.42),mat(0x56606b));seat.position.y=.42;c.add(seat);const bk=new THREE.Mesh(bgeo(.44,.45,.05),mat(0x56606b));bk.position.set(0,.66,-.2);c.add(bk);[[-.18,-.17],[.18,-.17],[-.18,.17],[.18,.17]].forEach(([a,b])=>{const l=new THREE.Mesh(bgeo(.04,.42,.04),mat(0x3e454e));l.position.set(a,.21,b);c.add(l);});c.position.set(x,0,z);c.rotation.y=ry;scene.add(c);}
+function chair(x,z,ry,kid=false){
+  CHAIRS.push([x,z]);const c=new THREE.Group(),height=kid?.32:.42,width=kid?.40:.44,color=kid?0xc68d54:0x56606b;
+  c.userData={layoutChair:true,kid,seatTop:height+.03};
+  const seat=new THREE.Mesh(bgeo(width,.06,.42),mat(color));seat.position.y=height;c.add(seat);
+  const bk=new THREE.Mesh(bgeo(width,kid?.34:.45,.05),mat(color));bk.position.set(0,height+(kid?.20:.24),-.2);c.add(bk);
+  [[-.16,-.17],[.16,-.17],[-.16,.17],[.16,.17]].forEach(([a,b])=>{const leg=new THREE.Mesh(bgeo(.04,height,.04),mat(0x3e454e));leg.position.set(a,height/2,b);c.add(leg);});
+  c.position.set(x,0,z);c.rotation.y=ry;scene.add(c);
+}
 const isChair=(x,z)=>CHAIRS.some(c=>Math.hypot(c[0]-x,c[1]-z)<.2);
 const npcs={},infoMarks={},itemMarks={},extras=[];const solids=[...WALLS];
 const stage=document.getElementById("stage");
@@ -64,7 +71,7 @@ function person(color,opts={}){
   if(opts.name){const l=label(opts.name,"#ffffff",opts.tagBg||"#1c2633",34);l.scale.multiplyScalar(.7);l.position.y=g.userData.top+.24;g.add(l);g.userData.label=l;}
   scene.add(g);return g;
 }
-function setPose(p,sit){const u=p.userData;u.seated=sit;u.legL.rotation.x=u.legR.rotation.x=sit?-Math.PI/2:0;u.rig.position.y=sit&&u.kid?.22:0;u.torso.rotation.x=0;}
+function setPose(p,sit){const u=p.userData;u.seated=sit;u.legL.rotation.x=u.legR.rotation.x=sit?-Math.PI/2:0;u.rig.position.y=sit&&u.kid?.026:0;u.torso.rotation.x=0;}
 /* 對話泡泡 */
 const emoteCache={};
 function emote(p,text,dur=2.4){const u=p.userData;if(u.emoteSpr){p.remove(u.emoteSpr);}
@@ -141,7 +148,7 @@ function furnishRoom(r){
     const b=wallSign({g1:"今日作業\n國習 p.12・生字一行",g2:"今日作業\n數習 p.32・國習 p.18",g34:"今日作業\n數學評量 第三回",c7:"段考範圍\n數學 1-1～2-2",c8:"段考範圍\n理化 第一章～第三章",c9:"會考倒數 210 天\n段考：下週二、三",english:"Unit 3\nWhat's your name?"}[r.id]||"",o+cx,1.6,top?bz+.07:bz-.07,ry,Math.min(4.2,bw-.6),.9,"#1d4fc4","#ffffff",56);
     b.userData={w:Math.min(4.2,bw-.6),h:.9};BOARDS[r.id]=b;
     const pz=top?1.6:16.4;furn([o+cx-.6,pz-.3,o+cx+.6,pz+.3],1.0,0x6b4f39);
-    seatsOf(r.id).forEach(([x,z,rot])=>{const dz=rot===Math.PI?-.62:.62;furn([x-.5,z+dz-.25,x+.5,z+dz+.25],kid?.62:.72,C.desk,C.deskTop);chair(x,z,rot);solids.push([x-.28,z-.25,x+.28,z+.25]);});
+    seatsOf(r.id).forEach(([x,z,rot])=>{const dz=rot===Math.PI?-.62:.62;furn([x-.5,z+dz-.25,x+.5,z+dz+.25],kid?.53:.72,C.desk,C.deskTop);chair(x,z,rot,kid);solids.push([x-.28,z-.25,x+.28,z+.25]);});
   };
   switch(r.id){
    case"office":furn(R4(2,2,5.5,3),.78,C.desk,C.deskTop);furn(R4(.3,.3,1.8,.8),1.7,C.shelf);furn(R4(6.3,.3,7.7,.8),1.3,0x6b7479);
@@ -163,7 +170,7 @@ function furnishRoom(r){
      wallSign("刷卡",o+6.9,1.75,17.73,Math.PI,.6,.26,"#ffffff","#2f5d8a",34);
      {const plant=new THREE.Mesh(new THREE.SphereGeometry(.38,8,6),new THREE.MeshLambertMaterial({color:0x5f8a4f}));plant.position.set(o+15.2,.65,17);scene.add(plant);solids.push(R4(14.8,16.6,15.6,17.4));}
      break;
-   case"english":classroom(false);break;
+   case"english":classroom(true);break;
    case"store":furn(R4(32,10,35.7,10.8),1.6,C.shelf);furn(R4(35,11.5,35.7,17.4),1.6,C.shelf);break;
    case"g1":case"g2":case"g34":classroom(true);break;
    case"careoffice":furn(R4(1,12,4.5,13),.74,0xcfc6b5,0xe9e2d4);chair(o+2.75,11.5,0);furn(R4(6.8,10,7.7,11.4),1.5,0xe6e9ec);box(.3,.24,.06,0xe03131,o+7.25,1.2,11.43);furn(R4(.3,15,1.2,17.6),1.4,C.shelf);break;

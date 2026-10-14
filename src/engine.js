@@ -72,13 +72,14 @@ function nextStep(){if(!stepReady())return;if(G.idx===0)store.set("tipWalk",true
 /* ---------- 換樓層 ---------- */
 const FLOOR_LABEL=["1F　大廳・櫃台・主任室・美語","2F　國小安親","3F　國中部"];
 function openFloorPicker(kind){const f=floorOf(player.position.x),opts=[];for(let g=0;g<FLOOR_N;g++){if(g===f)continue;if(kind==="stairs"&&Math.abs(g-f)!==1)continue;opts.push(g);}
-  openSheet(kind==="elev"?"電梯":"樓梯",`<div class="choices">${opts.map(g=>`<button class="choice" data-floor="${g}">${esc(FLOOR_LABEL[g])}</button>`).join("")}</div>`);
+  const costText=g=>{const q=floorTravelQuote(kind,f,g,G?G.clock:0);return kind==="stairs"?`${q.min} 分鐘${G&&G.s.hp!=null?`・體力 −${q.hp}`:""}`:`約 ${q.min.toFixed(1)}–${q.max.toFixed(1)} 分鐘${q.peak?"・放學高峰候梯":"・含候梯"}`;};
+  openSheet(kind==="elev"?"電梯":"樓梯",`<div class="choices">${opts.map(g=>`<button class="choice" data-floor="${g}">${esc(FLOOR_LABEL[g])}<small>${costText(g)}</small></button>`).join("")}</div>`);
   document.querySelectorAll("#sheet [data-floor]").forEach(b=>b.addEventListener("click",()=>{const g=+b.dataset.floor,pt=[FLX(g,CORE[kind][0]),CORE[kind][1]];pt.via=kind;closeSheet();path=null;portalHop(player,pt);}));}
 /* 換樓層要花時間：樓梯每層半分鐘；電梯要等，放學時間等更久 */
-function floorCost(via,from,to){if(!G)return;const n=Math.abs(to-from);let m=via==="stairs"?.5*n:(.6+Math.random()*.8);
-  if(via==="elev"&&G.clock>=17*60+25&&G.clock<=18*60+5)m+=1.5;spend(m);
-  if(via==="stairs"&&G.s.hp!=null&&n>0){G.s.hp=Math.max(1,G.s.hp-n);}
-  showBanner(FLOOR_LABEL[to],via==="elev"?(m>2?"電梯等了好久，每層都有人按。":"電梯門開了。"):"你走樓梯"+(to>from?"上樓":"下樓")+"。");renderHud();}
+function floorCost(via,from,to){if(!G)return;const q=floorTravelQuote(via,from,to,G.clock);if(!q||q.max===0)return;
+  const m=q.min+Math.random()*(q.max-q.min);spend(m);
+  if(q.hp&&G.s.hp!=null)G.s.hp=Math.max(1,G.s.hp-q.hp);
+  showBanner(FLOOR_LABEL[to],via==="elev"?`${q.peak?"放學高峰，電梯比較忙。":"電梯門開了。"}候梯與搭乘 ${m.toFixed(1)} 分鐘。`:`走樓梯${to>from?"上樓":"下樓"} ${m.toFixed(1)} 分鐘${G.s.hp!=null?`，體力 −${q.hp}`:""}。`);renderHud();}
 onFloorChange=floorCost;
 
 /* ---------- 目標與附近的東西 ---------- */

@@ -3,7 +3,7 @@ ARTIFACT='--artifact' in sys.argv
 DBG='--dbg' in sys.argv
 sys.argv=[a for a in sys.argv if a not in('--artifact','--dbg')]
 src=lambda f:open('src/'+f,encoding='utf8').read()
-order=['layout.js','common.js','world.js','life.js','atmos.js','art.js','art_models.js','art_models_fix.js','art_phase2.js','art_phase2_ui.js','art_phase2_perf.js','cast.js','minis.js','rush.js','events.js','overtime.js','chats.js','ach.js','items.js','sides.js','line_teacher.js']+[f for f in sorted(os.listdir('src')) if f.startswith('line_') and f!='line_teacher.js']+['day2.js','day2b.js','engine.js','settings.js','share.js','boot.js']
+order=['layout.js','floor-travel.js','common.js','world.js','life.js','atmos.js','art.js','art_models.js','art_models_fix.js','art_phase2.js','art_phase2_ui.js','art_phase2_perf.js','cast.js','minis.js','rush.js','events.js','overtime.js','chats.js','ach.js','items.js','sides.js','line_teacher.js']+[f for f in sorted(os.listdir('src')) if f.startswith('line_') and f!='line_teacher.js']+['day2.js','day2b.js','engine.js','settings.js','share.js','boot.js']
 three=sys.argv[1] if len(sys.argv)>1 else 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
 DBG=DBG or not three.startswith('http')
 # Debug jump is a scheduled-scene fixture; normal gameplay never uses it.
