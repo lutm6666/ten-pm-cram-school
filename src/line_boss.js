@@ -9,7 +9,7 @@ LINES.boss={
  coda:"週報上的數字是你的責任，數字後面的人也是。",
  msgs:[["13:10","總部","各分校週報請於今晚十點前上傳。"],["15:45","粉專通知","對面補習班：會考衝刺班 8 折最後三天！"],["19:20","小芸","主任，等一下下課可以跟你講一件事嗎？"],["20:18","老婆","女兒說要等你回家才睡。"]],
  preStatus:"營業中",endAt:"21:30",daylight:true,dead:G=>G.s.calm<=0,
- staff:["lin","wu","amy","hong"],
+ staff:["lin","wu","amy","hong","cai"],
  zoneText:{"主任室":"你的辦公室。續班名單、總部的信、一台不太好用的筆電。","四年級安親教室":"冷氣在漏水。小朋友四點就回來了。","九年級教室":"今晚的試聽在這裡。你只能從門上的小窗看。"},
  schedule:[["13:00","pre"],["17:00","leave"],["18:00","class"],["19:25","break"],["19:35","class"],["21:00","leave"]],
  phaseStatus:{pre:"營業中",class:"國中上課中",break:"國中下課",leave:"放學中",close:"收拾中"},
@@ -34,12 +34,12 @@ LINES.boss={
     {label:"捲起袖子自己拉",mini:"jam",fx:r=>({calm:r.tears?-6:-2,morale:5}),log:r=>r.tears?`主任修影印機，撕破 ${r.tears} 次`:"主任親手修好影印機",res:r=>r.tears?[[null,"紙拉出來了，袖子黑了。"]]:[[null,"四張紙完整拉出來。兩個老師在旁邊拍手。"]]},
     {label:"「安親的先印，國中的分兩批。」",fx:{calm:2,morale:3},set:{splitCopy:1},log:"排定影印機的順序",res:[[null,"安親的練習卷先印好。鄭老師的考卷分兩批，第二批四點前印完。"]]}]},
   {id:"b_consult",t:"14:45",target:{npc:"zhangma"},goal:"諮詢室：張媽媽在等你談學費",npc:{zhangma:PC.zhangConsult},after:{zhangma:null},
-   pages:G=>[["zhangma","剛剛蔡老師說得很清楚。那……學費大概多少？"],[null,"她手上的對面傳單寫著：「安親月費 6,200，報名送書包」。你們是 6,800。"]],
+   pages:G=>[["zhangma","剛剛蔡老師說得很清楚。學費小芸也跟我說了……可是對面比較便宜耶。"],[null,"她手上的對面傳單寫著：「安親月費 6,200，報名送書包」。你們是 6,800。"]],
    choices:G=>[
     {label:"「先試讀一週，不收費。」",fx:{sales:-2,rep:6},set:{trialWeek:1},log:"讓張媽媽先免費試讀一週",res:[["zhangma","不用錢嗎？那下週一我帶他來。"]]},
     {label:"給她早鳥折扣，對齊對面",fx:{sales:4,rep:-3},set:{carePrice:1},log:"安親給早鳥折扣",res:[["zhangma","這樣啊……好，我回去跟他爸說。"],[null,"你知道，下個月全部的家長都會來問同樣的折扣。"]]},
     {label:"照價，說明差別在哪裡",fx:{sales:2,rep:3,calm:-3},log:"照價說明安親內容",res:[["me","我們四年級一個老師顧八個，對面一個顧十五個。"],["zhangma","……我再想想。"]]}]},
-  {id:"b_ac",t:"15:30",target:{spot:"g4door"},goal:"二樓：安親教室冷氣在漏水",action:"上樓看",
+  {id:"b_ac",t:"15:05",target:{spot:"g4door"},goal:"二樓：安親教室冷氣在漏水",action:"上樓看",
    pages:G=>[[null,"四年級教室的冷氣滴水，地上放了一個水桶。小朋友三點五十就回來了。"],["cai","主任，上個月保養過，可是又漏了……"]],
    choices:G=>[
     {label:"叫廠商今天來修",fx:{sales:-4,morale:4,calm:-2},set:{acFix:1},log:"叫冷氣廠商今天來修",res:[[null,"廠商說五點到。正好是放學高峰。"]]},
@@ -52,7 +52,7 @@ LINES.boss={
     {label:"請小芸週三提早來支援",fx:{morale:-3,calm:2},set:{yunEarly:1},log:"請櫃台週三提早支援",res:[["lin","小芸會願意嗎？她已經……算了，我問她。"]]},
     {label:"「下個月再找一個兼職。」",fx:{sales:-3,morale:4},log:"答應下個月加安親人手",res:[["lin","那明天呢？"],[null,"你沒有回答。"]]}]},
   {id:"b_complaint",chapter:{t:"17:00",title:"放學高峰",sub:"大廳擠滿了家長。櫃台只有一個人。",status:"放學中"},
-   t:"17:35",target:{npc:"xiangma"},goal:"一位家長在大廳提高聲音",npc:{xiangma:PC.xiangmaLobby},
+   t:"17:35",target:{npc:"xiangma"},goal:"一位家長在大廳提高聲音",npc:{xiangma:PC.xiangmaLobby},after:{xiangma:null},
    pages:G=>[["xiangma","主任，我小兒子的數習，昨天老師說檢查過，結果三題都錯。"],["xiangma","還有我大兒子，九年級的阿翔……剛剛班導打給我，說他沒到班。"],[null,"她一手牽著小宇，手機一直在震。"]],
    choices:G=>[
     {label:"請她到諮詢室坐下，一件一件說",fx:{calm:-4,rep:8},set:{xiangmaTalk:1},log:"請阿翔媽媽到諮詢室談",res:[[null,"你倒了一杯水。她說到阿翔的時候，聲音小了下來：「他最近都去網咖。」"]]},

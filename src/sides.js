@@ -52,7 +52,7 @@ SIDES.yun=[
 SIDES.boss=[
  sideEarphone("earphone","b_patrol","b_report",{morale:3}),
  {id:"amy",from:"b_staff",until:"b_complaint",target:{npc:"amy"},title:"美語教室的投影機",avail:G=>G.clock>=T("16:35"),
-  pages:G=>[["amy","主任～美語教室的投影機又被借去三樓了。我四點半的課要放繪本。"],[null,"三樓的投影機，是國中部借走的。"]],
+  pages:G=>[["amy","主任～美語教室的投影機又被借去三樓了。我六點半的課要放繪本。"],[null,"三樓的投影機，是國中部借走的。"]],
   choices:G=>[
    {label:"「下個月採購單上，加一台。」",fx:{sales:-3,morale:6},set:{amyProj:1},log:"答應美語教室加一台投影機",res:[["amy","真的？那這個月……我先用手機投好了。"]]},
    {label:"「跟國中部排時間輪流用。」",fx:{calm:2,morale:-2},log:"請美語和國中輪流用投影機",res:[["amy","……好，我去排。"]]}]},

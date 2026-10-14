@@ -154,7 +154,7 @@ LINES2.yun={...LINES.yun,day:2,
    choices:G=>[
     {label:"帶她進諮詢室，倒杯水，再請主任",fx:{par:8,hp:-2},set:{linToBoss:1},log:"帶林媽媽進諮詢室",res:[["mom","……謝謝。"],[null,"你敲主任室的門。主任把電話掛掉，站起來。"]]},
     {label:"「退費單給我，我先幫您試算。」",fx:{ord:4,par:-4},log:"幫林媽媽試算退費",res:[[null,"退費只能退一半。你把數字寫給她看。"],["mom","一半？那我兒子這半年算什麼？"]]}]},
-  {id:"y2_ama",t:"16:20",target:{npc:"ama"},goal:"李阿嬤來了",npc:{ama:PC.amaLobby},after:{ama:null},
+  {id:"y2_ama",t:"16:20",target:{npc:"ama"},goal:"李阿嬤來了",npc:{ama:PC.amaLobby},after:{ama:null,mom:null},
    pages:G=>{const p=pv(G);
      if(p.paid===0)return [["ama","小姐，昨天你找給我的錢……我回家數，好像多了六百。"],[null,"阿嬤從信封裡拿出六張百元鈔，攤在櫃台上。"]];
      return [["ama","小姐，安安媽媽今天回來了。她說公司補助要收據的影本。"],[null,"她從布包裡拿出一個保溫杯：「這是綠豆湯，給你。」"]];},

@@ -28,7 +28,9 @@ function buildCrowd(){
 }
 /* 當天的時間表（分鐘） */
 function crowdTimes(e,day){const i=e.idx,j=(i*37)%11;
-  if(e.kind==="kid"){const arr=day===2?T("12:50")+(i%6)*.8:T("15:52")+(i%6)*.8,leave=T("17:00")+((i*23)%15)*6+(i%4===0?60:0);return [arr,leave];}
+  if(e.kind==="kid"){const arr=day===2?T("12:50")+(i%6)*.8:T("15:52")+(i%6)*.8,leave=T("17:00")+((i*23)%15)*6+(i%4===0?60:0);
+    // 四年級（玩家的班）：劇情 18:15 起「只剩一個人」，其他小朋友六點前都被接走
+    return [arr,e.room==="g4"?Math.min(leave,T("17:58")):leave];}
   if(e.kind==="jh")return [T("17:20")+((i*13)%34),T("21:00")+(i%8)*1.5];
   if(e.kind==="eng")return [T("18:15")+(i%6)*2,T("20:00")+(i%6)*1.2];
   if(e.kind==="parent"){const a=T("17:24")+((i*11)%8)*5.5+(day===2?3:0);return [a,a+3+(i%3)];}
@@ -60,16 +62,18 @@ function setCrowd(ph,instant){crowdPhase=ph;if(typeof syncItems==="function")syn
    不是這條線主角的職員，照這張表在補習班裡移動；劇情步驟用 npc 指定時會覆蓋到下一個行程點。
    [時刻, 地點]；地點是 SPOTS 名稱（站在旁邊）或 null（不在班上）。 */
 const STAFF_DAY={
- lin:[["11:30","g5podium"],["15:20","door"],["15:58","g5podium"],["18:40",null]],
- wu:[["11:30","g6podium"],["15:20","door"],["15:58","g6podium"],["18:40",null]],
+ // 15:20 在門口集合出發，15:25 人已經在國小（畫面上不在），15:52 帶小朋友回來
+ lin:[["11:30","g5podium"],["15:20","door"],["15:25",null],["15:52","g5podium"],["18:40",null]],
+ wu:[["11:30","g6podium"],["15:20","door"],["15:25",null],["15:52","g6podium"],["18:40",null]],
+ cai:[["11:30","g4podium"],["15:20","door"],["15:25",null],["15:52","g4podium"],["19:00",null]],
  amy:[["16:30","engpodium"],["20:10",null]],
  hong:[["17:00","tutor"],["21:20",null]],
  boss:[["13:00","bossdesk"],["21:30",null]],
  yun:[["13:30","counterIn"],["21:30",null]]
 };
 /* 同一個地點有好幾位老師時錯開站，不要疊在一起 */
-const STAFF_OFF={door:{lin:[-1,-.5],wu:[1,-.5]}};
-const STAFF_DAY2={lin:[["11:30","g5podium"],["12:20","door"],["12:52","g5podium"],["18:40",null]],wu:[["11:30","g6podium"],["12:20","door"],["12:52","g6podium"],["18:40",null]]};
+const STAFF_OFF={door:{lin:[-1.5,-1.3],wu:[1.5,-1.3],cai:[0,-1.6]}};
+const STAFF_DAY2={lin:[["11:30","g5podium"],["12:20","door"],["12:25",null],["12:52","g5podium"],["18:40",null]],wu:[["11:30","g6podium"],["12:20","door"],["12:25",null],["12:52","g6podium"],["18:40",null]],cai:[["11:30","g4podium"],["12:20","door"],["12:25",null],["12:52","g4podium"],["19:00",null]]};
 function staffSpec(id){const sch=((G&&G.day===2&&STAFF_DAY2[id])||STAFF_DAY[id]);if(!sch)return undefined;let at=null;for(const [t,s] of sch){if(G.clock>=T(t))at=s;}
   if(!at)return null;if(at==="bossdesk")return AT("bossdesk",0,-2.3,0);if(at==="counterIn")return AT("counterIn",0,0,0);const off=STAFF_OFF[at]&&STAFF_OFF[at][id];if(off)return AT(at,off[0],off[1],Math.PI);const s=SPOTS[at];return[s.pos[0]+(at.endsWith("podium")?0:.6),s.pos[1]+(at.endsWith("podium")?0:.4),at.endsWith("podium")?0:Math.PI];}
 let staffLast={};

@@ -10,7 +10,7 @@ LINES.yun={
  coda:"櫃台的電話明天還會響。你記得的是每個打來的人叫什麼名字。",
  msgs:[["13:44","何主任","下午有一位張媽媽會來問安親，麻煩先接待"],["16:12","鄭老師","小芸，九年級的便當今天訂 11 個喔"],["18:40","妹妹","今天幾點回家？毛線又把衛生紙抓爛了"],["20:48","許老師","林媽媽的電話謝謝你🙏"],["21:36","媽","菜幫你留在電鍋裡。"]],
  preStatus:"營業中",endAt:"21:30",daylight:true,
- staff:["lin","wu","amy","hong"],
+ staff:["lin","wu","amy","hong","cai"],
  zoneText:{"大廳":"你的戰場。櫃台、刷卡機、沙發、鞋櫃，還有永遠在響的電話。","教材室":"影印機在這裡。卡紙的時候，大家第一個找的是你。","主任室":"門通常開著。主任講電話的聲音，櫃台聽得到一半。"},
  schedule:[["13:30","pre"],["17:00","leave"],["18:00","class"],["19:25","break"],["19:35","class"],["21:00","leave"]],
  phaseStatus:{pre:"營業中",class:"國中上課中",break:"國中下課",leave:"放學高峰",close:"日結中"},
@@ -41,7 +41,7 @@ LINES.yun={
     {label:"自己說明安親時間和學費",fx:{par:2,ord:3},log:"自己說明安親",res:[["zhangma","學費我了解了……那老師會幫忙看應用題嗎？"],[null,"這題你答不出來。"]]},
     {label:"請主任出來談",fx:{pat:-3,par:3},log:"請主任接待",res:[[null,"主任在講總部的電話，讓張媽媽在沙發等了十分鐘。"]]}]},
   {id:"y_watch",chapter:{t:"15:20",title:"安親老師去接人了",sub:"二樓空了，大廳只剩你。",status:"營業中"},
-   t:"15:30",target:{npc:"deliv"},goal:"門口有人送東西來",npc:{deliv:AT("door",0,-.6)},after:{deliv:null},
+   t:"15:30",target:{npc:"deliv"},goal:"門口有人送東西來",npc:{deliv:AT("door",0,-.6)},after:{deliv:null,zhangma:null},
    pages:G=>[["deliv","你好，點心！三十個布丁，已經付款了。"],[null,"櫃台電話同時響了。是阿翔媽媽：「我今天五點半接小宇，可以嗎？」"]],
    choices:G=>[
     {label:"先簽收，再回電話",fx:{ord:3,par:-2},log:"先簽收點心",res:[[null,"布丁收進冰箱。電話那頭已經掛了。你在便利貼寫：「阿翔媽媽 17:30」。"]]},
@@ -52,7 +52,7 @@ LINES.yun={
     {label:"現在就打",fx:{hp:-6,par:6,cleared:1},log:"下午打完補課電話",res:[[null,"三通打完。一個約週六、一個要看錄影、一個說「段考完再說」。"]]},
     {label:"「放學高峰前打不完，晚上再打。」",fx:{pat:3,missed:1},log:"補課電話延到晚上",res:[["boss","好，那晚上記得。"]]}]},
   {id:"y_rush",chapter:{t:"17:00",title:"放學高峰",sub:"電話、廣播、家長交代、繳費、刷卡，一起來。",status:"放學高峰"},
-   t:"17:25",target:{spot:"counterIn"},goal:"櫃台前排了三個家長",action:"開始處理",npc:{xiangma:PC.xiangmaLobby},
+   t:"17:25",target:{spot:"counterIn"},goal:"櫃台前排了三個家長",action:"開始處理",npc:{xiangma:PC.xiangmaLobby},after:{xiangma:null},
    pages:G=>[[null,"刷卡機嗶個不停，國中生陸續到班。三個家長站在櫃台前，電話在響，二樓還在等你廣播。"],[null,"你只有一雙手。"]],
    choices:G=>[
     {label:"一件一件處理",mini:"rush",fx:r=>({par:r.ok*2-8-(r.wrong||0)*2,ord:r.ok>=7?6:r.ok>=5?2:-4,pat:-6,missed:r.drop}),log:r=>`放學高峰處理好 ${r.ok} 件${r.wrong?`，弄錯 ${r.wrong} 件`:""}，漏掉 ${r.drop} 件`,
