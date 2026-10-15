@@ -1,5 +1,5 @@
-/* =============== 美術實驗層 v3：櫃台區模型 + 紋理重製 ===============
-   這一層不做全螢幕濾鏡，只改物件本體。先用櫃台區當成 A/B 樣板。 */
+/* =============== 美術共用工具：程序貼圖、材質、倒角板件 ===============
+   art_phase2.js 的桌椅、講台都用這裡的工具。 */
 
 const FM={textures:{},materials:{}};
 function fmCanvasTex(key,w,h,draw,rx=1,ry=1){
@@ -11,23 +11,6 @@ function fmCanvasTex(key,w,h,draw,rx=1,ry=1){
   t.anisotropy=Math.min(8,an||4);FM.textures[key]=t;return t;
 }
 function fmRand(seed){let s=seed>>>0;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296);}
-function fmVinylTex(){
-  return fmCanvasTex('lobbyVinyl',512,512,(g,w,h)=>{
-    g.fillStyle='#d7d0c4';g.fillRect(0,0,w,h);
-    const rnd=fmRand(1701);
-    for(let i=0;i<1200;i++){
-      const v=155+Math.floor(rnd()*55),a=.035+rnd()*.055;
-      g.fillStyle=`rgba(${v},${v-4},${v-9},${a})`;
-      const r=.5+rnd()*1.5;g.fillRect(rnd()*w,rnd()*h,r,r);
-    }
-    g.strokeStyle='rgba(92,98,104,.16)';g.lineWidth=2;
-    for(let x=0;x<=w;x+=128){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
-    for(let y=0;y<=h;y+=128){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
-    g.strokeStyle='rgba(255,255,255,.34)';g.lineWidth=1;
-    for(let x=2;x<=w;x+=128){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
-    for(let y=2;y<=h;y+=128){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
-  },4.5,4.5);
-}
 function fmWoodTex(){
   return fmCanvasTex('counterWood',512,256,(g,w,h)=>{
     g.fillStyle='#b98d64';g.fillRect(0,0,w,h);
@@ -42,48 +25,57 @@ function fmWoodTex(){
     const grad=g.createLinearGradient(0,0,0,h);grad.addColorStop(0,'rgba(255,255,255,.13)');grad.addColorStop(.5,'rgba(255,255,255,0)');grad.addColorStop(1,'rgba(71,43,25,.08)');g.fillStyle=grad;g.fillRect(0,0,w,h);
   },3.2,1.2);
 }
-function fmPaintTex(){
-  return fmCanvasTex('blueLaminate',256,256,(g,w,h)=>{
-    g.fillStyle='#294c67';g.fillRect(0,0,w,h);const rnd=fmRand(4431);
-    for(let i=0;i<1500;i++){const a=.02+rnd()*.045;g.fillStyle=rnd()>.5?`rgba(255,255,255,${a})`:`rgba(0,0,0,${a})`;const s=.5+rnd();g.fillRect(rnd()*w,rnd()*h,s,s);}
-  },1,1);
+/* 同一張程序貼圖可以共用 Canvas，但不同尺寸家具不能共用同一組 repeat。
+   clone() 只複製 Texture 狀態、仍共用原 image，避免為每張桌子再建立 512px Canvas。
+   測試 stub 比真實 Three.js 精簡，center/rotation 若不存在就略過，不影響遊戲本體。 */
+function fmTextureView(key,base,rx,ry,rotation=0){
+  const k='view:'+key;if(FM.textures[k])return FM.textures[k];
+  const t=base.clone?base.clone():base;t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  if(t.repeat&&t.repeat.set)t.repeat.set(rx,ry);
+  if(t.center&&t.center.set)t.center.set(.5,.5);
+  if('rotation' in t)t.rotation=rotation;
+  t.needsUpdate=true;
+  FM.textures[k]=t;return t;
 }
-function fmFabricTex(){
-  return fmCanvasTex('sofaFabric',256,256,(g,w,h)=>{
-    g.fillStyle='#98786d';g.fillRect(0,0,w,h);
-    g.strokeStyle='rgba(255,255,255,.08)';g.lineWidth=1;
-    for(let i=0;i<w;i+=4){g.beginPath();g.moveTo(i,0);g.lineTo(i,h);g.stroke();}
-    g.strokeStyle='rgba(40,24,20,.07)';
-    for(let i=0;i<h;i+=4){g.beginPath();g.moveTo(0,i);g.lineTo(w,i);g.stroke();}
-  },2,4);
-}
+/* 材質快取。有貼圖的材質依實際尺寸調整 repeat，讓木紋在不同物件上維持接近的物理尺寸。 */
+const FM_MAP_PROFILES={'p2:podiumWood':[1.20,.60]};
 function fmMat(key,opts={}){
   if(FM.materials[key])return FM.materials[key];
-  const m=new THREE.MeshStandardMaterial({color:opts.color===undefined?0xffffff:opts.color,roughness:opts.rough===undefined?.78:opts.rough,metalness:opts.metal||0,map:opts.map||null});
+  let map=opts.map;const pf=map&&FM_MAP_PROFILES[key];if(pf)map=fmTextureView(key,map,pf[0],pf[1],pf[2]||0);
+  const m=new THREE.MeshStandardMaterial({color:opts.color===undefined?0xffffff:opts.color,roughness:opts.rough===undefined?.78:opts.rough,metalness:opts.metal||0,map:map||null});
   if(opts.transparent){m.transparent=true;m.opacity=opts.opacity===undefined?.5:opts.opacity;m.depthWrite=opts.depthWrite!==false;}
   FM.materials[key]=m;return m;
 }
-function fmBox(w,h,d,mat,x,y,z,parent){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m;}
-function fmCyl(rt,rb,h,mat,x,y,z,parent,seg=18){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m;}
+/* 倒角板件：頂/底用平面 UV、側面沿周長展開，木紋不會塌成一條線。
+   側面 U 依真實邊長比例累積，因此長邊、倒角與短邊不會各自被硬拉成一整張貼圖。
+   Phase 2 有大量同尺寸桌腳、椅架與板件，因此再以尺寸+r 做 BufferGeometry 快取。 */
+const FM_CHAMFER_CACHE=new Map();
 function fmChamferGeo(w,h,d,r=.06){
-  r=Math.min(r,w*.24,d*.24);const x=w/2,z=d/2,y=h/2;
+  r=Math.min(r,w*.24,d*.24);
+  const key=[w,h,d,r].map(v=>Number(v).toFixed(4)).join('|');
+  if(FM_CHAMFER_CACHE.has(key))return FM_CHAMFER_CACHE.get(key);
+  const x=w/2,z=d/2,y=h/2;
   const p=[[-x+r,-z],[x-r,-z],[x,-z+r],[x,z-r],[x-r,z],[-x+r,z],[-x,z-r],[-x,-z+r]];
   const verts=[],uvs=[];
-  const add=v=>{verts.push(...v);uvs.push(v[0]/w+.5,v[2]/d+.5);};
-  const tri=(a,b,c)=>{add(a);add(b);add(c);};
+  const add=(v,uv)=>{verts.push(...v);uvs.push(...uv);};
+  const tri=(a,b,c,ua,ub,uc)=>{add(a,ua);add(b,ub);add(c,uc);};
+  const faceUV=v=>[v[0]/w+.5,v[2]/d+.5];
   for(let i=1;i<7;i++){
-    tri([p[0][0],-y,p[0][1]],[p[i][0],-y,p[i][1]],[p[i+1][0],-y,p[i+1][1]]);
-    tri([p[0][0],y,p[0][1]],[p[i+1][0],y,p[i+1][1]],[p[i][0],y,p[i][1]]);
+    const b0=[p[0][0],-y,p[0][1]],b1=[p[i][0],-y,p[i][1]],b2=[p[i+1][0],-y,p[i+1][1]];
+    const t0=[p[0][0],y,p[0][1]],t1=[p[i+1][0],y,p[i+1][1]],t2=[p[i][0],y,p[i][1]];
+    tri(b0,b1,b2,faceUV(b0),faceUV(b1),faceUV(b2));
+    tri(t0,t1,t2,faceUV(t0),faceUV(t1),faceUV(t2));
   }
+  const edgeLen=p.map((a,i)=>{const b=p[(i+1)%8];return Math.hypot(b[0]-a[0],b[1]-a[1]);});
+  const perimeter=edgeLen.reduce((a,b)=>a+b,0);let run=0;
   for(let i=0;i<8;i++){
-    const j=(i+1)%8,a=p[i],b=p[j];
-    tri([a[0],-y,a[1]],[b[0],y,b[1]],[b[0],-y,b[1]]);
-    tri([a[0],-y,a[1]],[a[0],y,a[1]],[b[0],y,b[1]]);
+    const j=(i+1)%8,a=p[i],b=p[j],u0=run/perimeter,u1=(run+edgeLen[i])/perimeter;run+=edgeLen[i];
+    const a0=[a[0],-y,a[1]],b0=[b[0],-y,b[1]],b1=[b[0],y,b[1]],a1=[a[0],y,a[1]];
+    tri(a0,b1,b0,[u0,0],[u1,1],[u1,0]);
+    tri(a0,a1,b1,[u0,0],[u0,1],[u1,1]);
   }
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
   geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
-  geo.computeVertexNormals();return geo;
+  geo.computeVertexNormals();FM_CHAMFER_CACHE.set(key,geo);return geo;
 }
-function fmChamfer(w,h,d,r,mat,x,y,z,parent){const m=new THREE.Mesh(fmChamferGeo(w,h,d,r),mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m;}
-function fmPlane(w,h,mat,x,y,z,rx=0,ry=0,rz=0,parent){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);m.position.set(x,y,z);m.rotation.set(rx,ry,rz);m.receiveShadow=true;(parent||scene).add(m);return m;}

@@ -80,7 +80,7 @@ src/
 build.py           把 src 打包成單一的 index.html（打包順序寫在裡面）
 index.html         打包好的遊戲
 manifest.webmanifest、sw.js、assets/   主畫面圖示、分享預覽圖、離線快取
-docs/              改版規格與進度
+docs/              試玩檢查清單（現實設定）、改版進度、時鐘規則
 tests/             自動測試
 ```
 

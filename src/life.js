@@ -41,16 +41,16 @@ function crowdTimes(e,day){const i=e.idx,j=(i*37)%11;
     return [arr,Math.min(leave,e.room==="g4"?T("17:58"):T("18:30"))];}
   if(e.kind==="jh")return [T("17:20")+((i*13)%28),T("21:00")+(i%3)*.6];
   if(e.kind==="eng")return [T("18:15")+(i%6)*2,T("20:00")+(i%6)*1.2];
-  if(e.kind==="parent"){const a=T("17:24")+((i*11)%8)*5.5+(day===2?3:0);return [a,a+3+(i%3)];}
+  // 家長不另排時間：國小生要離開時，才有一位家長從大門進來接（見 tickCrowd）。
   return [0,0];}
-function crowdWanted(e){if(!G)return false;const t=G.clock,day=G.day||1,[a,l]=crowdTimes(e,day);
+function crowdWanted(e){if(!G)return false;if(e.kind==="parent")return !!e.with;const t=G.clock,day=G.day||1,[a,l]=crowdTimes(e,day);
   if(G.line.crowd&&!G.line.crowd.includes(e.kind))return false;return t>=a&&t<l;}
 function crowdPlace(e){const p=e.p,u=p.userData;p.visible=true;agentPlace(p,e.home[0],e.home[1],e.home[2]);e.state="here";u.act=null;}
 function crowdHide(e){const p=e.p,u=p.userData;p.visible=false;u.path=null;u.moving=false;e.state="away";}
 /* 依目前時刻，把所有背景人物直接放到該在的地方（開局、讀檔、快轉） */
-function crowdSettle(){extras.forEach(e=>{if(crowdWanted(e))crowdPlace(e);else crowdHide(e);});}
+function crowdSettle(){extras.forEach(e=>{if(e.kind==="parent")e.with=null;if(crowdWanted(e))crowdPlace(e);else crowdHide(e);});}
 function tickCrowd(){if(!G)return;
-  extras.forEach(e=>{const want=crowdWanted(e),p=e.p,u=p.userData;
+  extras.forEach(e=>{if(e.kind==="parent")return;const want=crowdWanted(e),p=e.p,u=p.userData;
     if(want&&e.state==="away"){
       // 晚到太多（快轉之後）直接就位；否則從大門走進來
       const [a]=crowdTimes(e,G.day||1);if(G.clock-a>8){crowdPlace(e);return;}
@@ -59,10 +59,19 @@ function tickCrowd(){if(!G)return;
       agentGo(p,e.home[0],e.home[1],e.home[2],()=>{e.state="here";if(Math.random()<.3)emote(p,e.kind==="kid"?pick(["老師好！","我第一名！","今天作業好多"]):e.kind==="parent"?pick(["我來接小孩","不好意思晚了"]):pick(["老師好","好餓","今天考什麼？"]),2);});
       if(u.routeFailed)crowdPlace(e);
     }else if(!want&&(e.state==="here"||e.state==="arriving")){
+      // 國小生（安親、美語）一定由家長接走：家長先到大廳，小朋友下樓找到家長，兩個人一起出門。
+      if(e.kind==="kid"||e.kind==="eng"){const par=extras.find(x=>x.kind==="parent"&&x.state==="away"&&!x.with);if(!par)return;escortOut(e,par);return;}
       e.state="leaving";u.act=null;if(Math.random()<.3)emote(p,pick(["掰掰","明天見","回家了～"]),2);
       agentGo(p,DOOR[0],DOOR[1],0,()=>crowdHide(e));if(u.routeFailed)crowdHide(e);
     }
   });}
+function escortOut(kid,par){const k=kid.p,pp=par.p,h=par.home;par.with=kid;kid.state="leaving";k.userData.act=null;
+  const done=()=>{crowdHide(kid);crowdHide(par);par.with=null;};
+  pp.visible=true;agentPlace(pp,DOOR[0],DOOR[1],Math.PI);setPose(pp,false);par.state="arriving";emote(pp,pick(["我來接小孩","不好意思晚了"]),2);
+  agentGo(pp,h[0],h[1],h[2],()=>{par.state="here";});
+  agentGo(k,h[0]+.6,h[1],h[2],()=>{if(Math.random()<.4)emote(k,pick(["掰掰","明天見","媽媽！"]),2);
+    agentGo(pp,DOOR[0]+.4,DOOR[1],0,()=>{});agentGo(k,DOOR[0],DOOR[1],0,done);if(k.userData.routeFailed)done();});
+  if(k.userData.routeFailed||pp.userData.routeFailed)done();}
 /* 舊介面：劇情換段落時呼叫。instant 時直接補位。 */
 function setCrowd(ph,instant){crowdPhase=ph;if(typeof syncItems==="function")syncItems();if(instant)crowdSettle();}
 

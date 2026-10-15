@@ -17,7 +17,7 @@ LINES.yun={
  phaseStatus:{pre:"營業中",class:"國中上課中",break:"國中下課",leave:"放學高峰",close:"日結中"},
  bells:{leave:["放學高峰","電話、廣播、繳費、刷卡，全部一起來。"],class:["國中上課了","大廳終於安靜下來。"],break:["國中下課","電話又開始響了。"]},
  events:["blackout","rain","roach"],
- eventSlots:[{after:"y_consult",t:"15:00",phase:"pre"},{after:"y_trial",t:"18:30",phase:"class"},{after:"y_mom",t:"20:15",phase:"class"}],
+ eventSlots:[{after:"y_consult",t:"15:00",phase:"pre"},{after:"y_trial",t:"18:30",phase:"class"},{after:"y_bocheck",t:"20:15",phase:"class"}],
  chats:["boss","cai","hr","teacher","hong","ama","zhangma","xiangma","chenba","parent"],
  start:[FLX(0,4.5),16.6],dead:G=>G.s.hp<=0||G.s.pat<=0,
  me:G=>({name:"你",title:`${G.pName}・櫃台`,abbr:"櫃",color:"#1f9c86"}),
@@ -88,14 +88,19 @@ LINES.yun={
     {label:"自己先安撫，約明天下午的時間",mini:"calm",fx:r=>({pat:-10,par:r.anger<=20?10:r.anger<=45?5:-5,cleared:1}),set:{linAppt:1},log:r=>`先安撫林媽媽（怒氣 ${r.anger}），約隔天談`,res:r=>[["me","林媽媽，主任明天下午有空，我幫您約三點好嗎？"],["mom",r.anger<=45?"……好吧。三點喔。":"三點！不要再放我鴿子！"]]},
     {label:"轉上三樓給鄭老師",fx:{par:8},set:{teacherNoBreak:1},log:"把林媽媽轉給班導",res:[[null,"鄭老師的下課十分鐘，全部在講電話。"]]},
     {label:"「老師在忙，下課後回您。」",fx:{par:-8,missed:1},log:"跟林媽媽說老師在忙",res:[["mom","每次都在忙！"],[null,"電話被掛斷了。"]]}]},
+  {id:"y_bocheck",t:"19:40",target:{spot:"counterIn"},goal:"刷卡機跳出提醒",action:"看刷卡紀錄",
+   pages:G=>[[null,"刷卡紀錄：八年級小柏 19:27 刷卡離班。第二節開始了，還沒刷回來。"],[null,"規定是：國中生下課不能自己離開，除非家長同意。"]],
+   choices:G=>{const c=[
+    {label:"打給小柏",fx:{par:4,pat:-2},set:{boFound:1},log:"打電話找小柏回來",res:[[null,"第三通，小柏接了：「我在 7-11 啦……」"],[null,"五分鐘後，他捧著一碗關東煮走進門，刷卡、上樓。你在接送表上記了一筆。"]]},
+    {label:"打給陳爸爸，也通知八年級班導",fx:{par:2,ord:4},set:{boDad:1},log:"通知陳爸爸和八年級班導",res:[[null,"陳爸爸沒有接。八年級班導說教室裡確實少一個人。"],[null,"十五分鐘後，小柏自己刷卡回來了。班導在門口等他。"]]}];
+    if(K.has("boSeven")||G.f.knowBo)c.unshift({label:"直接去 7-11 找他",note:K.has("boSeven")?ECHO:"阿宏說過他常去 7-11",fx:{hp:-3,par:6,ord:3},set:{boFound:1},log:"去 7-11 找回小柏",res:[[null,"你在 7-11 找到小柏，他正在挑關東煮。"],["bo","……姊姊你怎麼知道。"]]});
+    return c;}},
   {id:"y_bo",chapter:{t:"21:00",title:"國中放學",sub:"家長在樓下等，國中生搶電梯。",status:"放學"},
    t:"21:02",target:{npc:"chenba"},goal:"陳爸爸來接小柏",npc:{chenba:AT("counter",.9,.8)},
-   pages:G=>[["chenba","你好，我來接小柏。八年級的，他在樓上嗎？"],[null,"刷卡紀錄：小柏 19:27 刷卡離班。之後沒有再刷進來。"],[null,"陳爸爸的手機撥了兩次，沒有人接。"]],
-   choices:G=>{const c=[
-    {label:"打給小柏",fx:{par:5},set:{boFound:1},log:"打電話找小柏",res:[[null,"第三通，小柏接了：「我在 7-11 啦……」"],[null,"五分鐘後，他捧著一碗關東煮走進門。"]]},
-    {label:"「下課時間他刷卡出去，系統有傳通知給您喔。」",fx:{par:-6,ord:4},set:{boNotice:1},log:"跟陳爸爸說刷卡通知",res:[["chenba","……我在工地，沒看手機。"],[null,"他的語氣變了。不是生氣，是累。"]]}];
-    if(K.has("boSeven")||G.f.knowBo)c.unshift({label:"直接去 7-11 找他",note:K.has("boSeven")?ECHO:"阿宏說過他常去 7-11",fx:{hp:-3,par:10,ord:3},set:{boFound:1},log:"去 7-11 找回小柏",res:[[null,"你在 7-11 找到小柏，他正在挑關東煮。"],["chenba","你怎麼知道他在這？謝謝你。"]]});
-    return c;}},
+   pages:G=>[["chenba","你好，我來接小柏。八年級的，他在樓上嗎？"],[null,"刷卡紀錄：小柏 19:27 刷卡離班，第二節開始後才刷回來。"],...(G.f.boDad?[["chenba","你們七點多有打給我？我在工地灌漿，沒聽到。"]]:[])],
+   choices:G=>[
+    {label:"照實說，請爸爸跟他約好下課不出去",fx:{par:5,ord:3},set:{boTold:1},log:"跟陳爸爸說小柏下課外出",res:[["chenba","……他又去 7-11 喔。好，我跟他講。謝謝你們有去找。"]]},
+    {label:"「下課時間他刷卡出去，系統有傳通知給您喔。」",fx:{par:-6,ord:4},set:{boNotice:1},log:"跟陳爸爸說刷卡通知",res:[["chenba","……我在工地，沒看手機。"],[null,"他的語氣變了。不是生氣，是累。"]]}]},
   {id:"y_enroll",t:"21:06",target:{npc:"parent"},goal:"王媽媽要做決定",npc:{parent:AT("counter",-.9,.8),trial:AT("counter",-.2,1.2),bo:null,chenba:null},
    pages:G=>{const n=enrolledT(G),l=[];
      l.push(["parent",n?"他說聽得懂。我們想報名。":"我們回去再討論看看。對面也約了週四試聽。"]);

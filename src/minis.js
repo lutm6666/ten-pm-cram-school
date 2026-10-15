@@ -77,14 +77,12 @@ MINIS.calm={
     draw();}
 };
 
-/* 點名：從座位表找出沒來的人 */
+/* 點名：從座位表找出沒來的人。名單由各職業線填入（國小門口 kidroll、九年級 roll）。 */
 MINIS.roll={
-  head:"點名表",zone:"九年級門口",title:"誰沒來？",
-  intro:"前兩排應到 10 個人。看座位表，在名單上點出沒來的兩個人。點錯會被學生笑。",
-  names:["柏翰","佳穎","子涵","品妤","小安","宇軒","思妤","冠廷","詠晴","家豪"],absent:["小安","柏翰"],
+  head:"點名表",zone:"點名",title:"誰沒來？",names:[],absent:[],
   mount(el,done){const self=this;const present=this.names.filter(n=>!this.absent.includes(n)).sort(()=>Math.random()-.5);let found=0,miss=0;
     const seats=[...present,...self.absent.map(()=>"")].sort(()=>Math.random()-.5);
-    el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:8px 0">${seats.map(n=>`<div style="border:1px solid var(--rule);border-radius:3px;padding:6px 2px;text-align:center;font-size:.82rem;background:${n?"var(--surface)":"var(--tray)"};color:${n?"var(--ink)":"var(--muted)"}">${n||"空位"}</div>`).join("")}</div>
+    el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0">${seats.map(n=>`<div style="border:1px solid var(--rule);border-radius:3px;padding:6px 2px;text-align:center;font-size:.82rem;background:${n?"var(--surface)":"var(--tray)"};color:${n?"var(--ink)":"var(--muted)"}">${n||"空位"}</div>`).join("")}</div>
       <div class="lbl">名單</div><div style="display:flex;flex-wrap:wrap;gap:6px">${[...this.names].sort(()=>Math.random()-.5).map(n=>`<button class="choice" data-n="${n}" style="padding:6px 10px">${n}</button>`).join("")}</div><p class="feed" aria-live="polite"></p>`;
     const feed=el.querySelector(".feed");
     el.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;const n=b.dataset.n;b.disabled=true;
@@ -96,14 +94,10 @@ MINIS.roll={
 /* 只講三件事：從六件裡挑三件 */
 MINIS.summary={
   head:"只講三件事",zone:"三行",title:"挑三件最重要的",cost:4,
-  get intro(){return {teacher:"林媽媽在電話那頭。她記不住太多事，你只講三件。挑對她最有用的三件。",yun:"螢幕邊框上有六張便利貼。今天先處理三張，挑最急的。",boss:"總部只看三行。挑三件最能說明這間補習班現在需要什麼的事。",care:"林老師只有一分鐘聽你交接。挑明天最需要知道的三件事。",jh:"子晴媽媽在等你回覆。挑三件最能說明子晴狀況的事。"}[G&&G.line.id]||"挑三件。";},
+  intro:"螢幕邊框上有六張便利貼。今天先處理三張，挑最急的。",
   sets:{
-   yun:[["阿翔媽媽：今天五點半接小宇，要提醒二樓",3],["上週請假的三個國中生：補課還沒排",3],["子晴媽媽：段考前想多一次小考",2],["影印機：碳粉剩 10%",1],["冷氣遙控器：阿宏要",0],["上週的收據要歸檔",0]],
-   teacher:[["他今天自己算出一題分數",3],["他的基礎要從國一的分數補起",3],["下週開始提早半小時來",2],["他上課會畫畫，畫得很像",1],["他上課手機沒關聲音",0],["小考數學 32 分，全班最低",0]],
-   jh:[["英文小考 92 分，但作文扣分最多，可以多練寫作",3],["她被學校選去參加英文演講比賽",3],["上課很認真，常幫同學解釋單字",2],["班上排第三，前兩名差一分",1],["這次小考比較簡單",0],["其他同學也都考得不錯",0]],
-   care:[["明天是安安媽媽來接，不是李阿嬤",3],["張媽媽下週一要帶孩子來試讀",3],["小米媽媽今天會晚到",2],["小宇的數習第二題要訂正",1],["點心布丁剩三個",0],["下午影印機沒有卡紙",0]],
-   boss:[["櫃台只有一個人，放學高峰顧不過來",3],["有學生從國一就跟不上，需要基礎班",3],["影印機老舊，每天卡紙影響上課",2],["對面打八折，家長在比價",1],["本週續班率比上週低",0],["老師們都很努力",0]]},
-  mount(el,done){const list=this.sets[G.line.id]||this.sets.teacher,pick=new Set(),order=list.map((_,i)=>i).sort(()=>Math.random()-.5);
+   yun:[["阿翔媽媽：今天五點半接小宇，要提醒二樓",3],["上週請假的三個國中生：補課還沒排",3],["子晴媽媽：段考前想多一次小考",2],["影印機：碳粉剩 10%",1],["冷氣遙控器：阿宏要",0],["上週的收據要歸檔",0]]},
+  mount(el,done){const list=this.sets.yun,pick=new Set(),order=list.map((_,i)=>i).sort(()=>Math.random()-.5);
     el.innerHTML=`<div class="choices">${order.map(i=>`<button class="choice" data-i="${i}" aria-pressed="false">${esc(list[i][0])}</button>`).join("")}</div><p class="feed" aria-live="polite">選 3 件。</p><div class="actions" hidden><button class="go" data-call>就講這三件</button></div>`;
     const feed=el.querySelector(".feed"),act=el.querySelector(".actions");
     el.querySelectorAll("[data-i]").forEach(b=>b.addEventListener("click",()=>{const i=+b.dataset.i;if(act.dataset.done)return;

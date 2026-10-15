@@ -233,7 +233,7 @@ function furnishRoom(r){
      furn(R4(29.2,10,29.8,12),.9,0xbfb6a6);box(.5,.3,.36,0x333a44,o+29.5,1.05,11);furn(R4(29.2,16.8,29.8,17.6),1.1,0xd0ebff);box(.36,.06,.36,0x74c0fc,o+29.5,1.13,17.2);
      [[22.4,0x4dabf7],[22.95,0x40c057],[23.5,0xfab005]].forEach(([x,c])=>furn(R4(x,17.1,x+.45,17.6),.6,c));break;
    case"cubby":furn(R4(33.2,10,35.7,17.5),1.2,0xb59a72);break;
-   case"c7":case"c8":case"c9":classroom(false);if(r.id==="c9")wallSign("會考倒數 210 天",o+25,1.7,6.88,Math.PI,2.4,.45,"#2b8a3e","#ffffff",44);break;
+   case"c7":case"c8":case"c9":classroom(false);if(r.id==="c9")wallSign("會考倒數\n每一天都算數",o+25,1.7,6.88,Math.PI,2.4,.45,"#2b8a3e","#ffffff",44);break;
    case"jhlounge":furn(R4(1,12,4.5,13),.74,0xcfc6b5,0xe9e2d4);chair(o+2,11.5,0);chair(o+3.5,13.5,Math.PI);furn(R4(.3,15,.9,17.6),1.6,C.metal);
      furn(R4(7,14.4,7.7,17.4),.45,C.sofa);rbox(R4(7.45,14.4,7.7,17.4),.85,C.sofa);furn(R4(7.2,10,7.7,10.6),1.1,0xd0ebff);box(.36,.06,.36,0x74c0fc,o+7.45,1.13,10.3);plant(o+5,17.3,.3);break;
    case"tutor":furn(R4(9,12,19,12.9),.74,0xc9c2b2,0xe7e1d3);furn(R4(9,15,19,15.9),.74,0xc9c2b2,0xe7e1d3);
@@ -254,7 +254,6 @@ function assignFloors(skip){
 }
 function showFloor(f){curFloor=f;FLOOR_GROUPS.forEach((g,i)=>{if(g)g.visible=i===f;});}
 /* 人物、標記：不在目前樓層就不畫（不影響「在不在場」的邏輯） */
-function floorCull(o){if(!o)return;const on=floorOf(o.position.x)===curFloor;if(o.userData&&o.userData.rig){o.children.forEach(c=>c.visible=on);}else o.visible=o.visible&&on;}
 function makeNPC(id){const c=CHARS[id];const p=person(c.body,{name:`${c.name}｜${c.short}`,tagBg:c.color,hair:c.hair,kid:c.kid});npcs[id]=p;p.visible=false;return p;}
 function makePlayer(line){if(player)scene.remove(player);player=person(line.body,{name:`你｜${line.short}`,tagBg:"#d9a21b",hair:0x2a2421});return player;}
 /* 走到某處：坐著的人先站起來；到了如果是椅子就坐下 */
@@ -357,7 +356,6 @@ function moveNPCs(dt){
   for(const id in npcs){const n=npcs[id],u=n.userData;if(u.entrySpec){const s=u.entrySpec;if(enterAgent(n,s[3],u.anchor))u.entrySpec=null;}moveAgent(n,dt);}
   extras.forEach(e=>moveAgent(e.p,dt,e.speed||2.05));
 }
-function addInfoMark(info){const s=label("i","#ffffff","#5f6b78",40);s.scale.multiplyScalar(.75);s.position.set(info.pos[0],info.h||1.6,info.pos[1]);scene.add(s);infoMarks[info.id]=s;}
 function addSideMark(){const s=label("？","#1c2633","#f0b45a",48);s.scale.multiplyScalar(.75);scene.add(s);return s;}
 /* 收集物：地上一閃一閃的四角星（金色星星加深色外框與影子，淺色地板上也看得到） */
 let sparkTex=null,shadowTex=null;

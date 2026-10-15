@@ -6,13 +6,14 @@ const draw=new Proxy({measureText:s=>({width:String(s).length*26}),createLinearG
 const element=()=>({style:{},appendChild(){},addEventListener(){},getContext:()=>draw});
 const sandbox={window:{innerWidth:1200,innerHeight:800,devicePixelRatio:1,addEventListener(){}},document:{getElementById:element,createElement:element},innerWidth:1200,innerHeight:800,performance,console,Math};
 vm.createContext(sandbox);vm.runInContext(read('tests/stub.js')+'\nvar THREE=window.THREE;',sandbox);
-const names=['layout.js','floor-travel.js','world.js','art.js','art_models.js','art_models_fix.js','art_phase2.js'];
+const names=['layout.js','floor-travel.js','world.js','art.js','art_models.js','art_phase2.js'];
 for(const name of names)vm.runInContext(read('src/'+name),sandbox,{filename:name});
 vm.runInContext('buildWorld();globalThis.api={ROOMS,SPOTS,WALLS,PORTALS,CLASS_SEATS,CHAIRS,scene,solids,seatsOf,floorOf,blockedAt,findPathFrom,floorTravelQuote,person,setPose,agentPlace,agentGo,moveAgent,ART_LAYOUT_DETAILS};',sandbox);
 const A=sandbox.api;
 // The story's spatial contract must exactly equal the agreed source commit.
 // 2026-10-14：四～六年級改版、櫃台後牆、安親老師桌取代講台（使用者試玩回饋，Claude 調整）。
 // 2026-10-14 第二輪：空間太空曠，切出廁所、會議室、清潔間、機房、個別指導室，縮小大廳、美語教室、倉庫、閱讀角（使用者試玩回饋）。
+// 2026-10-15：五年級 10 人、六年級 12 人（4×3 座位）；九年級 15 座（使用者決定）。
 const expectedHashes={
   "ROOMS": "185f62820a362b96f749c1006776e3a4fb10ce164795d9de9a4f0ce37256a45c",
   "SPOTS": "0c7d5469094c93a5265109da693c174a0e25722feba8f7578641130ecfe4d9f7",

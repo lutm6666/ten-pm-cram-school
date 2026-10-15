@@ -23,7 +23,7 @@ LINES2.teacher={...LINES.teacher,day:2,
   {id:"t2_c8check",t:"17:45",target:{spot:"c8podium"},goal:"確認八年級的講義",action:"翻講義",
    pages:G=>[[null,"八年級講桌上：講義九份，小考卷九份。名單上是十二個人。"],[null,"班導請假，沒有人知道是誰印的、為什麼少了三份。"]],
    choices:G=>[
-    {label:"下樓自己補印三份",fx:{hp:-4,stu:3},set:{printed8:1},log:"自己下樓補印八年級講義",res:[[null,"你搭電梯下去、印、再上來。十七點五十八分，講義放到每張桌上。"]]},
+    {label:"下樓自己補印三份",fx:{hp:-4,stu:3},set:{printed8:1},log:"自己下樓補印八年級講義",res:[[null,"你搭電梯下去、印、再上來。五點五十八分，講義放到每張桌上。"]]},
     {label:"兩人共用一份，小考題寫在白板上",fx:{voice:-4,stu:-1},log:"八年級講義兩人共用",res:[[null,"白板右半邊寫滿了小考題。最後一排的同學舉手：「老師，看不到。」"]]}]},
   {id:"t2_c8",chapter:{t:"18:00",title:"第一節・八年級",sub:"18:00–19:25・段考複習：乘法公式",status:"上課中"},
    t:"18:00",target:{spot:"c8podium"},goal:"走上講台，開始上課",
@@ -36,7 +36,7 @@ LINES2.teacher={...LINES.teacher,day:2,
    pages:G=>{const y=pa(G,"yun"),l=[["bo","老師，學這個以後要幹嘛？我又不當數學老師。"],[null,"全班笑了。但每個人都在等你怎麼回。"]];
      if(y.boFound)l.push([null,"你想起小芸說過，昨天晚上小柏下課跑去 7-11，是她把人找回來的。他爸爸在工地上班。"]);return l;},
    choices:G=>{const y=pa(G,"yun"),c=[];
-     if(y.boFound||y.boNotice)c.push({label:"「你爸在工地，鋪地磚算面積就是在算這個。」",note:"(a + b)²",fx:{stu:12,voice:-4},set:{boHook:1},log:"用工地鋪地磚回答小柏",res:[["me","一間房間要鋪成正方形，大片的、小片的、長條的磚各要幾片？你爸每天都在算 (a + b)²。你回去問他。"],["bo","……蛤，真的假的。"],[null,"他把講義翻到下一頁，第一次自己往下寫。"]]});
+     if(y.boFound||y.boNotice||y.boDad||y.boTold)c.push({label:"「你爸在工地，鋪地磚算面積就是在算這個。」",note:"(a + b)²",fx:{stu:12,voice:-4},set:{boHook:1},log:"用工地鋪地磚回答小柏",res:[["me","一間房間要鋪成正方形，大片的、小片的、長條的磚各要幾片？你爸每天都在算 (a + b)²。你回去問他。"],["bo","……蛤，真的假的。"],[null,"他把講義翻到下一頁，第一次自己往下寫。"]]});
      c.push({label:"教他用乘法公式心算",fx:{stu:8,voice:-5},log:"用心算複習乘法公式",res:[["me","99 的平方怎麼算？100 減 1，(100 − 1)² = 10000 − 200 + 1。"],["bo","……9801？"],["me","對。你剛剛三秒就算出來了。"]]});
      c.push({label:"「段考會考。」",fx:{stu:-4,voice:2},log:"跟小柏說段考會考",res:[["bo","喔。"],[null,"他坐下了，鉛筆盒又開始響。"]]});return c;}},
   {id:"t2_zhe",chapter:{t:"19:25",title:"下課十分鐘",sub:"從八年級走到九年級，中間會經過阿哲。",status:"下課"},
@@ -210,7 +210,7 @@ LINES2.yun={...LINES.yun,day:2,
    t:"19:27",target:{npc:"bo"},goal:"小柏要出門",npc:{bo:AT("cardreader",.4,-.4,Math.PI)},after:{bo:SEAT("c8","bo")},
    pages:G=>{const p=pv(G),l=[["bo","姊姊，我下課去一下 7-11，十分鐘就回來。"]];
      if(p.boNotice)l.push([null,"你想起陳爸爸昨天說：「我在工地，沒看手機。」"]);
-     else if(p.boFound)l.push([null,"昨天晚上，是你在 7-11 找到他的。"]);
+     else if(p.boFound||p.boDad)l.push([null,"昨天晚上第二節開始了他還沒回來，你為他打了好幾通電話。"]);
      l.push([null,"規定是：國中生下課不能自己離開，除非家長同意。"]);return l;},
    choices:G=>{const c=pa(G,"care"),l=[
     {label:"打給陳爸爸問",fx:{par:6,pat:-2},set:{boCall:1},log:"打給陳爸爸確認小柏外出",res:[["chenba","（電話）不行。叫他乖乖待著。……謝謝你打來。"],["bo","蛤——"]]},
@@ -374,7 +374,7 @@ LINES2.boss={...LINES.boss,day:2,
 SIDES.care.push({id:"miDraw",day:2,from:"c2_wake",until:"c2_mima",target:{npc:"mi"},title:"小米的畫",action:"看小米的畫",
   avail:G=>!!(G.prev.waitMi||G.prev.leftMi),
   pages:G=>G.prev.waitMi?[["mi","老師，這個給你。"],[null,"一張畫：兩個人坐在桌子前面，把彩色筆排成一排。旁邊寫著「老師跟我等媽媽」。"]]
-    :[["mi","老師……昨天櫃台的阿姨陪我等。"],[null,"她給你一張畫：櫃台旁邊一張小椅子，椅子上坐著一個抱著兔子的人。"],["mi","今天媽媽會準時嗎？"]],
+    :[["mi","老師……昨天櫃台的姊姊陪我等。"],[null,"她給你一張畫：櫃台旁邊一張小椅子，椅子上坐著一個抱著兔子的人。"],["mi","今天媽媽會準時嗎？"]],
   choices:G=>[
    {label:"貼在老師桌旁邊",fx:{pat:3,par:2},log:"把小米的畫貼在老師桌旁",res:[[null,"小米看著你把畫貼好，回座位的時候腳步輕了一點。"]]},
    {label:"「放進資料夾，帶回家給媽媽看。」",fx:{par:5},log:"請小米把畫帶回家給媽媽",res:[["mi","……好。"],[null,"她把畫折好，夾進聯絡簿裡。"]]}]});

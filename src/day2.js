@@ -156,17 +156,17 @@ LINES2.jh={...LINES.jh,day:2,
  eventSlots:[{after:"j2_pinyuma",t:"15:50",phase:"pre"},{after:"j2_class",t:"18:20",phase:"class"},{after:"j2_qing",t:"19:33",phase:"break"}],
  npcs:{...LINES.jh.npcs,xiangma:null,mom:null},
  steps:[
-  {id:"j2_arrive",chapter:{t:"13:30",title:"第二天・週三",sub:"段考倒數五天。昨天的聯絡本都回來了。",status:"準備中",rush:["家長在聯絡本上的回覆要看完。","段考模擬卷要印。"]},
-   t:"13:30",target:{spot:"hrdesk"},goal:"上三樓，看家長的回覆",action:"翻聯絡本",
-   pages:G=>{const p=pv(G),l=[[null,"十二本聯絡本疊在桌上，是昨晚家長簽完、學生早上丟進收件籃的。"]];
-     if(p.notesAll)l.push([null,"阿哲那本，你寫「今天有問問題」。底下多了一行林媽媽的字：「他回家有說。謝謝老師。」"]);
-     if(p.paidFor)l.push([null,"阿哲那本聯絡本裡夾了一個信封，八十五元，零錢用膠帶黏在紙上。"]);
-     if(p.readNote)l.push([null,"有一本只寫了一句：「孩子說老師在全班面前念他的紙條，請問這是補習班的做法嗎？」"]);
+  {id:"j2_arrive",chapter:{t:"13:30",title:"第二天・週三",sub:"段考倒數五天。昨晚家長的回覆都傳來了。",status:"準備中",rush:["家長在群組和私訊的回覆要看完。","段考模擬卷要印。"]},
+   t:"13:30",target:{spot:"hrdesk"},goal:"上三樓，看家長的回覆",action:"打開手機",
+   pages:G=>{const p=pv(G),l=[[null,"聯絡本要等學生傍晚帶來。昨晚家長簽完，多半先拍照私訊給你。"]];
+     if(p.notesAll)l.push([null,"林媽媽拍了阿哲那本：你寫的「今天有問問題」下面，多了一行她的字：「他回家有說。謝謝老師。」"]);
+     if(p.paidFor)l.push([null,"櫃台轉上來一個信封，是林媽媽中午送來的便當錢。八十五元，零錢用膠帶黏在紙上。"]);
+     if(p.readNote)l.push([null,"有一位家長只傳了一句：「孩子說老師在全班面前念他的紙條，請問這是補習班的做法嗎？」"]);
      if(l.length===1)l.push([null,"大部分只有簽名。有一本寫：「段考加油」，不知道是寫給孩子還是寫給你。"]);return l;},
    choices:G=>{const p=pv(G),c=[];
      if(p.readNote)c.push({label:"打給那位家長，為念紙條道歉",fx:{par:8,pat:-4},set:{sorryNote:1},log:"為念紙條向家長道歉",res:[[null,"電話那頭沉默了一下：「……老師願意打來，我就知道了。」"]]});
-     c.push({label:"每一本都回一句",fx:{par:5,hp:-4},set:{replyAll:1},log:"每本聯絡本都回覆",res:[[null,"十二本，十二句。寫到第九本，手開始痠。"]]});
-     c.push({label:"簽名，先去印考卷",fx:{hp:2},log:"聯絡本先簽名",res:[[null,"簽完名，你抱起模擬卷原稿下樓。"]]});return c;}},
+     c.push({label:"每一則都回一句",fx:{par:5,hp:-4},set:{replyAll:1},log:"每位家長都回覆",res:[[null,"十二位家長，十二句。回到第九位，手指開始痠。"]]});
+     c.push({label:"先已讀，去印考卷",fx:{hp:2},log:"家長回覆先已讀",res:[[null,"你抱起模擬卷原稿下樓。"]]});return c;}},
   {id:"j2_print",t:"14:00",target:{spot:"copier"},goal:"下樓印段考模擬卷",action:"開始印",
    pages:G=>{const b=pa(G,"boss"),p=pv(G),l=[];
      if(b.newCopier)l.push([null,"影印機上貼著一張新的便利貼：「新機週五到，請大家再忍一下。——主任」"]);
@@ -184,7 +184,7 @@ LINES2.jh={...LINES.jh,day:2,
   {id:"j2_pinyuma",t:"15:30",target:{spot:"hrdesk"},goal:"品妤媽媽打來",action:"接電話",
    pages:G=>{const p=pv(G),l=[];
      if(p.pinyuSleep)l.push(["pinyuma","老師，您在聯絡本最後寫：「品妤說她兩點睡、六點起。」是什麼意思？"]);
-     else if(p.pinyuMa)l.push(["pinyuma","老師，昨天謝謝您陪她下樓。她說胃痛，我帶她去看了，醫生說是壓力。"]);
+     else if(p.pinyuMa)l.push(["pinyuma","老師，昨天謝謝您打來。她說胃痛，我帶她去看了，醫生說是壓力。"]);
      else l.push(["pinyuma","老師，品妤最近小考怎麼樣？我看她每天都念到很晚。"]);
      l.push(["pinyuma","她說她想段考考進前三。我是覺得……她可以的。"]);return l;},
    choices:G=>[
@@ -228,7 +228,7 @@ LINES2.jh={...LINES.jh,day:2,
     {label:"在後面慢慢巡，記下每個人卡住的題號",fx:{stu:6,hp:-3},set:{watchNotes:1},log:"監考時記下每個人卡住的地方",res:[[null,"你的筆記本上寫滿了座號和題號。阿翔在第十二題停了很久，最後寫了一個答案。"]]},
     {label:"坐在講台上改昨天的小考",fx:{hp:3,stu:-2},log:"監考時順便改考卷",res:[[null,"改到一半抬頭，最後一排有人在偷看手機。"]]}]},
   {id:"j2_xiangma",t:"18:32",target:{npc:"xiangma"},goal:"阿翔媽媽在國中老師休息室等你",npc:{xiangma:AT("jhlounge",0,.6,Math.PI)},after:{xiangma:null},
-   pages:G=>{const p=pv(G),l=[[null,"你請課輔的阿宏到九年級門口幫忙看一下考場，才下樓到休息室。"],["xiangma","老師，抱歉打擾您上課。小宇我放在二樓，蔡老師說可以待到七點。"]];
+   pages:G=>{const p=pv(G),l=[[null,"你請課輔的阿宏到九年級門口幫忙看一下考場，才下樓到休息室。"],["xiangma","老師，抱歉打擾您上課。小宇還在二樓，我下午有先跟蔡老師說會晚一點。"]];
      l.push(["xiangma",p.askedXiang?"昨天回家，阿翔跟我說了……他說他覺得我一直拿他跟小宇比。":"昨天我在網咖找到他。回家他一句話都沒說。"]);
      l.push(["xiangma","我一個人帶兩個，下午接小的，晚上接大的。我真的不知道要怎麼辦。"]);return l;},
    choices:G=>[

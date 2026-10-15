@@ -31,10 +31,10 @@ LINES.jh={
     {label:"先印考卷，影印機下午會塞",fx:{ord:0,hp:-2,stu:2},set:{printFirst:1},log:"先下樓印考卷",res:[[null,"你抱著三份原稿下樓。電梯在一樓不動。"]]},
     {label:"先把昨天的成績登完",fx:{par:3},log:"先登成績",res:[[null,"你登到第五個人的時候，想起影印機。下午兩點以後，安親和美語都會來排。"]]}]},
   {id:"j_copy",t:"13:45",target:{spot:"copier"},goal:"下樓印考卷",action:"開始印",npc:{cai:AT("copier",1,.4,Math.PI/2)},after:{cai:AT("g4podium",0,0,0)},
-   pages:G=>[[null,"影印機前，四年級的蔡老師抱著一疊練習卷的原稿。"],["cai","鄭老師也要印？我只有八張……"],[null,"你手上的考卷，加起來一百二十張。影印機發出「嗶——」的一聲，卡紙燈亮了。"]],
+   pages:G=>[[null,"你手上的考卷，加起來一百二十張。印到第二十張，四年級的蔡老師抱著一疊原稿走進來。"],["cai","鄭老師還很多嗎？我只有十張……"],[null,"影印機發出「嗶——」的一聲，卡紙燈亮了。"]],
    choices:G=>[
     {label:"自己拉卡紙",mini:"jam",fx:r=>({hp:-3-2*Math.min(4,r.tears),pat:r.tears?-3:2}),log:r=>r.tears?`修影印機，撕破 ${r.tears} 次`:"修好影印機",res:r=>r.tears?[[null,"碎紙卡在滾輪裡，蔡老師拿鑷子幫你夾。"],["cai","我先去樓上用手寫好了。"]]:[[null,"四張紙完整拉出來。"],["cai","好厲害！那你先印，我等。"]]},
-    {label:"讓蔡老師先印，八張很快",fx:{pat:3,hp:1},set:{letCai:1},log:"讓安親先用影印機",res:[["cai","謝謝謝謝！"],[null,"八份練習卷印完，輪到你的時候，影印機開始卡紙。你拉了十分鐘。"]]},
+    {label:"讓蔡老師先印，十張很快",fx:{pat:3,hp:1},set:{letCai:1},log:"讓安親先用影印機",res:[["cai","謝謝謝謝！"],[null,"十張印完，輪到你的時候，影印機開始卡紙。你拉了十分鐘。"]]},
     {label:"「我們段考前一週，真的比較急。」",fx:{stu:3,pat:-3},log:"國中部先用影印機",res:[["cai","……好，那你先。"],[null,"她抱著原稿站在旁邊。等到第四十張的時候，她走回樓上了。"]]}]},
   {id:"j_absent",t:"14:15",target:{spot:"hrdesk"},goal:"子涵最近缺了兩次課",action:"翻點名表",
    pages:G=>[[null,"點名表上，子涵上週四和這週一的格子都是空白。段考前一週，缺課的人最容易跟不上複習。"]],
@@ -77,7 +77,7 @@ LINES.jh={
     {label:"「我記下來，到了再跟您說。」",fx:{hp:2,par:-4},log:"記下阿翔缺席",res:[["xiangma","……好。"],[null,"她掛電話的聲音很重。"]]}]},
   {id:"j_xiang",chapter:{t:"18:00",title:"第一節",sub:"18:00–19:25・數學・許老師",status:"上課中"},
    t:"18:15",target:{npc:"xiang"},goal:"阿翔到了",npc:{xiang:[...PJ.xiangHall,DOOR],teacher:PJ.teacherPodium},after:{xiang:SEAT("c9","xiang")},
-   pages:G=>[[null,"六點十五分，阿翔出現在教室門口。他身上有一股網咖的菸味，手機還握在手上。"],["xiang","……老師，我等一下就交手機。"]],
+   pages:G=>[[null,"六點十五分，阿翔出現在教室門口。他身上有一股網咖冷氣和泡麵的味道，手機還握在手上。"],["xiang","……老師，我等一下就交手機。"]],
    choices:G=>[
     {label:"在門口小聲問他去哪了",fx:{stu:5,hp:-2},set:{askedXiang:1},log:"小聲問阿翔遲到的原因",res:[["xiang","……我只是不想一直被比。我媽一直說小宇乖。"],[null,"他把手機放進籃子，走進教室。你在聯絡本上沒有寫「網咖」兩個字。"]]},
     {label:"「手機交出來，下課再說。」",fx:{stu:-2,par:3},log:"收手機，下課再談",res:[[null,"他把手機丟進籃子。下課的時候，他是第一個衝去電梯的。"]]},
@@ -112,7 +112,7 @@ LINES.jh={
    t:"21:03",target:{npc:"pinyu"},goal:"品妤還坐在位子上",npc:{pinyu:SEAT("c9","pinyu"),zhe:null,qing:null,xiang:null,trial:null,teacher:null},
    pages:G=>[[null,"大家陸續走了。品妤還坐在位子上，手放在肚子上。"],["pinyu","老師，我胃有點痛……沒事，可能是太緊張。我媽說要我段考考進前三。"]],
    choices:G=>[
-    {label:"陪她下樓，順便跟來接的媽媽說一聲",fx:{hp:-3,par:6,stu:4},set:{pinyuMa:1},log:"陪品妤下樓、跟媽媽說她胃痛",res:[[null,"品妤媽媽聽完，沉默了一下：「……她都沒跟我說。」"]]},
+    {label:"打給媽媽，跟她說品妤胃痛",fx:{hp:-3,par:6,stu:4},set:{pinyuMa:1},log:"打給品妤媽媽說她胃痛",res:[[null,"品妤媽媽在電話那頭沉默了一下：「……她都沒跟我說。我會議一結束就去接她。」"]]},
     {label:"給她一杯溫水，問她最近睡得怎樣",fx:{stu:6,hp:-2},set:{pinyuSleep:1},log:"問品妤最近睡得好不好",res:[["pinyu","兩點睡，六點起來。我覺得還好……應該還好吧。"],[null,"你把這句話寫進了聯絡本的最後一行。"]]},
     {label:"「早點回家休息。」",fx:{hp:2},log:"叫品妤早點回家",res:[["pinyu","嗯。老師晚安。"]]}]},
   {id:"j_close",t:"21:15",target:{spot:"hrdesk"},goal:"簽聯絡本、登今天的考卷",action:"坐下來",
@@ -135,18 +135,10 @@ LINES.jh={
 };
 
 /* ---------- 班導的小遊戲 ---------- */
-MINIS.roll={
+MINIS.roll={...MINIS.roll,
   head:"九年級・確認到班",zone:"九年級教室",title:"誰沒到？",
   intro:"刷卡紀錄和教室對一次。十二個人，在名單上點出還沒到的兩個。點錯會被學生笑。",
-  names:["品妤","阿哲","阿翔","子晴","子涵","宇軒","思妤","冠廷","詠晴","家豪","佳穎","柏翰"],absent:["阿翔","子涵"],
-  mount(el,done){const self=this;const present=this.names.filter(n=>!this.absent.includes(n)).sort(()=>Math.random()-.5);let found=0,miss=0;
-    const seats=[...present,...self.absent.map(()=>"")].sort(()=>Math.random()-.5);
-    el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0">${seats.map(n=>`<div style="border:1px solid var(--rule);border-radius:3px;padding:6px 2px;text-align:center;font-size:.82rem;background:${n?"var(--surface)":"var(--tray)"};color:${n?"var(--ink)":"var(--muted)"}">${n||"空位"}</div>`).join("")}</div>
-      <div class="lbl">名單</div><div style="display:flex;flex-wrap:wrap;gap:6px">${[...this.names].sort(()=>Math.random()-.5).map(n=>`<button class="choice" data-n="${n}" style="padding:6px 10px">${n}</button>`).join("")}</div><p class="feed" aria-live="polite"></p>`;
-    const feed=el.querySelector(".feed");
-    el.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;const n=b.dataset.n;b.disabled=true;
-      if(self.absent.includes(n)){found++;b.style.borderColor="var(--green)";feed.textContent=`${n}：沒到。`;}else{miss++;b.style.borderColor="var(--red)";feed.textContent=`${n}：「我在這裡啦！」`;}
-      if(found===self.absent.length){feed.textContent=`找到了：${self.absent.join("、")}沒到。點錯 ${miss} 次。`;el.querySelectorAll("[data-n]").forEach(x=>x.disabled=true);done({miss});}}));}
+  names:["品妤","阿哲","阿翔","子晴","子涵","宇軒","思妤","冠廷","詠晴","家豪","佳穎","柏翰"],absent:["阿翔","子涵"]
 };
 MINIS.jhscore={...MINIS.grade,
   head:"小考成績・核對",zone:"國中辦公室",title:"找出算錯的那一行",

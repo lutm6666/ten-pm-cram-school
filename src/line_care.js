@@ -39,11 +39,11 @@ LINES.care={
    choices:G=>[
     {label:"多問幾句小米的事",fx:{par:2,hp:3},set:{knowMi:1},log:"跟林老師問小米的狀況",res:[["lin","她書包上掛著一隻兔子吊飾，叫「布丁」。哭的時候問她布丁好不好，會比問她怎麼了有用。"]]},
     {label:"邊吃邊排好下午要印的東西",fx:{ord:4,hp:2},log:"午餐時排好要印的東西",res:[[null,"你在便當盒蓋上寫：數學加強練習卷八份、上週學校國語考卷的解答一份。小宇的分數還沒弄熟，多印一張分數補充講義給他。"],[null,"學校作業每個人不一樣，等下午接回來、看了聯絡簿再排。"]]}]},
-  {id:"c_copy",chapter:{t:"13:40",title:"下午・影印",sub:"一樓的影印機，下午是大家的。",status:"準備中"},
-   t:"13:40",target:{spot:"copier"},goal:"下樓印練習卷和考卷解答",action:"排隊",npc:{hr:AT("copier",.9,.3,Math.PI/2)},after:{hr:PC.hrDesk},
+  {id:"c_copy",chapter:{t:"13:50",title:"下午・影印",sub:"一樓的影印機，下午是大家的。",status:"準備中"},
+   t:"13:50",target:{spot:"copier"},goal:"下樓印練習卷和考卷解答",action:"排隊",npc:{hr:AT("copier",.9,.3,Math.PI/2)},after:{hr:PC.hrDesk},
    pages:G=>[[null,"影印機正在吐國中部的考卷。九年級的鄭老師站在旁邊，一臉焦慮。"],["hr","啊，蔡老師也要印嗎？我這邊還有……一百二十張。段考複習卷。"],[null,"影印機發出「嗶——」的一聲。卡紙燈亮了。"]],
    choices:G=>[
-    {label:"「我來拉，我很會。」",mini:"jam",fx:r=>({hp:-3-2*Math.min(4,r.tears),ord:r.tears?-2:3}),set:{fixedCopier:1},log:r=>r.tears?`幫忙修影印機，撕破 ${r.tears} 次`:"幫國中部修好影印機",res:r=>r.tears?[[null,"紙拉出來了，但碎紙卡在滾輪裡。鄭老師拿鑷子夾了五分鐘。"]]:[[null,"四張紙完整拉出來。影印機又開始吐考卷。"],["hr","你救了我。你先印，八張而已。"]]},
+    {label:"「我來拉，我很會。」",mini:"jam",fx:r=>({hp:-3-2*Math.min(4,r.tears),ord:r.tears?-2:3}),set:{fixedCopier:1},log:r=>r.tears?`幫忙修影印機，撕破 ${r.tears} 次`:"幫國中部修好影印機",res:r=>r.tears?[[null,"紙拉出來了，但碎紙卡在滾輪裡。鄭老師拿鑷子夾了五分鐘。"]]:[[null,"四張紙完整拉出來。影印機又開始吐考卷。"],["hr","你救了我。你先印，十張而已。"]]},
     {label:"讓她先印完",fx:{pat:-4,hp:2},log:"讓國中部先用影印機",res:[[null,"你在旁邊等了二十分鐘，把要印的東西重排了兩次。"],["hr","不好意思不好意思……我晚點請你喝飲料。"]]},
     {label:"改用手抄，練習卷明天再印",fx:{ord:-4,hp:-2},set:{noCopy:1},log:"練習卷沒印，改成手抄",res:[[null,"你回到二樓，在白板上抄了五題。練習卷……明天再說。"]]}]},
   {id:"c_consult",t:"14:30",target:{npc:"zhangma"},goal:"小芸請你下樓：家長想問四年級怎麼看功課",npc:{zhangma:PC.zhangLobby,yun:PC.yunDesk},after:{zhangma:null},
@@ -59,7 +59,7 @@ LINES.care={
    choices:G=>[
     {label:"看名單，找出還沒出來的",mini:"kidroll",fx:r=>({ord:r.miss?2:8,pat:-3}),log:r=>r.miss?`點名接小朋友，點錯 ${r.miss} 次`:"一次就點出還沒出來的兩個",
      res:r=>[[null,"小宇在操場打球打到忘了時間，晴晴在找她的水壺。"],[null,"八個小朋友排成一排，跟著你過馬路。小宇一路都在講他剛剛進了三球。"]]},
-    {label:"等到人都出來再走",fx:{hp:-5,pat:-6},log:"在校門口等到人齊",res:[[null,"等了二十分鐘。小宇最後一個跑出來，滿頭大汗。"]]}]},
+    {label:"等到人都出來再走",fx:{hp:-5,pat:-6},log:"在校門口等到人齊",res:[[null,"多等了十分鐘。小宇最後一個跑出來，滿頭大汗。"]]}]},
   {id:"c_snack",chapter:{t:"15:55",title:"點心時間",sub:"洗手、吃點心，四點十分開始寫作業。",status:"點心時間"},
    t:"15:58",target:{npc:"mi"},goal:"小米的點心一口都沒吃",npc:{mi:SEAT("g4","mi")},after:{mi:SEAT("g4","mi")},
    pages:G=>[[null,"大家坐在自己的位子上吃布丁。小米手裡握著書包上的兔子吊飾，一直看著門口。"],["mi","……我想打電話給媽媽。"],[null,"布丁放在她桌上，一口都沒吃。"]],

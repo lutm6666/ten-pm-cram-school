@@ -5,10 +5,8 @@
 const P2_BASE_PERSON=person;
 const P2_BASE_FURN=furn;
 
-function p2Hash(s){let h=2166136261;for(let i=0;i<(s||'').length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 function p2Std(key,color,rough=.76,metal=.02){return fmMat('p2:'+key,{color,rough,metal});}
 function p2Mesh(geo,material,parent,x=0,y=0,z=0){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m;}
-function p2HideFirstMesh(group){if(!group)return;const m=group.children&&group.children.find(o=>o&&o.isMesh);if(m)m.visible=false;}
 
 /* ---------- 人物：回歸原版方塊比例 ---------- */
 // 原版 person 已提供方塊頭、軀幹、四肢、鞋子、衣領與名牌。
