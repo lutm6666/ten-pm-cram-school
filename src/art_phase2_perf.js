@@ -66,7 +66,7 @@ function p2MergeStatic(){
   if(typeof cars!=='undefined')cars.forEach(addTree);
   if(typeof NIGHT_PARTS!=='undefined'){NIGHT_PARTS.glows.forEach(addTree);NIGHT_PARTS.ground.forEach(([m])=>addTree(m));}
   if(typeof P2_STORY_PROPS!=='undefined')P2_STORY_PROPS.forEach(s=>addTree(s.belongings));
-  if(typeof ground!=='undefined')addTree(ground);if(typeof boardSign!=='undefined')addTree(boardSign);
+  if(typeof ground!=='undefined')addTree(ground);if(typeof BOARDS!=='undefined')Object.values(BOARDS).forEach(addTree);
   scene.updateMatrixWorld(true);
   const visibleChain=o=>{for(let c=o;c;c=c.parent)if(c.visible===false)return false;return true;};
   const buckets=new Map();
@@ -108,7 +108,7 @@ function p2MergeStatic(){
     mg.setIndex(new THREE.BufferAttribute(idx,1));mg.computeBoundingSphere();mg.computeBoundingBox();
     const merged=new THREE.Mesh(mg,mat);merged.name='p2-static-merged';merged.matrixAutoUpdate=false;
     merged.castShadow=list.some(o=>o.castShadow);merged.receiveShadow=list.some(o=>o.receiveShadow);
-    scene.add(merged);
+    const mp=new THREE.Vector3().setFromMatrixPosition(list[0].matrixWorld);((typeof FLOOR_GROUPS!=='undefined'&&FLOOR_GROUPS[floorOf(mp.x)])||scene).add(merged);
     list.forEach(o=>{o.parent&&o.parent.remove(o);removed++;});
   }
   // 合併後變空的群組也拿掉，scene graph 走訪更輕。

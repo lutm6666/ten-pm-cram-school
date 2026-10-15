@@ -40,6 +40,14 @@ function openShareCard(){
     try{if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],text,url:SHARE_URL}).catch(()=>{});
       else if(navigator.share)navigator.share({text,url:SHARE_URL}).catch(()=>{});
       else{navigator.clipboard.writeText(text+" "+SHARE_URL);btn.textContent="已複製連結";}}catch(e){btn.textContent="請長按圖片儲存";}},"image/png");};
+  // Claude 頁面版（沒有 manifest）：用平台的下載功能存圖；拿不到就只留長按儲存。
+  if(!document.querySelector('link[rel="manifest"]')&&window.claude&&typeof window.claude.use==="function"){
+    const actions=$("sheet").querySelector(".actions");
+    window.claude.use("downloads").then(dl=>{if(!dl||!actions||!document.body.contains(actions))return;
+      const b=document.createElement("button");b.className="ghost";b.textContent="下載圖片";actions.appendChild(b);
+      b.onclick=()=>c.toBlob(blob=>{dl.save({filename:name,data:blob}).then(()=>{b.textContent="已下載";}).catch(e=>{const k=e&&e.code;if(k==="declined")return;b.textContent=k==="rate_limited"?"稍等一下再試":"這裡無法下載，請長按圖片";});},"image/png");
+    }).catch(()=>{});
+  }
 }
 /* PWA：只有獨立網頁版（有 manifest）才註冊 service worker */
 if(document.querySelector('link[rel="manifest"]')&&"serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}

@@ -21,14 +21,14 @@ for(const id of ts.slice(0,3)){
   await p.click('[data-act=chatEnd]');if(await p.evaluate(()=>__dbg.mode)!=='walk')fail++;
   chatted++;console.log('chat',id,label,'|',say.slice(0,30),'|',(await p.evaluate(()=>__dbg.chatUsed)).join(','));}
 // 主線對話結束時「多聊幾句」
-{await p.evaluate(()=>__dbg.jump('hall'));while(await vis('[data-act=chapterGo]'))await p.click('[data-act=chapterGo]');await p.click('[data-act=guide]');for(let k=0;k<200;k++){await p.waitForTimeout(60);if(await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'}))break;}
+{await p.evaluate(()=>__dbg.jump('t_check'));while(await vis('[data-act=chapterGo]'))await p.click('[data-act=chapterGo]');await p.click('[data-act=guide]');for(let k=0;k<200;k++){await p.waitForTimeout(60);if(await p.evaluate(()=>{const n=__dbg.near();return n&&n.type==='main'}))break;}
  const id0=await p.evaluate(()=>__dbg.G.steps[__dbg.G.idx].id);await p.click('#actBtn');let saw=false;
  for(let i=0;i<20;i++){if(await vis('[data-act=dchat]')){saw=true;await p.click('[data-act=dchat]');await p.waitForSelector('#cchips');await p.click('[data-act=chatEnd]');break;}if(await vis('#dlg .choice'))await p.click('#dlg .choice >> nth=0');else if(await vis('[data-act=dnext]'))await p.click('[data-act=dnext]');else break;}
  while(await vis('[data-act=dnext]')||await vis('[data-act=chapterGo]')){if(await vis('[data-act=chapterGo]'))await p.click('[data-act=chapterGo]');else await p.click('[data-act=dnext]');}
  const id1=await p.evaluate(()=>__dbg.G.steps[__dbg.G.idx].id);console.log('more-chat',saw,id0,'->',id1);if(!saw||id0===id1)fail++;}
 const used=await p.evaluate(()=>__dbg.chatUsed);console.log('used',used);
 if(ts.length&&!chatted)fail++;
-for(const id of ['lockup','reply','wait']){
+for(const id of ['lockup','reply','wait','rush']){
   await p.evaluate(id=>{window.__r=null;__dbg.runMini(id,r=>{window.__r=r;});},id);
   for(let g=0;g<40;g++){
     if(await vis('[data-act=miniOk]')){await p.click('[data-act=miniOk]');break;}

@@ -4,9 +4,9 @@
   "scripts": {
     "build": "python3 build.py",
     "build:test": "python3 build.py stub.js tests/test.html",
-    "test:phase2": "node tests/phase2-regression.js",
     "test:clock": "node tests/continuous-clock.js",
-    "test": "node tests/run.js"
+    "test": "node tests/run.js",
+    "test:layout": "node tests/redesign-layout.js"
   },
   "devDependencies": {
     "playwright": "1.47.2"

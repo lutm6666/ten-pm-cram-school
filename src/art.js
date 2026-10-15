@@ -55,136 +55,163 @@ person=function(color,opts={}){
   return p;
 };
 
-/* ---------- 建築收邊 ---------- */
-function artAddBaseboards(){
-  const col=0x98a0a8;
-  WALLS.forEach(r=>{
-    const w=r[2]-r[0],d=r[3]-r[1];
-    if(w>d) artBox(w,.07,Math.max(.05,d+.035),col,(r[0]+r[2])/2,.045,(r[1]+r[3])/2,null,.88,0);
-    else artBox(Math.max(.05,w+.035),.07,d,col,(r[0]+r[2])/2,.045,(r[1]+r[3])/2,null,.88,0);
-  });
-}
-function artThreshold(x,z,w,d,color=0x77818b){artBox(w,.02,d,color,x,.012,z,null,.72,.04);}
-function artAddDoorThresholds(){
-  // Explicit open entry: the old continuous perimeter wall hid the doorway.
-  const entry=new THREE.Group();entry.name='p2-main-entrance';scene.add(entry);
-  // 牆只有 1.1m 高（俯視切面），門框跟牆頂齊平、不加門楣，否則從鏡頭看像一個空心框。
-  [3.25,5.75].forEach(x=>artBox(.14,1.14,.2,0x647481,x,.57,17.87,entry));
-  artThreshold(4.5,17.84,2.35,.25);
-  const sign=wallSign('入口 / 出口',2.2,.78,17.73,Math.PI,1.1,.24,'#ffffff','#386657',32);sign.material.side=THREE.DoubleSide;
-  // Open classroom jambs make the C-class entrance readable from both sides.
-  [29.54,31.66].forEach(x=>artBox(.10,1.45,.18,0x657985,x,.725,11));
-  artThreshold(30.6,11,1.9,.30);
-  // 幾個最常經過的門口，直接用實體門檻增加空間分區感。
-  [[9,2.5,.30,1.7],[9,7,.30,1.7],[9,13.5,.30,2.5],[12,2,.30,1.8],[12,9,.30,1.8],[12,14,.30,1.8],[28,14,.30,1.8]].forEach(v=>artThreshold(...v));
-}
-
-/* ---------- 大廳 / 櫃台 ---------- */
-function artFrontDesk(){
-  // 櫃台正面分板與踢腳板
-  [2.15,3.75,5.35].forEach(x=>artBox(1.35,.56,.035,0x294763,x,.55,11.62,null,.58,.04));
-  artBox(4.55,.10,.10,0x1e3448,3.75,.12,11.65,null,.55,.05);
-  // 電腦螢幕、底座、鍵盤、電話
-  artBox(.62,.40,.055,0x252b32,2.65,1.38,11.32);artBox(.50,.29,.018,0x58758c,2.65,1.38,11.285);
-  artBox(.12,.18,.12,0x545d66,2.65,1.13,11.34);artBox(.62,.03,.20,0x333a42,2.65,1.075,11.12,null,.55,.08);
-  artBox(.38,.10,.22,0x2b3036,4.95,1.10,11.22);artBox(.09,.10,.11,0x454b52,4.78,1.19,11.21);
-  // 文件盤與講義
-  [0,1,2].forEach(i=>{artPaper(.55,.36,3.65+i*.07,1.08+i*.045,11.20-i*.015,i===1?0xfff2b2:0xf8f5ed,-.06);});
-  artBox(.07,.18,.07,0x315d88,5.55,1.17,11.14);artBox(.07,.16,.07,0xc84630,5.62,1.16,11.14);
-  // 壓克力立牌 / 試聽表。快取材質是共享的，透明設定要用獨立 clone，避免污染同參數物件。
-  const stand=artBox(.34,.42,.025,0xdde9ef,1.95,1.30,11.16,null,.2,.02);stand.material=stand.material.clone();stand.material.transparent=true;stand.material.opacity=.78;
-  artPaper(.26,.17,1.95,1.115,11.08,0xfff3c2,0);
-  // 等候區小桌與雜誌
-  // 等候區不放穿入沙發的茶几；雜誌移到櫃台旁的獨立矮桌。
-  artBox(.70,.055,.48,0x8a6b50,1.55,.48,15.45);artBox(.07,.45,.07,0x65717c,1.55,.23,15.45);
-  artBook(.38,.26,1.46,.52,15.39,0xe86b5b,.12);artBook(.34,.24,1.65,.54,15.49,0x4e88c7,-.10);
-  // 原本的綠球補上盆體，終於看起來是盆栽。
-  artCyl(.27,.20,.38,0x8b6549,.65,.20,9.60,null,14);
-  artCyl(.31,.31,.035,0x6e513b,.65,.40,9.60,null,14);
-  // 入口地墊
-  artBox(2.20,.018,1.00,0x5c6670,4.45,.012,16.95,null,.96,0);
-  artBox(1.55,.008,.045,0xd8b153,4.45,.024,16.95,null,.8,0);
-}
-
-/* ---------- 主任室 ---------- */
-function artOfficeDetails(){
-  // 桌燈
-  artCyl(.14,.18,.05,0x454b52,4.45,.86,2.15,null,16);artBox(.055,.48,.055,0x4b5259,4.45,1.10,2.15,null,.5,.18);
-  const shade=artCyl(.22,.12,.22,0xe3c184,4.45,1.37,2.15,null,18);shade.rotation.z=.12;
-  // 筆電、文件夾、名牌
-  artBox(.62,.035,.40,0x3e4751,3.10,.82,2.10,null,.45,.12);const scr=artBox(.58,.36,.025,0x313a44,3.10,1.02,1.93,null,.42,.08);scr.rotation.x=-.18;
-  artBook(.42,.30,2.50,.84,2.32,0x8d3c36,.05);artBook(.38,.28,2.56,.90,2.30,0x365f86,-.03);
-  artBox(.58,.14,.10,0x7e674f,3.80,.86,2.35); // 桌上名牌底
-  // 書櫃增加書脊色塊
-  const cols=[0x9d4b43,0x3f698d,0xc49b4b,0x4f7a5a,0x6c5a84];
-  for(let i=0;i<8;i++)artBox(.11,.42,.24,cols[i%cols.length],.48+i*.15,1.30,.82,null,.82,0);
-}
-
-/* ---------- 講師休息室 ---------- */
-function artLoungeDetails(){
-  artCup(2.75,.80,6.72,0xf3eee4);artCup(3.20,.80,6.84,0x5f7fa0);
-  artBook(.40,.28,4.20,.79,6.65,0xd88952,.10);
-  // 便當盒與筷子
-  artBox(.48,.12,.34,0xdbc8a4,3.55,.81,6.95,null,.9,0);artBox(.44,.025,.30,0xf2eadc,3.55,.885,6.95,null,.9,0);
-  artBox(.025,.025,.42,0x775c42,3.80,.91,6.96,null,.85,0).rotation.y=.15;
-  artBox(.025,.025,.42,0x775c42,3.84,.91,6.96,null,.85,0).rotation.y=.15;
-  // 冰箱把手由 Phase 2 冰箱模型本體繪製，避免舊把手浮在外面。
-}
-
-/* ---------- 教室桌面與白板細節 ---------- */
-function artClassroomDetails(){
-  // 白板托盤、板擦、色筆
-  artBox(5.4,.055,.13,0x9da5ad,20,.91,.38,null,.46,.13);
-  artBox(.34,.08,.10,0x44505a,18.55,.97,.33,null,.72,.02);
-  [19.25,19.40,19.55].forEach((x,i)=>artBox(.06,.06,.18,[0x3366aa,0xc84630,0x20252b][i],x,.98,.34,null,.60,.02));
-  // 講桌桌面加講義與粉筆盒
-  artBook(.46,.32,20.00,1.055,1.92,0x426d96,.04);artPaper(.40,.28,20.15,1.09,2.04,0xf8f5ed,-.08);
-  artBox(.28,.08,.16,0xe0c780,19.68,1.07,2.10,null,.84,0);
-  // 學生桌上放一些不規則講義 / 筆袋，避免 20 張桌子像複製貼上。
-  const props=[
-    [14.5,4,0x4f78a5,.10],[17,5.8,0xb95d55,-.08],[19.5,7.6,0x5b8a65,.04],[22,4,0xd3a444,-.12],
-    [24.5,5.8,0x7a64a5,.09],[14.5,7.6,0x3e8b8b,-.04],[19.5,9.4,0xa96a42,.13],[24.5,7.6,0x3f698d,-.10]
-  ];
-  props.forEach(([x,z,c,r],i)=>{
-    artBook(.42,.28,x-.12,.765,z,c,r);artPaper(.36,.25,x+.16,.79,z+.04,0xf9f6ee,-r*.7);
-    if(i%2===0){const pc=artBox(.34,.085,.12,0x464f58,x+.22,.80,z-.12,null,.70,.02);pc.rotation.y=-r;}
-  });
-}
-function artStudyDetails(){
-  [[15.2,13.35,0x53769a],[18.2,13.35,0x8a654f],[22.4,13.35,0x5f805c],[24.7,16.05,0x77649a],[16.0,16.05,0x9a744f]].forEach(([x,z,c],i)=>{
-    artBook(.40,.27,x,.78,z,c,(i%2?-.08:.07));
-    artBook(.36,.25,x+.08,.84,z+.04,0xc8a55a,(i%2?.05:-.04));
-  });
-}
-function artJuniorDetails(){
-  // C 班白板配件
-  artBox(3.9,.05,.12,0x9da5ad,32,.92,.38,null,.46,.13);artBox(.32,.08,.10,0x3d4a55,31.15,.98,.33);
-  // 國中桌面：更多彩色筆袋與課本
-  [[29.6,4,0x3f7fb7],[32,5.8,0xd0724d],[34.4,7.6,0x6f5bb0],[29.6,7.6,0x4c8b62]].forEach(([x,z,c],i)=>{
-    artBook(.39,.26,x-.10,.765,z,c,.06*(i-1));artBox(.32,.08,.12,0x555f69,x+.22,.80,z-.12,null,.72,.01).rotation.y=.10*(i%2?1:-1);
-  });
-  // 手機籃真正放入數支手機
-  for(let i=0;i<6;i++){
-    const ph=artBox(.10,.035,.19,[0x20242a,0x434b54,0x6a443e][i%3],29.70+(i%3)*.18,.94,16.86+Math.floor(i/3)*.18,null,.42,.08);
-    ph.rotation.y=(i%2?.14:-.10);
-  }
-}
-
-/* ---------- 走廊 / 門牌 ---------- */
-function artHallDetails(){
-  // 牆面門牌，比只有地板字更像真實補習班。
-  wallSign("主任室",9.13,1.38,3.65,Math.PI/2,.70,.28,"#ffffff","#425466",36);
-  wallSign("講師休息室",9.13,1.38,7.95,Math.PI/2,1.05,.28,"#ffffff","#425466",32);
-  wallSign("高三 B 班",12.08,1.42,2.95,-Math.PI/2,.90,.30,"#ffffff","#8a5c32",34);
-  wallSign("自習室",12.08,1.42,12.35,-Math.PI/2,.72,.30,"#ffffff","#4f6d62",34);
-  wallSign("國中 C 班",28.08,1.42,9.95,-Math.PI/2,.90,.30,"#ffffff","#4c6f8c",34);
-  // 公告夾與消防器材
-  artBox(.32,.62,.16,0xc93c31,10.82,.38,16.30,null,.58,.04);artBox(.18,.14,.18,0xe9e4d8,10.82,.74,16.30,null,.85,0);
-}
-
+/* ---------- 依 layout.js 資料產生建築收邊及房間細節 ---------- */
+const ART_LAYOUT_DETAILS=[];
+function artRecord(room,kind,object){object.userData.layoutDetail={room:room.id,floor:room.f,kind};ART_LAYOUT_DETAILS.push(object);return object;}
 function artDecorateWorld(){
-  artAddBaseboards();artAddDoorThresholds();artFrontDesk();artOfficeDetails();artLoungeDetails();
-  artClassroomDetails();artStudyDetails();artJuniorDetails();artHallDetails();
+  WALLS.forEach(r=>{const w=r[2]-r[0],d=r[3]-r[1];artBox(w+.03,.07,d+.03,0x98a0a8,(r[0]+r[2])/2,.045,(r[1]+r[3])/2,null,.88,0);});
+  ROOMS.forEach(room=>{
+    const o=FLX(room.f,0),[x0,z0,x1,z1]=room.rect,cx=(x0+x1)/2;
+    // Door thresholds and jambs fit inside the existing collision footprint.
+    if(room.door&&!room.open){const top=z1===7,z=top?7:9.5,[a,b]=room.door;
+      artRecord(room,'threshold',artBox(b-a,.015,.16,0x85989d,o+(a+b)/2,.012,z));
+      [a-.055,b+.055].forEach(x=>artRecord(room,'jamb',artBox(.09,1.1,.18,0x7c8f94,o+x,.55,z)));
+    }
+    const seats=CLASS_SEATS[room.id];
+    if(seats){
+      const kid=!!seats.kid||room.id==='english',height=kid?.53:.72;
+      seatsOf(room.id).forEach(([x,z,rot],i)=>{
+        const ri=Math.floor(i/seats.cols.length),ci=i%seats.cols.length;
+        if((ri+ci)%3!==0)return;
+        // seatsOf 回傳椅子的位置；桌心偏移與 furnishRoom 使用同一方向。
+        const deskZ=z+(rot===Math.PI?-.62:.62);
+        artRecord(room,'book',artBook(.28,.20,x-.13,height+.085,deskZ,room.f===2?0x507e9c:0xd6a05d,.04));
+        artRecord(room,'paper',artPaper(.25,.20,x+.17,height+.065,deskZ+.015));
+      });
+      const top=z0===0,bz=top?.34:17.66;
+      const care=['g4','g5','g6'].includes(room.id),boardX=care?cx-1:cx;
+      artRecord(room,'boardTray',artBox(Math.min(4.2,x1-x0-(care?5:3)),.045,.12,0x9da5ad,o+boardX,.92,bz));
+      artRecord(room,'eraser',artBox(.25,.065,.10,0x4e646e,o+boardX-.7,.97,bz));
+    }
+    if(room.id==='copyroom'){
+      artRecord(room,'copierScreen',artBox(.3,.035,.23,0x5f8ba5,o+10.5,1.105,1.55));
+      artRecord(room,'paper',artPaper(.4,.29,o+10,1.11,1.55));
+    }
+    if(room.id==='lobby'){
+      artRecord(room,'keyboard',artBox(.5,.025,.18,0x303b43,5,1.065,10.95));
+      artRecord(room,'phone',artBox(.35,.1,.2,0x303b43,7.3,1.105,11.0));
+      artRecord(room,'paper',artPaper(.4,.28,3.6,1.07,10.98));
+    }
+    if(room.id==='office'){
+      artRecord(room,'paper',artPaper(.45,.28,o+3.3,.845,2.5));
+      artRecord(room,'book',artBook(.32,.25,o+4.7,.85,2.5,0x5b7991));
+    }
+    if(room.id==='jhlounge'||room.id==='jhoffice'){
+      const deskX=room.id==='jhoffice'?32:2.8;
+      artRecord(room,'book',artBook(.35,.26,o+deskX,.81,12.5,0x507e9c));
+    }
+    if(room.id.startsWith('core')){
+      // Platform locations CORE.elev and CORE.stairs remain free for pathfinding.
+      artRecord(room,'elevatorSeam',artBox(.035,2,.06,0x6d7f88,o+CORE.elev[0],1,2.86));
+      artRecord(room,'elevatorIndicator',wallSign(FLOOR_NAMES[room.f],o+CORE.elev[0],2.2,2.88,0,.5,.22,'#d2edb5','#33434e',30));
+      artRecord(room,'stairsRail',artBox(.045,1.1,2.4,0x748991,o+CORE.stairs[0]-1.22,.8,1.5));
+      artRecord(room,'stairsSign',wallSign('樓梯',o+CORE.stairs[0],1.4,.22,0,1.1,.3,'#ffffff','#536a77',32));
+    }
+  });
+  artRedesignRooms();
+}
+
+/* 第二輪：只使用 layout.js 的房間、座位與既有家具表面，不增加碰撞。 */
+function artRedesignRooms(){
+  const ink=0x425566,cream=0xf4eedf,teal=0x638c87;
+  ROOMS.filter(r=>r.f>0).forEach(room=>{
+    const o=FLX(room.f,0),[x0,z0,x1,z1]=room.rect;
+    const record=(kind,obj)=>artRecord(room,kind,obj);
+    const detail=(w,h,d,c,x,y,z)=>record('roomDetail',artBox(w,h,d,c,o+x,y,z));
+    const sign=(text,x,y,z,ry,w,h,fg='#314857',bg='#f4eedf')=>record('roomNotice',wallSign(text,o+x,y,z,ry,w,h,fg,bg,38));
+    const books=(x,y,z,n,step=.16)=>{
+      const cols=[0x648b89,0xc09357,0x8c6d78,0x59758e];
+      for(let i=0;i<n;i++)detail(.10,.30+(i%3)*.035,.23,cols[i%cols.length],x+i*step,y,z);
+    };
+    if(['g4','g5','g6'].includes(room.id)){
+      const grade={g4:'四',g5:'五',g6:'六'}[room.id],color={g4:0xc68d54,g5:teal,g6:0x7186a3}[room.id],dx=x1-1.35;
+      // 老師桌的前板與改評量工具；白板前沒有講台。
+      detail(1.75,.38,.035,color,dx,.45,1.57);
+      record('teacherPaper',artPaper(.38,.25,o+dx-.2,.81,1.30));
+      detail(.18,.20,.16,ink,dx+.69,.86,1.15);
+      detail(.025,.24,.025,0xd86654,dx+.66,1.05,1.15);
+      detail(.025,.27,.025,0x577ea7,dx+.72,1.07,1.15);
+      sign(grade+'年級｜作品與提醒',x0+.23,1.72,3.8,Math.PI/2,2.5,.75,'#4b5045','#e4d6b7');
+      // 公告欄上的作品卡以圖形呈現，不把學校作業寫成全班統一進度。
+      for(let i=0;i<3;i++){
+        detail(.025,.22,.35,[0xffeed0,0xe1ebdb,0xdce5ef][i],x0+.26,1.56,3.15+i*.60);
+      }
+      sign('聯絡簿・評量分開放',dx,1.69,.32,0,1.7,.32);
+    }
+    if(room.id==='careoffice'){
+      sign('安親儲藏室\n評量・教具・備品',3.1,1.8,17.77,Math.PI,2.4,.72);
+      // 儲藏櫃內的分類箱：沿既有櫃體的朝向，物件仍在櫃體範圍。
+      [10.9,12.5,14.1,15.7,17.0].forEach((z,i)=>{
+        detail(.06,.35,.72,[0xc6a578,0x79958c,0x8196ad][i%3],1.22,.93,z);
+        sign(['評量','教具','備品','清潔','失物'][i],1.265,.96,z,Math.PI/2,.55,.21);
+      });
+      [2.1,3.15,4.2].forEach((x,i)=>{
+        detail(.85,.30,.46,i%2?0x8fa59e:0xc1a886,x,1.56,17.35);
+        sign(['四年級','五年級','六年級'][i],x,1.54,17.02,Math.PI,.65,.22);
+      });
+      // 教具箱原本就有碰撞；補上箱蓋與把手，不再留下浮在空中的辦公桌書本。
+      detail(1.62,.055,.82,0x537d99,3.2,.54,13);
+      detail(.3,.055,.035,cream,3.2,.41,13.42);
+    }
+    if(room.id==='wash'){
+      [11.3,13.8,16.3].forEach(z=>{
+        detail(.42,.025,.55,0x849ca7,8.6,.72,z);
+        detail(.06,.27,.06,0x7b8e98,8.48,.86,z-.24);
+        detail(.23,.06,.06,0x7b8e98,8.56,.97,z-.24);
+      });
+      sign('洗手・擦乾\n水龍頭記得關',8.23,1.65,13.8,Math.PI/2,1.8,.62);
+    }
+    if(room.id==='reading'){
+      sign('閱讀角\n書看完，放回原位',15,1.75,17.78,Math.PI,2.7,.72,'#36564a','#e5eee1');
+      [12.8,14.4,16.0].forEach(x=>books(x,1.36,17.4,5));
+      // 閱讀地墊上的平面書頁圖案；沒有午休床墊或新增通道障礙。
+      detail(1.15,.012,.72,0xe6e3d3,14.7,.052,13.7);
+      detail(.025,.013,.72,0x749789,14.7,.06,13.7);
+    }
+    if(room.id==='snack'){
+      sign('點心區\n吃完收好・垃圾分類',26,1.7,17.78,Math.PI,2.6,.7);
+      [24,26,28].forEach(x=>{
+        detail(.62,.025,.30,0x7c9792,x,.67,13);
+        detail(.25,.08,.23,cream,x,.72,13);
+      });
+    }
+    if(room.id==='cubby'){
+      // 書包櫃朝向走廊；格線與年級色條貼在既有櫃面。
+      [.39,.77,1.14].forEach(y=>detail(.025,.025,7.4,ink,33.18,y,13.75));
+      for(let i=0;i<8;i++)detail(.025,1.12,.035,ink,33.18,.60,10.25+i*.94);
+      [10.7,12.6,14.5,16.4].forEach((z,i)=>detail(.027,.12,.42,[0xc68d54,teal,0x7186a3,teal][i],33.16,1.02,z));
+      sign('書包放好再下樓',32.5,1.65,17.78,Math.PI,2.1,.4);
+    }
+    if(['c7','c8','c9'].includes(room.id)){
+      sign('段考複習\n複習卷・錯題整理',x0+.22,1.7,4.1,Math.PI/2,2.6,.7,'#385975','#e5ecf0');
+      // 講桌上的卷子和紅筆，對應考前檢討；不增加新的課程進度文字。
+      record('reviewPaper',artPaper(.43,.27,o+(x0+x1)/2,.963,1.6));
+      detail(.28,.018,.025,0xb94e46,(x0+x1)/2+.36,.973,1.6);
+    }
+    if(room.id==='tutor'){
+      sign('課輔室\n先試寫，再問卡住的地方',14,1.7,17.78,Math.PI,3.6,.72,'#36564a','#e5eee1');
+      [12.45,15.45].forEach(z=>[10.5,14.5,17.5].forEach((x,i)=>{
+        record('tutorPaper',artPaper(.42,.28,o+x,.817,z));
+        if(i===0)record('tutorBook',artBook(.35,.25,o+x+.7,.84,z,0x59758e));
+      }));
+    }
+    if(room.id==='jhlounge'){
+      sign('講師休息室\n水杯・講義・下一堂課',5,1.75,17.78,Math.PI,3,.72);
+      record('teacherCup',artCup(o+4,.89,12.5));
+      record('teacherPaper',artPaper(.42,.28,o+2.8,.817,12.5));
+    }
+    if(room.id==='jhoffice'){
+      sign('班導工作區\n到班紀錄・家長留言',32,1.7,17.78,Math.PI,3,.72);
+      record('attendancePaper',artPaper(.44,.3,o+32.5,.817,12.5));
+      for(let i=0;i<5;i++)detail(.23,.30+(i%3)*.035,.10,[0x648b89,0xc09357,0x8c6d78,0x59758e][i%4],35.35,1.75,10.55+i*.12);
+    }
+    if(room.id==='lockers'){
+      // 國中置物櫃只加面板細節，不搬動國中部家具。
+      [.48,.95,1.42].forEach(y=>detail(.025,.025,7.4,ink,27.18,y,13.8));
+      for(let i=0;i<9;i++)detail(.025,1.38,.025,ink,27.18,.75,10.15+i*.9);
+      sign('書包靠櫃・走道留空',24,1.65,9.72,0,2.8,.38);
+    }
+  });
 }
 
 /* ---------- 建世界：保留原版色調，限制像素倍率並加入實體細節 ---------- */
