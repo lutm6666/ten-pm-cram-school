@@ -10,7 +10,7 @@ function run(command,args,env={}){
 run(process.env.PYTHON||(process.platform==='win32'?'python':'python3'),['build.py','stub.js','tests/test.html']);
 const P2=JSON.stringify;
 const suite=[
-  ['timeline.js'],['consistency.js'],['navigation.js'],['continuous-clock.js'],['resume.js'],['extras.js'],
+  ['timeline.js'],['consistency.js'],['navigation.js'],['continuous-clock.js'],['resume.js'],['extras.js'],['report-fixes.js'],
   // 第一天：五條線
   ['play2.js','care','0'],['play2.js','jh','1'],['play2.js','teacher','0'],['play2.js','yun','1'],['play2.js','boss','2'],
   // 第二天：帶著第一天的旗標

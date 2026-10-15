@@ -12,7 +12,7 @@ const RUSH_SETS={
   {ic:"🪪",who:"九年級學生",say:"姊姊，我卡片忘了帶……",opts:["手動登記到班時間","讓他直接上樓"],ok:0,why:"沒刷卡，家長就收不到到班通知，要手動補登。",pat:7},
   {ic:"🙋",who:"不認識的阿姨",say:"我來接小米，我是她阿姨。",opts:["先打給小米媽媽確認","廣播：四年級小米下樓"],ok:0,why:"不在[[接送名單]]上的人，一律先打給家長確認。",pat:10},
   {ic:"🙋",who:"妞妞爸爸",say:"妞妞，四年級的。",opts:["廣播：四年級妞妞，爸爸來接","請他自己上二樓找"],ok:0,why:"安親的小朋友由老師帶下樓，家長在大廳等。",pat:8},
-  {ic:"📟",who:"二樓對講機・蔡老師",say:"小米媽媽有打來嗎？",opts:["有，她說會晚一點","沒有接到"],ok:0,why:"小米媽媽六點多傳過訊息，說公司在開會。",pat:7},
+  {ic:"📟",who:"二樓對講機・蔡老師",say:"小米媽媽有打來嗎？",opts:["有，她說會晚一點","還沒有，有消息我馬上通知你"],ok:1,why:"小米媽媽還沒聯絡。照實說，不要替家長猜。",pat:7},
   {ic:"💰",who:"九年級學生",say:"便當錢 85 元。（遞給你 100）",opts:["找 15 元","找 25 元"],ok:0,why:"100 − 85 = 15。",pat:8},
   {ic:"📞",who:"電話・陌生號碼",say:"請問明天國中部有上課嗎？",opts:["有，國中部週三照常上課","我不清楚，明天再打來"],ok:0,why:"這種問題櫃台自己就能回答。",pat:7}
  ],
@@ -43,7 +43,7 @@ MINIS.rush={
     function bars(){el.querySelectorAll("[data-bar]").forEach(f=>{const t=tasks[+f.dataset.bar],v=Math.max(0,t.left/t.max);f.style.width=v*100+"%";f.style.background=col(v);});const h=el.querySelector(".rushhead span");if(h)h.textContent=fmt(17*60+30+Math.min(30,Math.round(clock/((tasks.length*2.6+3)/30))));}
     function spawn(){while(next<tasks.length&&(clock>=spawnAt(next)||!queue().length)){tasks[next].state="here";tasks[next].born=clock;next++;}}
     function finish(){if(ended)return;ended=true;clearInterval(timer);
-      el.innerHTML=`<p class="feed">十八點整。處理好 ${ok} 件${wrong?`，弄錯 ${wrong} 件`:""}${drop?`，有 ${drop} 件等不及走了`:""}。</p>`;done({ok,drop,wrong});}
+      el.innerHTML=`<p class="feed">這一波過去了。處理好 ${ok} 件${wrong?`，弄錯 ${wrong} 件`:""}${drop?`，有 ${drop} 件等不及走了`:""}。</p>`;done({ok,drop,wrong});}
     function draw(){
       const q=queue(),bar=t=>Math.max(0,t.left/t.max),gm=Math.min(30,Math.round(clock/((tasks.length*2.6+3)/30)));
       const head=`<div class="rushhead"><span>${fmt(17*60+30+gm)}</span><span>✓ ${ok}　✗ ${wrong}　走掉 ${drop}</span><span>還有 ${tasks.length-next} 件會進來</span></div>`;

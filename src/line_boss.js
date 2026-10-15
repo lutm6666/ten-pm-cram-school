@@ -53,7 +53,7 @@ LINES.boss={
     {label:"「下個月再找一個兼職。」",fx:{sales:-3,morale:4},log:"答應下個月加安親人手",res:[["lin","那明天呢？"],[null,"你沒有回答。"]]}]},
   {id:"b_complaint",chapter:{t:"17:00",title:"放學高峰",sub:"大廳擠滿了家長。櫃台只有一個人。",status:"放學中"},
    t:"17:35",target:{npc:"xiangma"},goal:"一位家長在大廳提高聲音",npc:{xiangma:PC.xiangmaLobby},after:{xiangma:null},
-   pages:G=>[["xiangma","主任，我小兒子的數習，昨天老師說檢查過，結果三題都錯。"],["xiangma","還有我大兒子，九年級的阿翔……剛剛班導打給我，說他沒到班。"],[null,"她一手牽著小宇，手機一直在震。"]],
+   pages:G=>[["xiangma","主任，我小兒子的數習，昨天老師說檢查過，結果三題都錯。"],["xiangma","還有我大兒子，九年級的阿翔……他傳訊息說今天會晚到，我打給他都不接。"],[null,"她一手牽著小宇，手機一直在震。"]],
    choices:G=>[
     {label:"請她到諮詢室坐下，一件一件說",fx:{calm:-4,rep:8},set:{xiangmaTalk:1},log:"請阿翔媽媽到諮詢室談",res:[[null,"你倒了一杯水。她說到阿翔的時候，聲音小了下來：「他最近都去網咖。」"]]},
     {label:"「我請兩位老師直接跟您說明。」",fx:{rep:3,morale:-3},log:"請老師跟家長說明",res:[[null,"你打給二樓和三樓。兩位老師都在忙，都說「馬上下去」。"]]},

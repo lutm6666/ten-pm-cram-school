@@ -193,13 +193,19 @@ function check(label,detail){results.push({label,...detail});console.log('PASS',
     check('generated auto event and future named NPC: serialized waiting, scheduled activation',{event:'17:40',npc:'17:50'});
 
     // Last-step index alone cannot force the crowd into the closing phase.
+    // （安親線 18:20 之後是忙碌時段，直接接到收拾；這裡用班導線測最後一件事前的等待。）
+    await start('jh',{noEvents:true});await page.evaluate(()=>__dbg.jump('j_out'));
+    if(await page.isVisible('[data-act="chapterGo"]'))await page.locator('[data-act="chapterGo"]').click();
+    await page.evaluate(()=>{__clockQA.G.clock=21*60+8;__clockQA.renderAll();});await finishMain(0);
+    const finalWait=await state();console.log('FINALWAIT',JSON.stringify(finalWait));assert.strictEqual(finalWait.id,'j_close');assert.strictEqual(finalWait.ready,false);
+    await resume();assert.deepStrictEqual(await state(),finalWait,'Pending final task keeps real crowd phase on resume');await advanceTo(21*60+15);
+    assert.strictEqual((await state()).ready,true);assert.strictEqual((await state()).phase,'close');
+    check('pending final task: closing phase waits for scheduled start',{waiting:finalWait.time,start:'21:15'});
+    // 安親線：最後一個小朋友走後，直接接到收拾，不出現空檔
     await start('care',{noEvents:true});await page.evaluate(()=>__dbg.jump('c_late'));
     if(await page.isVisible('[data-act="chapterGo"]'))await page.locator('[data-act="chapterGo"]').click();
-    await page.evaluate(()=>{__clockQA.G.clock=18*60+30;__clockQA.renderAll();});await finishMain(1);
-    const finalWait=await state();assert.strictEqual(finalWait.id,'c_close');assert.strictEqual(finalWait.time,'18:32');assert.strictEqual(finalWait.ready,false);assert.strictEqual(finalWait.phase,'leave');
-    await resume();assert.deepStrictEqual(await state(),finalWait,'Pending final task keeps real crowd phase on resume');await advanceTo(18*60+45);
-    assert.strictEqual((await state()).ready,true);assert.strictEqual((await state()).phase,'close');
-    check('pending final task: closing phase waits for scheduled start',{waiting:'18:32',start:'18:45'});
+    await finishMain(1);const careClose=await state();assert.strictEqual(careClose.id,'c_close');assert.strictEqual(careClose.time,'18:45');assert.strictEqual(careClose.ready,true);
+    check('care busy window: last child leaves, straight to closing',{close:careClose.time});
 
     // Held glasses exercise a side's availability on targetless automatic
     // events, where accessing step().target.npc used to throw.

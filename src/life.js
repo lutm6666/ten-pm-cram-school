@@ -25,6 +25,8 @@ function buildCrowd(){
   fill("english","eng",6);
   // 接送家長：在大廳出現一下就帶小孩走
   for(let i=0;i<8;i++){const p=person(PARENT_COLORS[i%6],{hair:[0x2a2421,0x3b2b20,0x8a8a8a][i%3]});p.visible=false;extras.push({p,kind:"parent",room:"lobby",home:[FLX(0,5.5+((i*1.7)%5.5)),12.4+(i%3)*1.1,Math.PI],state:"away",idx:extras.length});}
+  // 八年級名單十二人：其餘三席補在最後（不改動前面人群的編號與到班時間）
+  {const taken=new Set(Object.values(NAMED_SEATS.c8)),used=new Set(extras.filter(e=>e.room==="c8").map(e=>e.home.join()));seatsOf("c8").forEach((s,i)=>{if(!taken.has(i)&&!used.has(s.join()))add("jh","c8",i);});}
 }
 /* 當天的時間表（分鐘） */
 function crowdTimes(e,day){const i=e.idx,j=(i*37)%11;

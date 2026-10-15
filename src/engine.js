@@ -27,6 +27,7 @@ function newGame(lineId,day=1){
   G={line:L,idx:0,s:{},h:{...L.hidden},f:{},log:[],items:[],sidesDone:{},tName:lineId==="teacher"?sur+"老師":"許老師",pName:name||({yun:"小芸",boss:"何主任",care:"蔡老師",jh:"鄭老師"}[lineId]||"你"),name,tipShown:false,status:"",time:"17:20",chapterTitle:""};
   for(const k in L.stats)G.s[k]=L.stats[k][1];
   G.day=day;const outAll=store.get("out",{});G.prevAll=outAll;G.prev=day===2?((outAll[lineId]||{}).f||{}):{};
+  if(day===2&&L.carryH)L.carryH(G,(outAll[lineId]||{}).h||{}); // 第二天承接前一天的隱藏數值（例如沒回的電話）
   G.steps=buildSteps(L);G.minis={};G.chatUsed=[];G.chatWith=[];G.hard=doneLines.has(lineId);G.clock=toMin(G.steps[0].t);G.lates=0;G.lateMin=0;
   Object.defineProperty(G,"time",{get(){return fmt(G.clock);},set(v){},configurable:true});
   if(player)scene.remove(player);makePlayer(L);player.position.set(L.start[0],0,L.start[1]);player.rotation.y=Math.PI;
@@ -88,7 +89,7 @@ function targetOf(t){if(typeof t==="function")t=t(G);if(!t)return null;if(t.npc)
   const s=SPOTS[t.spot];return{x:s.pos[0],z:s.pos[1],h:s.h+.5,name:s.name,kind:"spot"};}
 function activeSides(){const list=SIDES[G.line.id]||[],ids=G.steps.map(s=>s.id);
   const mainNpc=stepReady()&&val(G.steps[G.idx].target,G)?.npc,idx=sideStepIndex();
-  return list.filter(sd=>!G.sidesDone[sd.id]&&!(mainNpc&&sd.target.npc===mainNpc)&&idx>=ids.indexOf(sd.from)&&idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G)));}
+  return list.filter(sd=>(sd.day||1)===(G.day||1)&&!G.sidesDone[sd.id]&&!(mainNpc&&sd.target.npc===mainNpc)&&idx>=ids.indexOf(sd.from)&&idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G)));}
 function nearest(){
   const px=player.position.x,pz=player.position.z,d=(x,z)=>Math.hypot(x-px,z-pz),c=[];
   const m=stepReady()?targetOf(step().target):null;if(m){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:"main",label:val(step().action,G)||(m.kind==="npc"?`找${CHARS[m.id].name}`:`到${m.name}`)});}
@@ -189,7 +190,7 @@ function resolveChoice(c,onDone,arg){
   const a=arg!==undefined?arg:G;
   if(c.onResolve)c.onResolve(a);
   const fx=val(c.fx,a)||{},res=val(c.res,a),log=val(c.log,a);
-  if(c.min)spend(c.min);if(c.set)Object.assign(G.f,c.set);if(log)G.log.push([G.time,log]);
+  if(c.min&&!c.mini)spend(c.min);if(c.set)Object.assign(G.f,c.set);if(log)G.log.push([G.time,log]);
   const deltas=applyFx(fx);renderHud();
   const pages=typeof res==="string"?[[null,res]]:res||[[null,"……"]];
   if(G.s.voice!==undefined&&G.s.voice>0&&G.s.voice<20&&!G.f.hoarse){G.f.hoarse=1;pages.push([null,"你的聲音開始沙啞了。"]);}
@@ -205,14 +206,14 @@ function openStep(){
   if(G.due!=null&&G.clock>=G.due+1&&!st.auto){const late=Math.floor(G.clock-G.due),k=Math.min(3,Math.ceil(late/5));G.lates++;G.lateMin+=late;const lf=G.line.late||{};const fx={};for(const a in lf.fx||{})fx[a]=lf.fx[a]*k;const d=applyFx(fx);G.log.push([G.time,`遲到 ${late} 分鐘`]);pages=[[null,`你晚了 ${late} 分鐘。${lf.text||""}`],...pages];if(d)G.lateDeltas=d;renderHud();}
   spend(2);G.chatNpc=val(st.target,G)?.npc;
   runDialog({pages,choices,chatId:choices?null:G.chatNpc,endLabel:st.endLabel,onEnd:choices?null:()=>{if(st.fx)applyFx(val(st.fx,G));if(st.set)Object.assign(G.f,st.set);nextStep();},
-    onChoice:c=>{if(c.mini)runMini(c.mini,r=>resolveChoice(c,nextStep,r));else resolveChoice(c,nextStep);}});
+    onChoice:c=>{if(c.mini)runMini(c.mini,r=>resolveChoice(c,nextStep,r),c.min);else resolveChoice(c,nextStep);}});
 }
 function openSide(sd){
   spend(3);G.chatNpc=sd.target&&sd.target.npc;
   const pages=val(sd.pages,G),choices=sd.choices?val(sd.choices,G):null;
   const done=()=>{G.sidesDone[sd.id]=1;setTimeout(checkAch,50);seenSides.add(G.line.id+":"+sd.id);store.set("sides",[...seenSides]);beep("side");mode="walk";renderAll();};
   runDialog({pages,choices,chatId:choices?null:G.chatNpc,onEnd:choices?null:()=>{if(sd.fx)applyFx(val(sd.fx,G));if(sd.set)Object.assign(G.f,sd.set);if(sd.log)G.log.push([G.time,"（支線）"+sd.log]);done();},
-    onChoice:c=>{const go=r=>resolveChoice({...c,log:c.log?(a=>"（支線）"+val(c.log,a)):null},done,r);if(c.mini)runMini(c.mini,go);else go();}});
+    onChoice:c=>{const go=r=>resolveChoice({...c,log:c.log?(a=>"（支線）"+val(c.log,a)):null},done,r);if(c.mini)runMini(c.mini,go,c.min);else go();}});
 }
 
 /* ---------- 面板：說明、小遊戲、撿到的東西、圖鑑 ---------- */
@@ -228,11 +229,12 @@ function openInfo(inf){
   mode="info";renderAll();seenInfo.add(inf.id);store.set("info",[...seenInfo]);
   openSheet("說明",`<div class="zone">${esc(inf.zone)}</div><h3>${esc(inf.title)}</h3>${inf.body.map(p=>`<p>${rich(p)}</p>`).join("")}${inf.table?tableHTML(inf.table(G)):""}`,()=>{mode="walk";renderAll();});
 }
-function runMini(id,cb){
+/* 花的時間：選項有寫 min 就用 min（含小遊戲本身），沒有就用小遊戲的 cost，不重複加 */
+function runMini(id,cb,min){
   const M=MINIS[id];mode="mini";renderAll();
   openSheet(M.head,`<div class="zone">${esc(M.zone)}</div><h3>${esc(M.title)}</h3><p>${rich(M.intro)}</p><div id="miniArea"></div><div class="actions" id="miniDone" hidden><button class="go" data-act="miniOk">好</button></div>`,false);
   let result=null;M.mount($("miniArea"),r=>{result=r;beep("ok");$("miniDone").hidden=false;$("miniDone").querySelector("button").focus();});
-  $("sheet").querySelector("[data-act=miniOk]").onclick=()=>{$("sheet").hidden=true;$("sheetBg").hidden=true;spend(M.cost||5);G.minis[id]=result;checkAch();cb(result);};
+  $("sheet").querySelector("[data-act=miniOk]").onclick=()=>{$("sheet").hidden=true;$("sheetBg").hidden=true;spend(min??(M.cost||5));G.minis[id]=result;checkAch();cb(result);};
 }
 function pickItem(it){
   beep("pick");mode="info";renderAll();const first=!seenItems.has(it.id);G.items.push(it.id);seenItems.add(it.id);store.set("items",[...seenItems]);
@@ -372,7 +374,7 @@ function finish(){
   c.innerHTML=`<div class="card report fade"><div class="kick">${G.day===2?"第二天・":""}${r.dead?"提早下班":fmt(Math.max(G.clock,endMin()))+" 下班"}・${esc(G.line.role)}・結案報告</div><h2>${esc(r.title)}</h2><p style="margin:0">${esc(r.desc)}</p>${G.line.coda?`<p style="margin:10px 0 0;font-family:var(--display);color:var(--muted)">${esc(G.line.coda)}</p>`:""}
    <div class="big">${r.big.map(([v,l])=>`<div><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("")}</div>
    <div class="big" style="grid-template-columns:repeat(${Object.keys(G.s).length},1fr)">${Object.keys(G.s).map(k=>`<div><b style="font-size:1.1rem">${G.s[k]}</b><span>${G.line.stats[k][0]}</span></div>`).join("")}</div>
-   <div class="lbl">準時</div><p style="margin:0">${G.lates?`遲到 ${G.lates} 次，一共 ${G.lateMin} 分鐘。`:"每一件事都準時到。"}${r.dead?"":otMin()?`加班 ${otMin()} 分鐘。`:"準時十點下班。"}${(G.chatWith||[]).length?`跟 ${G.chatWith.length} 個人聊了天。`:""}</p>
+   <div class="lbl">準時</div><p style="margin:0">${G.lates?`遲到 ${G.lates} 次，一共 ${G.lateMin} 分鐘。`:"每一件事都準時到。"}${r.dead?"":otMin()?`加班 ${otMin()} 分鐘。`:`準時 ${G.line.endAt||"21:30"} 下班。`}${(G.chatWith||[]).length?`跟 ${G.chatWith.length} 個人聊了天。`:""}</p>
    ${its.length?`<div class="lbl">今晚撿到</div><p style="margin:0">${its.map(i=>`${i.icon} ${esc(i.name)}`).join("　")}</p>`:""}
    <ol class="log">${G.log.map(([a,b])=>`<li><span>${esc(a)}</span>${esc(b)}</li>`).join("")}</ol>
    <div class="actions"><button class="primary" data-act="start">再上一天班</button><button class="ghost" data-act="shareCard">成績卡</button><button class="ghost" data-act="copy">複製結算</button><button class="ghost" data-act="title">換個位子</button><span class="toast" id="toast" aria-live="polite"></span></div>
@@ -405,7 +407,7 @@ document.addEventListener("click",e=>{
   else if(act==="shareCard")openShareCard();
   else if(act==="home"){showTitle();}
   else if(act==="title")showTitle();
-  else if(act==="about")openSheet("關於",`<h3>晚上十點下課</h3><p>一個補習班晚上的小遊戲。靈感來自晶圓廠的打工遊戲 fab24hr，把場景換成台灣的補習班。</p><p>可以玩三個不同的位子：數學老師、櫃台班導、補習班主任。同一個晚上，看到的事情不一樣。</p><p class="hint">補習班、人物、數字都是虛構的，不代表任何一家補習班。</p>`);
+  else if(act==="about")openSheet("關於",`<h3>晚上十點下課</h3><p>補習班打工人的一天。靈感來自晶圓廠的打工遊戲 fab24hr，把場景換成台灣的補習班：國小四～六年級安親加國中部。</p><p>可以玩五個不同的位子：四年級安親老師、九年級班導、跑堂數學老師、櫃台、主任。同一間補習班、同一天，看到的事情不一樣；玩完第一天還有第二天。</p><p class="hint">補習班、人物、數字都是虛構的，不代表任何一家補習班。</p>`);
   else if(act==="copy"){const txt=summaryText(),t=$("toast");const fb=()=>{const b=$("copybox");b.hidden=false;b.value=txt;b.select();t.textContent="無法自動複製，已幫你選取文字";};
     try{navigator.clipboard.writeText(txt).then(()=>t.textContent="已複製",fb);}catch(err){fb();}}
 });

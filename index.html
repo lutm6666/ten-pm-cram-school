@@ -1026,6 +1026,8 @@ function buildCrowd(){
   fill("english","eng",6);
   // 接送家長：在大廳出現一下就帶小孩走
   for(let i=0;i<8;i++){const p=person(PARENT_COLORS[i%6],{hair:[0x2a2421,0x3b2b20,0x8a8a8a][i%3]});p.visible=false;extras.push({p,kind:"parent",room:"lobby",home:[FLX(0,5.5+((i*1.7)%5.5)),12.4+(i%3)*1.1,Math.PI],state:"away",idx:extras.length});}
+  // 八年級名單十二人：其餘三席補在最後（不改動前面人群的編號與到班時間）
+  {const taken=new Set(Object.values(NAMED_SEATS.c8)),used=new Set(extras.filter(e=>e.room==="c8").map(e=>e.home.join()));seatsOf("c8").forEach((s,i)=>{if(!taken.has(i)&&!used.has(s.join()))add("jh","c8",i);});}
 }
 /* 當天的時間表（分鐘） */
 function crowdTimes(e,day){const i=e.idx,j=(i*37)%11;
@@ -2045,7 +2047,7 @@ const RUSH_SETS={
   {ic:"🪪",who:"九年級學生",say:"姊姊，我卡片忘了帶……",opts:["手動登記到班時間","讓他直接上樓"],ok:0,why:"沒刷卡，家長就收不到到班通知，要手動補登。",pat:7},
   {ic:"🙋",who:"不認識的阿姨",say:"我來接小米，我是她阿姨。",opts:["先打給小米媽媽確認","廣播：四年級小米下樓"],ok:0,why:"不在[[接送名單]]上的人，一律先打給家長確認。",pat:10},
   {ic:"🙋",who:"妞妞爸爸",say:"妞妞，四年級的。",opts:["廣播：四年級妞妞，爸爸來接","請他自己上二樓找"],ok:0,why:"安親的小朋友由老師帶下樓，家長在大廳等。",pat:8},
-  {ic:"📟",who:"二樓對講機・蔡老師",say:"小米媽媽有打來嗎？",opts:["有，她說會晚一點","沒有接到"],ok:0,why:"小米媽媽六點多傳過訊息，說公司在開會。",pat:7},
+  {ic:"📟",who:"二樓對講機・蔡老師",say:"小米媽媽有打來嗎？",opts:["有，她說會晚一點","還沒有，有消息我馬上通知你"],ok:1,why:"小米媽媽還沒聯絡。照實說，不要替家長猜。",pat:7},
   {ic:"💰",who:"九年級學生",say:"便當錢 85 元。（遞給你 100）",opts:["找 15 元","找 25 元"],ok:0,why:"100 − 85 = 15。",pat:8},
   {ic:"📞",who:"電話・陌生號碼",say:"請問明天國中部有上課嗎？",opts:["有，國中部週三照常上課","我不清楚，明天再打來"],ok:0,why:"這種問題櫃台自己就能回答。",pat:7}
  ],
@@ -2076,7 +2078,7 @@ MINIS.rush={
     function bars(){el.querySelectorAll("[data-bar]").forEach(f=>{const t=tasks[+f.dataset.bar],v=Math.max(0,t.left/t.max);f.style.width=v*100+"%";f.style.background=col(v);});const h=el.querySelector(".rushhead span");if(h)h.textContent=fmt(17*60+30+Math.min(30,Math.round(clock/((tasks.length*2.6+3)/30))));}
     function spawn(){while(next<tasks.length&&(clock>=spawnAt(next)||!queue().length)){tasks[next].state="here";tasks[next].born=clock;next++;}}
     function finish(){if(ended)return;ended=true;clearInterval(timer);
-      el.innerHTML=`<p class="feed">十八點整。處理好 ${ok} 件${wrong?`，弄錯 ${wrong} 件`:""}${drop?`，有 ${drop} 件等不及走了`:""}。</p>`;done({ok,drop,wrong});}
+      el.innerHTML=`<p class="feed">這一波過去了。處理好 ${ok} 件${wrong?`，弄錯 ${wrong} 件`:""}${drop?`，有 ${drop} 件等不及走了`:""}。</p>`;done({ok,drop,wrong});}
     function draw(){
       const q=queue(),bar=t=>Math.max(0,t.left/t.max),gm=Math.min(30,Math.round(clock/((tasks.length*2.6+3)/30)));
       const head=`<div class="rushhead"><span>${fmt(17*60+30+gm)}</span><span>✓ ${ok}　✗ ${wrong}　走掉 ${drop}</span><span>還有 ${tasks.length-next} 件會進來</span></div>`;
@@ -2647,8 +2649,8 @@ LINES.teacher={
     {label:"照複習卷一題一題檢討",fx:{voice:-10,stu:-3,trial:5},log:"照複習卷一題一題檢討",res:[[null,"檢討得很順。有一半的人一直在看別科的講義。"]]}];
     if(G.f.askedTrial)c.unshift({label:"從找對應邊開始，用放大照片來講",note:"試聽生說他卡在這裡",fx:{voice:-8,stu:10,trial:12},set:{storyStart:1},log:"從對應邊開始複習",res:[[null,"「相似就是把照片放大。手機兩指一拉，眼睛還是對眼睛、鼻子還是對鼻子。」你在白板上畫了一大一小兩個三角形，把對應的角塗成同一個顏色。"],[null,"試聽生第一次抬頭。品妤在講義上寫了「角對角，邊對邊」。"]]});
     return c;}},
-  {id:"t_zhe",t:"18:40",target:{npc:"zhe"},goal:"阿哲睡著了",
-   pages:G=>[[null,"最後一排，阿哲趴著。他的講義停在第一頁，空白的。"],[null,"全班都知道他睡著了。試聽生也看到了。"]],
+  {id:"t_zhe",t:"18:40",target:{npc:"zhe"},goal:"阿哲睡著了",npc:{xiang:SEAT("c9","xiang")},
+   pages:G=>[[null,"阿翔十八點十五分才從後門溜進來，現在坐在位子上，手機還握在手裡。"],[null,"最後一排，阿哲趴著。他的講義停在第一頁，空白的。"],[null,"全班都知道他睡著了。試聽生也看到了。"]],
    choices:G=>[
     {label:"叫他起來解剛剛那題",fx:{stu:-6},set:{shamedZhe:1},log:"點阿哲上台解題",res:[[null,"阿哲拖著腳走上台，盯著白板一分鐘，寫了一個 x 就停住。有人笑出來。"]]},
     {label:"走過去，在他講義上寫一個簡單的題目",note:"不停課",fx:{hp:-2,stu:5},set:{nudgedZhe:1},log:"給阿哲一題簡單的",res:[[null,"你在他講義上寫：「1/2 + 1/3 = ?」"],[null,"十分鐘後你再走過去，他寫了「2/5」，然後又劃掉了。"]]},
@@ -2788,7 +2790,7 @@ LINES.boss={
     {label:"「下個月再找一個兼職。」",fx:{sales:-3,morale:4},log:"答應下個月加安親人手",res:[["lin","那明天呢？"],[null,"你沒有回答。"]]}]},
   {id:"b_complaint",chapter:{t:"17:00",title:"放學高峰",sub:"大廳擠滿了家長。櫃台只有一個人。",status:"放學中"},
    t:"17:35",target:{npc:"xiangma"},goal:"一位家長在大廳提高聲音",npc:{xiangma:PC.xiangmaLobby},after:{xiangma:null},
-   pages:G=>[["xiangma","主任，我小兒子的數習，昨天老師說檢查過，結果三題都錯。"],["xiangma","還有我大兒子，九年級的阿翔……剛剛班導打給我，說他沒到班。"],[null,"她一手牽著小宇，手機一直在震。"]],
+   pages:G=>[["xiangma","主任，我小兒子的數習，昨天老師說檢查過，結果三題都錯。"],["xiangma","還有我大兒子，九年級的阿翔……他傳訊息說今天會晚到，我打給他都不接。"],[null,"她一手牽著小宇，手機一直在震。"]],
    choices:G=>[
     {label:"請她到諮詢室坐下，一件一件說",fx:{calm:-4,rep:8},set:{xiangmaTalk:1},log:"請阿翔媽媽到諮詢室談",res:[[null,"你倒了一杯水。她說到阿翔的時候，聲音小了下來：「他最近都去網咖。」"]]},
     {label:"「我請兩位老師直接跟您說明。」",fx:{rep:3,morale:-3},log:"請老師跟家長說明",res:[[null,"你打給二樓和三樓。兩位老師都在忙，都說「馬上下去」。"]]},
@@ -2883,7 +2885,7 @@ LINES.care={
  msgs:[["12:05","四年級家長群","安安阿嬤：老師，安安媽媽出差到明天，這兩天都是我接喔"],["14:55","國小家長群","下週一校慶補假，安親照常開"],["18:12","小米媽媽","老師不好意思，公司在開會，我會晚一點😢"]],
  preStatus:"準備中",endAt:"19:00",daylight:true,
  staff:["lin","wu","amy","hong","boss","yun"],
- busy:[["15:20","15:58","g4door","接回來了","國小走回補習班十分鐘。八個小朋友上樓、洗手、換室內鞋，三點五十坐回位子上。"],["15:58","18:20","g4podium","巡堂","看作業、簽聯絡簿、回答「老師這題怎麼寫」。四點以後，沒有空檔。"]],
+ busy:[["15:20","15:58","g4door","接回來了","國小走回補習班十分鐘。八個小朋友上樓、洗手、換室內鞋，三點五十坐回位子上。"],["15:58","18:20","g4podium","巡堂","看作業、簽聯絡簿、回答「老師這題怎麼寫」。四點以後，沒有空檔。"],["18:20","18:45","g4podium","送走最後一個","最後一個小朋友被接走後，把桌椅推回去、把今天的聯絡簿收好。"]],
  boards:{g4:"評量進度　學校作業先寫完\n數學 第4回・國語 第3回・自然 第2回"},
  zoneText:{"四年級安親教室":"你的教室。九張小桌子，八個小朋友，一個永遠空著的位子。","大廳":"白天的大廳很安靜。四點以後，就是接送的戰場。","國中置物區":"晚上才會熱鬧。現在只有一籃空空的手機格。"},
  schedule:[["11:30","pre"],["15:50","class"],["17:00","leave"]],
@@ -3250,8 +3252,8 @@ LINES.yun={
   {id:"y_pay",t:"17:46",target:{npc:"ama"},goal:"李阿嬤來繳安安的學費",npc:{ama:PC.amaLobby},after:{ama:null},
    pages:G=>[["ama","小姐，我來繳安安這個月的錢。"],[null,"她從布包裡拿出一個信封，裡面是一疊折得整整齊齊的千元鈔。"],["ama","收據要寫她媽媽的名字喔，她公司有子女教育補助。"]],
    choices:G=>[
-    {label:"算錢、找零、開收據",mini:"change",fx:r=>({par:r.right&&r.exact?8:r.right?3:-8,ord:r.right?4:-4,cash:r.right?0:-600}),log:r=>r.right?`幫李阿嬤繳費，找零 ${r.bills} 張／個`:"繳費金額算錯了",
-     res:r=>{G.f.paid=r.right?1:0;return r.right?[["ama","小姐你算得好快。"],[null,"收據上寫著安安媽媽的名字。阿嬤把收據折好，放進信封。"]]:[[null,"阿嬤開心地走了。你沒發現抽屜裡的錢少了一點。"]];}},
+    {label:"算錢、找零、開收據",mini:"change",fx:r=>({par:r.right&&r.exact?8:r.right?3:-8,ord:r.right?4:-4,cash:r.right?0:(r.diff||-600)}),log:r=>r.right?`幫李阿嬤繳費，找零 ${r.bills} 張／個`:"繳費金額算錯了",
+     res:r=>{G.f.paid=r.right?1:0;G.f.payDiff=r.right?0:(r.diff||-600);return r.right?[["ama","小姐你算得好快。"],[null,"收據上寫著安安媽媽的名字。阿嬤把收據折好，放進信封。"]]:G.f.payDiff<0?[[null,"阿嬤開心地走了。你沒發現少收了 600 元，多找了她六張百元鈔。"]]:[[null,"阿嬤沒有數找回來的錢，直接收進信封。你沒發現多收了她 600 元。"]];}},
     {label:"請阿嬤先坐，等一下再算",fx:{par:-4,pat:2},log:"請阿嬤等一下再繳費",res:[[null,"阿嬤坐在沙發上等了二十分鐘。她說沒關係，但她看了四次時鐘。"]]}]},
   {id:"y_trial",t:"17:52",target:{npc:"parent"},goal:"試聽家長到了",npc:{parent:AT("door",0,-.8),trial:AT("door",.7,-.6)},after:{trial:[...SEAT("c9","trial"),DOOR],parent:AT("sofa",0,.2,Math.PI)},
    pages:G=>[["parent","你好，我們是來[[試聽]]的，我姓王。"],["parent","想先問一下學費……對面那間說，現在報名打八折耶。"],["trial","（小聲）媽……"]],
@@ -3280,7 +3282,7 @@ LINES.yun={
      if(G.f.discount)l.push(["parent","早鳥價還算數吧？"]);return l;},
    choices:G=>{const n=enrolledT(G),c=[];
     if(n)c.push({label:"拿報名表和收據",fx:{par:5,cash:0},set:{enrolled:1},log:"試聽生報名",res:[[null,"王媽媽填好報名表。試聽生在旁邊偷偷鬆了一口氣。"]]});
-    else c.push({label:"約下週再試聽一次",fx:{trial:10,par:3},set:{retry:1},log:"約試聽生再來一次",res:[["parent","好啊，那就明天同一個時間。"],[null,"你在行事曆上寫：王，試聽第二次。"]]});
+    else c.push({label:"約明天再試聽一次",fx:{trial:10,par:3},set:{retry:1},log:"約試聽生再來一次",res:[["parent","好啊，那就明天同一個時間。"],[null,"你在行事曆上寫：王，試聽第二次。"]]});
     c.push({label:"說名額快滿了",note:"推一把",fx:G=>G.h.trial>=55?{trial:5,par:-3}:{trial:-10,par:-5},set:{pushed:1},onResolve:G=>{if(G.h.trial>=55)G.f.enrolled=1;},log:"跟家長說名額快滿",res:G=>G.h.trial>=55?[["parent","那……我們先報名吧。"]]:[["parent","（皺眉）我們不喜歡被催。"]]});
     return c;}},
   {id:"y_close",chapter:{t:"21:15",title:"日結",sub:"現金、收據、刷卡紀錄。對得起來才能下班。",status:"日結中"},
@@ -3307,31 +3309,34 @@ LINES.yun={
 MINIS.change={
   head:"櫃台・繳費",zone:"櫃台",title:"算錢、找零、開收據",cost:5,
   intro:"先算出這個月要收多少，再從抽屜裡拿零錢找給阿嬤。",
-  bill:[["十月安親費",6800],["點心費",600],["評量費",350]],paid:10000,
+  bill:[["十月安親費",6800],["點心費",600],["練習卷・講義費",350]],paid:10000,
   mount(el,done){const self=this,total=this.bill.reduce((a,b)=>a+b[1],0),opts=[total,total-600,total+600].sort(()=>Math.random()-.5);let right=false,stage=1;
     el.innerHTML=`<div class="paper"><div class="q">安安・十月</div>${this.bill.map(b=>`<div style="display:flex;justify-content:space-between"><span>${b[0]}</span><b style="font-family:var(--mono)">${b[1].toLocaleString()}</b></div>`).join("")}<div style="margin-top:6px">阿嬤給了 <b style="font-family:var(--mono)">${this.paid.toLocaleString()}</b> 元</div></div>
       <div id="chStage"><div class="lbl">應收多少？</div><div class="choices">${opts.map(v=>`<button class="choice" data-k="${v}">${v.toLocaleString()} 元</button>`).join("")}</div></div><p class="feed" aria-live="polite"></p>`;
     const feed=el.querySelector(".feed"),box=el.querySelector("#chStage");
-    box.querySelectorAll("[data-k]").forEach(b=>b.addEventListener("click",()=>{if(stage!==1)return;stage=2;right=+b.dataset.k===total;
-      feed.textContent=right?"對，應收 "+total.toLocaleString()+" 元。":"再算一次……應收是 "+total.toLocaleString()+" 元。";
-      let left=self.paid-total;const used=[],den=[1000,500,100,50,10,5,1];
+    box.querySelectorAll("[data-k]").forEach(b=>b.addEventListener("click",()=>{if(stage!==1)return;stage=2;const charge=+b.dataset.k;right=charge===total;
+      // 算錯就照算錯的金額收、找（不替玩家更正），差額留到日結
+      feed.textContent="應收 "+charge.toLocaleString()+" 元。";
+      let left=self.paid-charge;const used=[],den=[1000,500,100,50,10,5,1];
       box.innerHTML=`<div class="lbl">要找 <b id="chLeft" style="font-family:var(--mono)">${left}</b> 元。點抽屜裡的錢。</div><div class="choices" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">${den.map(d=>`<button class="choice" data-n="${d}" style="text-align:center">${d>=100?"💵":"🪙"} ${d}</button>`).join("")}</div><div class="lbl">已拿：<span id="chUsed">—</span></div><div class="actions" hidden><button class="go" data-next>開收據</button></div>`;
       const sync=()=>{box.querySelectorAll("[data-n]").forEach(x=>x.disabled=+x.dataset.n>left);box.querySelector("#chLeft").textContent=left;box.querySelector("#chUsed").textContent=used.length?used.join("＋"):"—";box.querySelector(".actions").hidden=left!==0;};
       box.querySelectorAll("[data-n]").forEach(x=>x.addEventListener("click",()=>{const d=+x.dataset.n;if(d>left)return;left-=d;used.push(d);sync();}));
       box.querySelector("[data-next]").addEventListener("click",function(){if(this.disabled)return;this.disabled=true;
-        let rem=self.paid-total,opt=0;den.forEach(d=>{while(rem>=d){rem-=d;opt++;}});const exact=used.length<=opt;
-        feed.textContent=`找了 ${used.length} 張／個${exact?"，剛剛好。":"。其實可以用更少張。"}收據上寫：安安媽媽。`;done({right,bills:used.length,exact});});
+        let rem=self.paid-charge,opt=0;den.forEach(d=>{while(rem>=d){rem-=d;opt++;}});const exact=used.length<=opt;
+        feed.textContent=`找了 ${used.length} 張／個${exact?"，剛剛好。":"。其實可以用更少張。"}收據上寫：安安媽媽。`;done({right,bills:used.length,exact,diff:charge-total});});
       sync();}));}
 };
 /* 日結：收據和現金逐筆對，找出差在哪 */
 MINIS.ledger={
   head:"櫃台・日結",zone:"櫃台",title:"現金和收據對不起來？",cost:5,
   intro:"今天開了四張收據。點出跟抽屜現金對不起來的那一筆；都對就按「都對」。",
-  mount(el,done){const short=G&&G.h&&G.h.cash<0;
-    const rows=[["安安（李阿嬤）",7750,short?7150:7750],["補課講義費・九年級",300,300],["美語分班測驗報名",500,500],["國中便當代墊回收",170,170]];
-    el.innerHTML=`<div class="paper">${rows.map((r,i)=>`<button class="stepl" data-i="${i}" style="display:flex;justify-content:space-between;width:100%"><span>${r[0]}</span><span style="font-family:var(--mono)">收據 ${r[1]}｜抽屜 ${r[2]}</span></button>`).join("")}</div><div class="actions"><button class="go" data-ok>都對</button></div><p class="feed" aria-live="polite"></p>`;
+  mount(el,done){
+    const diff=G&&G.h&&G.h.cash||0;
+    // 第二天：昨天的錯帳已經在當天更正，今天的收據都對得上
+    const rows=G&&G.day===2?[["小米（十月安親費）",7750,7750],["段考模擬卷印製・九年級",300,300],["美語分班測驗報名",500,500],["國中便當代墊回收",170,170]]:[["安安（李阿嬤）",7750,7750+diff],["補課講義費・九年級",300,300],["美語分班測驗報名",500,500],["國中便當代墊回收",170,170]];
+    el.innerHTML=`<div class="paper">${rows.map((r,i)=>`<button class="stepl" data-i="${i}" style="display:flex;justify-content:space-between;width:100%"><span>${r[0]}</span><span style="font-family:var(--mono)">應收 ${r[1]}｜抽屜 ${r[2]}</span></button>`).join("")}</div><div class="actions"><button class="go" data-ok>都對</button></div><p class="feed" aria-live="polite"></p>`;
     const feed=el.querySelector(".feed");let doneOnce=false;const finish=(pick)=>{if(doneOnce)return;doneOnce=true;const bad=rows.findIndex(r=>r[1]!==r[2]),diff=bad<0?0:rows[bad][1]-rows[bad][2];
-      const ok=pick===bad;feed.textContent=bad<0?(pick<0?"都對。今天可以準時下班。":"這一筆其實沒問題。"):ok?`找到了：${rows[bad][0]}，少了 ${diff} 元。是下午算錯的那一筆。`:`不是這一筆。差的是：${rows[bad][0]}，少了 ${diff} 元。`;
+      const ok=pick===bad;feed.textContent=bad<0?(pick<0?"都對。今天可以準時下班。":"這一筆其實沒問題。"):ok?`找到了：${rows[bad][0]}，${diff>0?"少了":"多了"} ${Math.abs(diff)} 元。是下午算錯的那一筆。`:`不是這一筆。差的是：${rows[bad][0]}，${diff>0?"少了":"多了"} ${Math.abs(diff)} 元。`;
       done({ok:bad<0?pick<0:ok,diff});};
     el.querySelectorAll("[data-i]").forEach(b=>b.addEventListener("click",()=>finish(+b.dataset.i)));el.querySelector("[data-ok]").addEventListener("click",()=>finish(-1));}
 };
@@ -3350,7 +3355,7 @@ LINES2.care={...LINES.care,day:2,
  msgs:[["11:42","林老師","今天三間學校同時放，我們 12:20 樓下集合喔"],["13:58","國小家長群","週五戶外教學，回條請明天交給導師"],["16:05","安安媽媽","老師我下午五點多會到，想跟您聊一下安安這週的狀況"],["18:10","小芸","蔡老師，小宇媽媽說她在三樓跟鄭老師談，請你幫忙看一下小宇🙏"]],
  boards:{g4:"午休 13:00–13:30\n評量進度：數學 第5回・國語 第4回"},
  schedule:[["11:30","pre"],["12:50","class"],["17:00","leave"]],
- busy:[["12:20","13:05","g4door","接回來了","三間學校的小朋友一起走回來。十二點五十進教室，洗手、上廁所、拿出午睡枕。"],["13:32","18:15","g4podium","巡堂","看作業、簽聯絡簿、回答「老師這題怎麼寫」。下午小朋友都在，沒有空檔。"]],
+ busy:[["12:20","13:05","g4door","接回來了","三間學校的小朋友一起走回來。十二點五十進教室，洗手、上廁所、拿出午睡枕。"],["13:32","18:15","g4podium","巡堂","看作業、簽聯絡簿、回答「老師這題怎麼寫」。下午小朋友都在，沒有空檔。"],["18:15","18:55","g4podium","送走最後一個","最後一個小朋友被接走後，把桌椅推回去、把今天的聯絡簿收好。"]],
  phaseStatus:{pre:"準備中",class:"午休・寫作業",leave:"放學中",close:"收拾中"},
  bells:{class:["小朋友回來了","洗手、換室內鞋，一點整午休。"],leave:["放學時間","家長陸續來接了。櫃台會廣播誰的家長到了。"]},
  events:["kidfall","schoolcall","pudding"],
@@ -3362,7 +3367,7 @@ LINES2.care={...LINES.care,day:2,
    pages:G=>{const p=pv(G),l=[];
      l.push([null,p.readyNap?"八個午睡枕排在櫃子上，名字朝外。昨天下班前的你，做了一件好事。":"午睡枕還堆在櫃子最上層。有兩個的名字貼紙掉了。"]);
      if(p.noCopy)l.push([null,"白板角落還留著昨天手抄的五題。練習卷昨天沒有印。"]);
-     l.push([null,"四十分鐘後，四年級的八個小朋友就會一起回來。"]);return l;},
+     l.push([null,"十二點二十出發去接人，一點以前，四年級的小朋友就會回到這間教室午休。"]);return l;},
    choices:G=>{const p=pv(G),c=[];
      if(!p.readyNap)c.push({label:"把午睡枕發到每個位子、補上名字",fx:{ord:6,hp:-4},set:{napReady:1},log:"準備好午睡枕",res:[[null,"八張桌子上各放一個午睡枕。沒有名字的那兩個，你憑印象寫上「子恩」和「大頭」。"]]});
      else c.push({label:"把午睡枕發到每個位子",fx:{ord:4,hp:-1},set:{napReady:1},log:"發好午睡枕",res:[[null,"昨天排好的，今天三分鐘就發完了。"]]});
@@ -3483,6 +3488,9 @@ MINIS.kidgrade2={...MINIS.kidgrade,intro:"小宇的數習 p.34，三題。點出
   ]};
 
 /* ---------- 九年級班導・第二天 ---------- */
+/* 今天到考場的人數：十二個人，阿哲沒來就少一個 */
+const zheGone2=G=>!!(pv(G).refundForm&&!(pa(G,"boss").baseClass||pa(G,"teacher").zheOpen||pv(G).bossKnowsZhe));
+const c9Here2=G=>12-(zheGone2(G)?1:0),CN={9:"九",12:"十二",11:"十一",33:"三十三",36:"三十六"};
 LINES2.jh={...LINES.jh,day:2,
  pick:"第二天・週三。段考倒數五天。昨天的聯絡本，今天都有家長的回覆。",
  coda:"班導的工作沒有下課鐘。但今天，有人在聯絡本上回了一句「謝謝老師」。",
@@ -3553,12 +3561,12 @@ LINES2.jh={...LINES.jh,day:2,
       {label:"確認他今天會不會來",fx:{par:2},log:"確認阿哲今天是否到班",res:[["mom","他說不想去了。退費單我拿了，還沒填。"],[null,"今天的模擬考，十二張桌子有一張是空的。"]]}];}},
   {id:"j2_class",chapter:{t:"18:00",title:"段考模擬",sub:"18:00–19:25・三科模擬，班導監考",status:"上課中"},
    t:"18:02",target:{spot:"c9podium"},goal:"發模擬卷，開始監考",action:"發考卷",
-   pages:G=>[[null,"「考卷翻過來。」十一支筆同時開始動。"],[null,"監考的時候，你看得到每一個人卡在哪裡：有人一直擦，有人一直看時鐘，有人在第一題就停住了。"]],
+   pages:G=>[[null,`「考卷翻過來。」${CN[c9Here2(G)]}支筆同時開始動。`],[null,"監考的時候，你看得到每一個人卡在哪裡：有人一直擦，有人一直看時鐘，有人在第一題就停住了。"]],
    choices:G=>[
     {label:"在後面慢慢巡，記下每個人卡住的題號",fx:{stu:6,hp:-3},set:{watchNotes:1},log:"監考時記下每個人卡住的地方",res:[[null,"你的筆記本上寫滿了座號和題號。阿翔在第十二題停了很久，最後寫了一個答案。"]]},
     {label:"坐在講台上改昨天的小考",fx:{hp:3,stu:-2},log:"監考時順便改考卷",res:[[null,"改到一半抬頭，最後一排有人在偷看手機。"]]}]},
   {id:"j2_xiangma",t:"18:32",target:{npc:"xiangma"},goal:"阿翔媽媽在國中老師休息室等你",npc:{xiangma:AT("jhlounge",0,.6,Math.PI)},after:{xiangma:null},
-   pages:G=>{const p=pv(G),l=[["xiangma","老師，抱歉打擾您上課。小宇我放在二樓，蔡老師說可以待到七點。"]];
+   pages:G=>{const p=pv(G),l=[[null,"你請課輔的阿宏到九年級門口幫忙看一下考場，才下樓到休息室。"],["xiangma","老師，抱歉打擾您上課。小宇我放在二樓，蔡老師說可以待到七點。"]];
      l.push(["xiangma",p.askedXiang?"昨天回家，阿翔跟我說了……他說他覺得我一直拿他跟小宇比。":"昨天我在網咖找到他。回家他一句話都沒說。"]);
      l.push(["xiangma","我一個人帶兩個，下午接小的，晚上接大的。我真的不知道要怎麼辦。"]);return l;},
    choices:G=>[
@@ -3591,7 +3599,7 @@ LINES2.jh={...LINES.jh,day:2,
     {label:G.f.toldPinyuMa?"「那今天早點睡。」":"「錯在哪裡，比錯幾題重要。」",fx:{stu:6,hp:-2},set:{pinyuOk:1},log:"陪品妤收書包",res:G=>G.f.toldPinyuMa?[["pinyu","……嗯。今天十二點前睡。"],[null,"她背起書包，第一次沒有在電梯裡翻講義。"]]:[["pinyu","……錯在哪裡。"],[null,"她把資料夾又打開，在第一個紅圈旁邊寫了兩個字：「單位」。"]]},
     {label:"「早點回家。」",fx:{hp:2},log:"叫品妤早點回家",res:[["pinyu","嗯。老師晚安。"]]}]},
   {id:"j2_close",t:"21:15",target:{spot:"hrdesk"},goal:"整理模擬考、寫聯絡本",action:"坐下來",
-   pages:G=>[[null,"四十五張模擬卷，十二本聯絡本。"],[null,G.f.watchNotes?"監考時記下的題號，正好可以寫進每個人的聯絡本。":"今天的事，要寫成家長看得懂的三行字。"]],
+   pages:G=>[[null,`收回來的模擬卷 ${CN[c9Here2(G)*3]} 張，備用卷 ${CN[45-c9Here2(G)*3]} 張另外收好。${CN[c9Here2(G)]}本聯絡本。`],[null,G.f.watchNotes?"監考時記下的題號，正好可以寫進每個人的聯絡本。":"今天的事，要寫成家長看得懂的三行字。"]],
    choices:G=>[
     {label:G.f.watchNotes?"把每個人卡住的題號寫進聯絡本":"每本都寫一句今天的事",fx:{par:8,hp:-6,stu:G.f.watchNotes?4:0},set:{notesAll2:1},log:"每本聯絡本都寫一句話",res:G=>[[null,G.f.watchNotes?"「第 12 題停了很久，但寫出來了。」這是阿翔那本。":"寫到阿翔那本，你寫：「今天 17:35 到班。」"]]},
     {label:"只寫成績，簽名",fx:{hp:3,par:-2},log:"聯絡本只寫成績",res:[[null,"你關燈的時候，三樓只剩電梯的聲音。"]]}]}
@@ -3633,9 +3641,9 @@ LINES2.teacher={...LINES.teacher,day:2,
     {label:"在茶水間吃完便當再上樓",fx:{hp:10},set:{ate2:1},log:"上課前吃完晚餐",res:[[null,"今天微波爐前面沒有人排隊。週三，安親的小朋友比較早走。"]]},
     {label:"便當帶上樓，先看八年級的講義",fx:{hp:-2,stu:3},log:"沒吃晚餐，先看講義",res:[[null,"電梯裡只有你和便當。"]]}]},
   {id:"t2_c8check",t:"17:45",target:{spot:"c8podium"},goal:"確認八年級的講義",action:"翻講義",
-   pages:G=>[[null,"八年級講桌上：講義十份，小考卷十份。名單上是十五個人。"],[null,"班導請假，沒有人知道是誰印的、為什麼少了五份。"]],
+   pages:G=>[[null,"八年級講桌上：講義九份，小考卷九份。名單上是十二個人。"],[null,"班導請假，沒有人知道是誰印的、為什麼少了三份。"]],
    choices:G=>[
-    {label:"下樓自己補印五份",fx:{hp:-4,stu:3},set:{printed8:1},log:"自己下樓補印八年級講義",res:[[null,"你搭電梯下去、印、再上來。十七點五十八分，講義放到每張桌上。"]]},
+    {label:"下樓自己補印三份",fx:{hp:-4,stu:3},set:{printed8:1},log:"自己下樓補印八年級講義",res:[[null,"你搭電梯下去、印、再上來。十七點五十八分，講義放到每張桌上。"]]},
     {label:"兩人共用一份，小考題寫在白板上",fx:{voice:-4,stu:-1},log:"八年級講義兩人共用",res:[[null,"白板右半邊寫滿了小考題。最後一排的同學舉手：「老師，看不到。」"]]}]},
   {id:"t2_c8",chapter:{t:"18:00",title:"第一節・八年級",sub:"18:00–19:25・段考複習：乘法公式",status:"上課中"},
    t:"18:00",target:{spot:"c8podium"},goal:"走上講台，開始上課",
@@ -3681,10 +3689,10 @@ LINES2.teacher={...LINES.teacher,day:2,
      if(p.stayedPinyu)l.push(["pinyu","昨天你陪我做完那題之後，我昨天……十二點半就睡了。比平常早。"]);return l;},
    choices:G=>[
     {label:"讓她上台講她的算法",note:"錯在哪，全班一起看",fx:{stu:10,voice:-3},set:{pinyuBoard:1},log:"讓品妤上台講她的算法",res:[[null,"她在白板上寫了三行。第二行，對應邊列反了。"],[null,"她自己看出來，轉頭說：「啊。」全班都笑了，她也笑了。"]]},
-    {label:"走過去，在她講義上圈出錯的那一行",fx:{stu:5},log:"幫品妤圈出錯誤",res:[["pinyu","……正負號。又是正負號。"]]}]},
+    {label:"走過去，在她講義上圈出錯的那一行",fx:{stu:5},log:"幫品妤圈出錯誤",res:[["pinyu","……對應邊。我又把它對反了。"]]}]},
   {id:"t2_after",chapter:{t:"21:00",title:"放學",sub:"國中生搶電梯，走廊很快就空了。",status:"放學"},
    t:"21:02",target:{spot:"c9podium"},goal:"回講台收東西",npc:{pinyu:null,qing:null,xiang:null,zhe:G=>pv(G).zheOpen||G.f.zheWin||G.f.sorryZhe?AT("c9door",-1,.4,Math.PI):null},
-   pages:G=>{const l=[[null,"白板角落還有你畫的紙片正方形，是剛剛從八年級帶過來的。"]];if(pv(G).zheOpen||G.f.zheWin||G.f.sorryZhe)l.push([null,"阿哲站在門口沒走。"]);l.push([null,"你還要騎二十分鐘回家。明天下午的國小五年級分數講義還沒看完。"]);return l;},
+   pages:G=>{const l=[[null,"講桌上還留著八年級那節剪的紙片正方形，你順手帶上來的。"]];if(pv(G).zheOpen||G.f.zheWin||G.f.sorryZhe)l.push([null,"阿哲站在門口沒走。"]);l.push([null,"你還要騎二十分鐘回家。明天下午的國小五年級分數講義還沒看完。"]);return l;},
    choices:G=>{const c=[];
      if(pv(G).zheOpen||G.f.zheWin||G.f.sorryZhe)c.push({label:"給阿哲一張分數的練習題",note:"明天下午你剛好要上分數",fx:{hp:-3,stu:10},set:{zheSheet:1},log:"把國小五年級的分數講義給阿哲",res:[["me","這是我明天要上五年級的。你先寫，寫不出來沒關係。"],["zhe","……五年級喔。"],[null,"他把講義捲起來，塞進書包側袋。沒有說不要。"]]});
      c.push({label:"擦白板，下樓",fx:{hp:3},log:"擦白板下樓",res:[[null,"紙片正方形被擦掉了。明天八年級的同學應該還會記得 (a + b)²。"]]});return c;}},
@@ -3693,7 +3701,7 @@ LINES2.teacher={...LINES.teacher,day:2,
      if(p.baseWinter||b.baseClass)l.push(["boss","寒假的分數基礎班排好了，週二週四晚上。林媽媽今天下午來簽了。"]);
      else l.push(["boss","阿哲的媽媽今天來過，說要再想想退費的事。"]);
      if(p.winter4)l.push(["boss","寒假你答應四天，我排好了。……你看起來很累。"]);
-     else if(p.winter2)l.push(["boss","寒假你說兩天。我想問，八年級能不能也給你？今天八年級的班導說你上得很好。"]);
+     else if(p.winter2)l.push(["boss","寒假你說兩天。我想問，八年級能不能也給你？剛剛八年級下課，好幾個學生在電梯口說今天數學聽得懂。"]);
      else l.push(["boss","寒假的事，你想好了嗎？"]);
      return l;},
    choices:G=>{const p=pv(G),c=[];
@@ -3725,6 +3733,7 @@ MINIS.grade2={...MINIS.grade,head:"九年級・模擬考檢討",zone:"九年級�
 
 /* ---------- 櫃台・第二天 ---------- */
 LINES2.yun={...LINES.yun,day:2,
+ carryH:(G,h)=>{G.h.missed=Math.max(0,Math.round((h.missed||0)-(h.cleared||0)));},
  pick:"第二天・週三。國小中午就放學，櫃台十二點開。昨天沒回的電話，今天都會再打來。",
  coda:"第二天的電話，有一半是昨天的回音。你記得每一通的開頭。",
  msgs:[["12:08","林老師","小芸，今天有家長改接送的話直接打我手機🙏"],["15:48","何主任","放學那一小時，我盡量下來"],["19:10","妹妹","毛線今天沒有抓衛生紙。牠抓了窗簾。"],["21:32","媽","今天也很晚喔？"]],
@@ -3767,11 +3776,14 @@ LINES2.yun={...LINES.yun,day:2,
     {label:"「退費單給我，我先幫您試算。」",fx:{ord:4,par:-4},log:"幫林媽媽試算退費",res:[[null,"退費只能退一半。你把數字寫給她看。"],["mom","一半？那我兒子這半年算什麼？"]]}]},
   {id:"y2_ama",t:"16:20",target:{npc:"ama"},goal:"李阿嬤來了",npc:{ama:PC.amaLobby},after:{ama:null,mom:null},
    pages:G=>{const p=pv(G);
+     if(p.paid===0&&p.payDiff>0)return [["ama","小姐，昨天的錢……安安媽媽看了收據，說好像多收了六百。"],[null,"阿嬤把收據攤在櫃台上，上面的總數多寫了 600。"]];
      if(p.paid===0)return [["ama","小姐，昨天你找給我的錢……我回家數，好像多了六百。"],[null,"阿嬤從信封裡拿出六張百元鈔，攤在櫃台上。"]];
      return [["ama","小姐，安安媽媽今天回來了。她說公司補助要收據的影本。"],[null,"她從布包裡拿出一個保溫杯：「這是綠豆湯，給你。」"]];},
    choices:G=>{const p=pv(G);
+     if(p.paid===0&&p.payDiff>0)return [
+      {label:"道歉，退 600 元，重開收據",fx:{par:4,ord:6},set:{amaFix:1},log:"退還李阿嬤多收的錢",res:[["me","阿嬤，對不起，是我算錯了。"],["ama","沒關係啦，人都會算錯。"]]}];
      if(p.paid===0)return [
-      {label:"道謝，重新開一張正確的收據",fx:{par:8,ord:6,cash:600},set:{amaFix:1},log:"李阿嬤送回多找的錢",res:[["me","阿嬤，謝謝你。是我算錯了。"],["ama","數錢我很會，我以前在菜市場賣菜。"]]}];
+      {label:"道謝，重新開一張正確的收據",fx:{par:8,ord:6},set:{amaFix:1},log:"李阿嬤送回多找的錢",res:[["me","阿嬤，謝謝你。是我算錯了。"],["ama","數錢我很會，我以前在菜市場賣菜。"]]}];
      return [
       {label:"印收據影本，蓋章給她",fx:{par:5,hp:-1},log:"幫李阿嬤印收據影本",res:[["ama","你蓋章蓋得好正。"],[null,"綠豆湯還是溫的。"]]},
       {label:"「綠豆湯不用啦，阿嬤留著喝。」",fx:{par:2},log:"婉拒李阿嬤的綠豆湯",res:[["ama","不行，我煮了一整鍋。"],[null,"保溫杯最後還是留在櫃台上。"]]}];}},
@@ -3857,13 +3869,13 @@ LINES2.boss={...LINES.boss,day:2,
    choices:G=>{const p=pv(G);
      if(p.bossPickup)return [
       {label:"一路點人數，過馬路時站在車道那一側",fx:{calm:-5,morale:10,rep:4},set:{walkedKids:1},log:"跟安親老師一起接六年級",res:[[null,"十二個人，點了四次。過馬路時，一台機車在你面前停下來。"],["wu","主任，你剛剛那一步，比我們站得還前面。"]]},
-      {label:"「我在後面，你們放心。」",fx:{calm:-2,morale:6},log:"跟在隊伍後面",res:[[null,"你走在最後面，看著三十個書包在前面晃。這是你第一次走這條路。"]]}];
+      {label:"「我在後面，你們放心。」",fx:{calm:-2,morale:6},log:"跟在隊伍後面",res:[[null,"你走在最後面，看著二十七個書包在前面晃。這是你第一次走這條路。"]]}];
      return [
       {label:"自己接電話，讓小芸處理阿公",fx:{calm:-4,morale:5},log:"主任幫櫃台接電話",res:[[null,"你接了三通。「今天阿嬤接」「小米五點五十」「安安媽媽自己來」。全部寫在接送表上。"]]},
       {label:"「先請阿公坐，我打給蔡老師。」",fx:{calm:-2,rep:2},log:"處理沒登記的接送",res:[[null,"阿公不在接送名單上。蔡老師打給小朋友的媽媽確認：是阿公沒錯。"]]}];}},
   {id:"b2_ac",t:"13:10",target:{spot:"g4door"},goal:"上二樓看午休",action:"看一下",
    pages:G=>{const p=pv(G);
-     if(p.acFix)return [[null,"四年級教室的冷氣沒有在滴水了。八個小朋友趴在桌上，睡成三排。"],["cai","（小聲）主任，昨天修好了，今天午休終於不用聽滴水聲。"]];
+     if(p.acFix)return [[null,"四年級教室的冷氣沒有在滴水了。七個小朋友趴在桌上，睡成三排。"],["cai","（小聲）主任，昨天修好了，今天午休終於不用聽滴水聲。"]];
      return [[null,"冷氣還在滴水。水桶放在兩排桌子中間，滴答、滴答。"],["cai","（小聲）主任……小宇說他睡不著，因為那個聲音好像有人在敲門。"]];},
    choices:G=>{const p=pv(G),c=[];
      if(!p.acFix)c.push({label:"現在打給廠商，今天一定要來",fx:{sales:-4,morale:6,calm:-3},set:{acFix2:1},log:"叫冷氣廠商今天來修",res:[[null,"廠商說四點到。你說：「三點半。」他說：「好。」"]]});
@@ -3956,6 +3968,42 @@ LINES2.boss={...LINES.boss,day:2,
  }
 };
 
+/* ---------- 第二天專屬支線：每個位子一條，承接第一天的選擇（不重播第一天的支線） ---------- */
+SIDES.care.push({id:"miDraw",day:2,from:"c2_wake",until:"c2_mima",target:{npc:"mi"},title:"小米的畫",action:"看小米的畫",
+  avail:G=>!!(G.prev.waitMi||G.prev.leftMi),
+  pages:G=>G.prev.waitMi?[["mi","老師，這個給你。"],[null,"一張畫：兩個人坐在桌子前面，把彩色筆排成一排。旁邊寫著「老師跟我等媽媽」。"]]
+    :[["mi","老師……昨天櫃台的阿姨陪我等。"],[null,"她給你一張畫：櫃台旁邊一張小椅子，椅子上坐著一個抱著兔子的人。"],["mi","今天媽媽會準時嗎？"]],
+  choices:G=>[
+   {label:"貼在老師桌旁邊",fx:{pat:3,par:2},log:"把小米的畫貼在老師桌旁",res:[[null,"小米看著你把畫貼好，回座位的時候腳步輕了一點。"]]},
+   {label:"「放進資料夾，帶回家給媽媽看。」",fx:{par:5},log:"請小米把畫帶回家給媽媽",res:[["mi","……好。"],[null,"她把畫折好，夾進聯絡簿裡。"]]}]});
+SIDES.jh.push({id:"bentoPay",day:2,from:"j2_xiang",until:"j2_out",target:{npc:"xiang"},title:"昨天的便當錢",action:"找阿翔",
+  avail:G=>!!G.prev.paidFor,
+  pages:G=>[["xiang","老師……昨天的便當錢。我媽叫我拿來。"],[null,"八十五元：一個五十元、三個十元、一個五元，用橡皮筋綁著。"]],
+  choices:G=>[
+   {label:"收下，在聯絡本寫「已還，謝謝」",fx:{par:4},log:"收回幫阿翔墊的便當錢",res:[[null,"你在聯絡本上寫了一行。阿翔看了一眼，沒說話，把聯絡本收進書包。"]]},
+   {label:"收下，跟他說「謝謝你記得」",fx:{stu:4},log:"謝謝阿翔記得還錢",res:[["xiang","……是我媽記得。"],[null,"他說完，嘴角動了一下。"]]}]});
+SIDES.teacher.push({id:"score32",day:2,from:"t2_c8",until:"t2_zhe",target:{npc:"bo"},title:"三十二分",action:"跟小柏說",
+  avail:G=>!!G.prev.told32,
+  pages:G=>[["bo","老師，九年級的說你國中數學考過三十二分，真的假的？"],[null,"前兩排的人都轉過頭來。"]],
+  choices:G=>[
+   {label:"「真的。所以我知道卡住是什麼感覺。」",fx:{stu:6,voice:-1},log:"跟八年級說自己考過三十二分",res:[["bo","那你後來怎麼變老師的？"],["me","下課再跟你說。先把這一題乘開。"]]},
+   {label:"「先上課，下課再說。」",fx:{voice:1},log:"請小柏先回座位",res:[["bo","喔……"],[null,"他坐回去，但一直在看你。"]]}]});
+SIDES.yun.push({id:"earlyPrice",day:2,from:"y2_open",until:"y2_trial",target:{npc:"boss"},title:"昨天說出去的早鳥價",action:"找主任",
+  avail:G=>!!G.prev.discount,
+  pages:G=>[["boss","小芸，王媽媽說你昨天答應她早鳥價？"],["boss","價錢的事要先問我。不是不能給，是要一致。"]],
+  choices:G=>[
+   {label:"照實說：是我沒先問",fx:{ord:4,pat:-2},log:"跟主任承認早鳥價沒先問",res:[["boss","好，這次照你說的給。下次先傳訊息給我。"],[null,"主任在你的便利貼上補了一行：「價錢 → 先問主任」。"]]},
+   {label:"「家長一直問，我只是先安撫。」",fx:{pat:2,ord:-2},log:"跟主任解釋早鳥價",res:[["boss","……我知道櫃台很難。可是其他家長也會來問。"],[null,"主任沒有再說什麼，回主任室了。"]]}]});
+SIDES.boss.push({id:"oldCopier",day:2,from:"b2_post",until:"b2_trial",target:{npc:"yun"},title:"影印機的事",action:"找小芸",
+  avail:G=>!!(G.prev.newCopier||G.prev.splitCopy),
+  pages:G=>G.prev.newCopier?[["yun","主任，新影印機的廠商說週五送來。舊的那台要不要留著？"],["yun","蔡老師說二樓如果有一台，練習卷就不用下樓搶了。"]]
+    :[["yun","主任，鄭老師說昨天分兩批印的辦法很好，今天模擬卷也照這樣排。"],["yun","可是這樣安親每天都要等到四點……"]],
+  choices:G=>G.prev.newCopier?[
+   {label:"舊的搬到二樓給安親用",fx:{morale:5,calm:-2},log:"舊影印機留給安親",res:[["yun","我跟蔡老師說！她一定很高興。"]]},
+   {label:"請廠商回收，折抵價錢",fx:{sales:4},log:"舊影印機折抵",res:[["yun","好，我跟廠商說。"],[null,"你在支出單上把那一行劃掉，改成小一點的數字。"]]}]
+   :[{label:"排一張固定的影印時間表",fx:{morale:4,calm:-2},log:"排固定的影印時間表",res:[["yun","我做一張貼在教材室門口！"]]},
+     {label:"先這樣，段考完再說",fx:{calm:2},log:"影印順序段考完再說",res:[["yun","好。"]]}]});
+
 /* ================= 遊戲引擎 ================= */
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -3985,6 +4033,7 @@ function newGame(lineId,day=1){
   G={line:L,idx:0,s:{},h:{...L.hidden},f:{},log:[],items:[],sidesDone:{},tName:lineId==="teacher"?sur+"老師":"許老師",pName:name||({yun:"小芸",boss:"何主任",care:"蔡老師",jh:"鄭老師"}[lineId]||"你"),name,tipShown:false,status:"",time:"17:20",chapterTitle:""};
   for(const k in L.stats)G.s[k]=L.stats[k][1];
   G.day=day;const outAll=store.get("out",{});G.prevAll=outAll;G.prev=day===2?((outAll[lineId]||{}).f||{}):{};
+  if(day===2&&L.carryH)L.carryH(G,(outAll[lineId]||{}).h||{}); // 第二天承接前一天的隱藏數值（例如沒回的電話）
   G.steps=buildSteps(L);G.minis={};G.chatUsed=[];G.chatWith=[];G.hard=doneLines.has(lineId);G.clock=toMin(G.steps[0].t);G.lates=0;G.lateMin=0;
   Object.defineProperty(G,"time",{get(){return fmt(G.clock);},set(v){},configurable:true});
   if(player)scene.remove(player);makePlayer(L);player.position.set(L.start[0],0,L.start[1]);player.rotation.y=Math.PI;
@@ -4046,7 +4095,7 @@ function targetOf(t){if(typeof t==="function")t=t(G);if(!t)return null;if(t.npc)
   const s=SPOTS[t.spot];return{x:s.pos[0],z:s.pos[1],h:s.h+.5,name:s.name,kind:"spot"};}
 function activeSides(){const list=SIDES[G.line.id]||[],ids=G.steps.map(s=>s.id);
   const mainNpc=stepReady()&&val(G.steps[G.idx].target,G)?.npc,idx=sideStepIndex();
-  return list.filter(sd=>!G.sidesDone[sd.id]&&!(mainNpc&&sd.target.npc===mainNpc)&&idx>=ids.indexOf(sd.from)&&idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G)));}
+  return list.filter(sd=>(sd.day||1)===(G.day||1)&&!G.sidesDone[sd.id]&&!(mainNpc&&sd.target.npc===mainNpc)&&idx>=ids.indexOf(sd.from)&&idx<=ids.indexOf(sd.until)&&(!sd.avail||sd.avail(G)));}
 function nearest(){
   const px=player.position.x,pz=player.position.z,d=(x,z)=>Math.hypot(x-px,z-pz),c=[];
   const m=stepReady()?targetOf(step().target):null;if(m){const dm=d(m.x,m.z);if(dm<1.9)c.push({dist:dm,type:"main",label:val(step().action,G)||(m.kind==="npc"?`找${CHARS[m.id].name}`:`到${m.name}`)});}
@@ -4147,7 +4196,7 @@ function resolveChoice(c,onDone,arg){
   const a=arg!==undefined?arg:G;
   if(c.onResolve)c.onResolve(a);
   const fx=val(c.fx,a)||{},res=val(c.res,a),log=val(c.log,a);
-  if(c.min)spend(c.min);if(c.set)Object.assign(G.f,c.set);if(log)G.log.push([G.time,log]);
+  if(c.min&&!c.mini)spend(c.min);if(c.set)Object.assign(G.f,c.set);if(log)G.log.push([G.time,log]);
   const deltas=applyFx(fx);renderHud();
   const pages=typeof res==="string"?[[null,res]]:res||[[null,"……"]];
   if(G.s.voice!==undefined&&G.s.voice>0&&G.s.voice<20&&!G.f.hoarse){G.f.hoarse=1;pages.push([null,"你的聲音開始沙啞了。"]);}
@@ -4163,14 +4212,14 @@ function openStep(){
   if(G.due!=null&&G.clock>=G.due+1&&!st.auto){const late=Math.floor(G.clock-G.due),k=Math.min(3,Math.ceil(late/5));G.lates++;G.lateMin+=late;const lf=G.line.late||{};const fx={};for(const a in lf.fx||{})fx[a]=lf.fx[a]*k;const d=applyFx(fx);G.log.push([G.time,`遲到 ${late} 分鐘`]);pages=[[null,`你晚了 ${late} 分鐘。${lf.text||""}`],...pages];if(d)G.lateDeltas=d;renderHud();}
   spend(2);G.chatNpc=val(st.target,G)?.npc;
   runDialog({pages,choices,chatId:choices?null:G.chatNpc,endLabel:st.endLabel,onEnd:choices?null:()=>{if(st.fx)applyFx(val(st.fx,G));if(st.set)Object.assign(G.f,st.set);nextStep();},
-    onChoice:c=>{if(c.mini)runMini(c.mini,r=>resolveChoice(c,nextStep,r));else resolveChoice(c,nextStep);}});
+    onChoice:c=>{if(c.mini)runMini(c.mini,r=>resolveChoice(c,nextStep,r),c.min);else resolveChoice(c,nextStep);}});
 }
 function openSide(sd){
   spend(3);G.chatNpc=sd.target&&sd.target.npc;
   const pages=val(sd.pages,G),choices=sd.choices?val(sd.choices,G):null;
   const done=()=>{G.sidesDone[sd.id]=1;setTimeout(checkAch,50);seenSides.add(G.line.id+":"+sd.id);store.set("sides",[...seenSides]);beep("side");mode="walk";renderAll();};
   runDialog({pages,choices,chatId:choices?null:G.chatNpc,onEnd:choices?null:()=>{if(sd.fx)applyFx(val(sd.fx,G));if(sd.set)Object.assign(G.f,sd.set);if(sd.log)G.log.push([G.time,"（支線）"+sd.log]);done();},
-    onChoice:c=>{const go=r=>resolveChoice({...c,log:c.log?(a=>"（支線）"+val(c.log,a)):null},done,r);if(c.mini)runMini(c.mini,go);else go();}});
+    onChoice:c=>{const go=r=>resolveChoice({...c,log:c.log?(a=>"（支線）"+val(c.log,a)):null},done,r);if(c.mini)runMini(c.mini,go,c.min);else go();}});
 }
 
 /* ---------- 面板：說明、小遊戲、撿到的東西、圖鑑 ---------- */
@@ -4186,11 +4235,12 @@ function openInfo(inf){
   mode="info";renderAll();seenInfo.add(inf.id);store.set("info",[...seenInfo]);
   openSheet("說明",`<div class="zone">${esc(inf.zone)}</div><h3>${esc(inf.title)}</h3>${inf.body.map(p=>`<p>${rich(p)}</p>`).join("")}${inf.table?tableHTML(inf.table(G)):""}`,()=>{mode="walk";renderAll();});
 }
-function runMini(id,cb){
+/* 花的時間：選項有寫 min 就用 min（含小遊戲本身），沒有就用小遊戲的 cost，不重複加 */
+function runMini(id,cb,min){
   const M=MINIS[id];mode="mini";renderAll();
   openSheet(M.head,`<div class="zone">${esc(M.zone)}</div><h3>${esc(M.title)}</h3><p>${rich(M.intro)}</p><div id="miniArea"></div><div class="actions" id="miniDone" hidden><button class="go" data-act="miniOk">好</button></div>`,false);
   let result=null;M.mount($("miniArea"),r=>{result=r;beep("ok");$("miniDone").hidden=false;$("miniDone").querySelector("button").focus();});
-  $("sheet").querySelector("[data-act=miniOk]").onclick=()=>{$("sheet").hidden=true;$("sheetBg").hidden=true;spend(M.cost||5);G.minis[id]=result;checkAch();cb(result);};
+  $("sheet").querySelector("[data-act=miniOk]").onclick=()=>{$("sheet").hidden=true;$("sheetBg").hidden=true;spend(min??(M.cost||5));G.minis[id]=result;checkAch();cb(result);};
 }
 function pickItem(it){
   beep("pick");mode="info";renderAll();const first=!seenItems.has(it.id);G.items.push(it.id);seenItems.add(it.id);store.set("items",[...seenItems]);
@@ -4330,7 +4380,7 @@ function finish(){
   c.innerHTML=`<div class="card report fade"><div class="kick">${G.day===2?"第二天・":""}${r.dead?"提早下班":fmt(Math.max(G.clock,endMin()))+" 下班"}・${esc(G.line.role)}・結案報告</div><h2>${esc(r.title)}</h2><p style="margin:0">${esc(r.desc)}</p>${G.line.coda?`<p style="margin:10px 0 0;font-family:var(--display);color:var(--muted)">${esc(G.line.coda)}</p>`:""}
    <div class="big">${r.big.map(([v,l])=>`<div><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("")}</div>
    <div class="big" style="grid-template-columns:repeat(${Object.keys(G.s).length},1fr)">${Object.keys(G.s).map(k=>`<div><b style="font-size:1.1rem">${G.s[k]}</b><span>${G.line.stats[k][0]}</span></div>`).join("")}</div>
-   <div class="lbl">準時</div><p style="margin:0">${G.lates?`遲到 ${G.lates} 次，一共 ${G.lateMin} 分鐘。`:"每一件事都準時到。"}${r.dead?"":otMin()?`加班 ${otMin()} 分鐘。`:"準時十點下班。"}${(G.chatWith||[]).length?`跟 ${G.chatWith.length} 個人聊了天。`:""}</p>
+   <div class="lbl">準時</div><p style="margin:0">${G.lates?`遲到 ${G.lates} 次，一共 ${G.lateMin} 分鐘。`:"每一件事都準時到。"}${r.dead?"":otMin()?`加班 ${otMin()} 分鐘。`:`準時 ${G.line.endAt||"21:30"} 下班。`}${(G.chatWith||[]).length?`跟 ${G.chatWith.length} 個人聊了天。`:""}</p>
    ${its.length?`<div class="lbl">今晚撿到</div><p style="margin:0">${its.map(i=>`${i.icon} ${esc(i.name)}`).join("　")}</p>`:""}
    <ol class="log">${G.log.map(([a,b])=>`<li><span>${esc(a)}</span>${esc(b)}</li>`).join("")}</ol>
    <div class="actions"><button class="primary" data-act="start">再上一天班</button><button class="ghost" data-act="shareCard">成績卡</button><button class="ghost" data-act="copy">複製結算</button><button class="ghost" data-act="title">換個位子</button><span class="toast" id="toast" aria-live="polite"></span></div>
@@ -4363,7 +4413,7 @@ document.addEventListener("click",e=>{
   else if(act==="shareCard")openShareCard();
   else if(act==="home"){showTitle();}
   else if(act==="title")showTitle();
-  else if(act==="about")openSheet("關於",`<h3>晚上十點下課</h3><p>一個補習班晚上的小遊戲。靈感來自晶圓廠的打工遊戲 fab24hr，把場景換成台灣的補習班。</p><p>可以玩三個不同的位子：數學老師、櫃台班導、補習班主任。同一個晚上，看到的事情不一樣。</p><p class="hint">補習班、人物、數字都是虛構的，不代表任何一家補習班。</p>`);
+  else if(act==="about")openSheet("關於",`<h3>晚上十點下課</h3><p>補習班打工人的一天。靈感來自晶圓廠的打工遊戲 fab24hr，把場景換成台灣的補習班：國小四～六年級安親加國中部。</p><p>可以玩五個不同的位子：四年級安親老師、九年級班導、跑堂數學老師、櫃台、主任。同一間補習班、同一天，看到的事情不一樣；玩完第一天還有第二天。</p><p class="hint">補習班、人物、數字都是虛構的，不代表任何一家補習班。</p>`);
   else if(act==="copy"){const txt=summaryText(),t=$("toast");const fb=()=>{const b=$("copybox");b.hidden=false;b.value=txt;b.select();t.textContent="無法自動複製，已幫你選取文字";};
     try{navigator.clipboard.writeText(txt).then(()=>t.textContent="已複製",fb);}catch(err){fb();}}
 });

@@ -61,8 +61,8 @@ LINES.yun={
   {id:"y_pay",t:"17:46",target:{npc:"ama"},goal:"李阿嬤來繳安安的學費",npc:{ama:PC.amaLobby},after:{ama:null},
    pages:G=>[["ama","小姐，我來繳安安這個月的錢。"],[null,"她從布包裡拿出一個信封，裡面是一疊折得整整齊齊的千元鈔。"],["ama","收據要寫她媽媽的名字喔，她公司有子女教育補助。"]],
    choices:G=>[
-    {label:"算錢、找零、開收據",mini:"change",fx:r=>({par:r.right&&r.exact?8:r.right?3:-8,ord:r.right?4:-4,cash:r.right?0:-600}),log:r=>r.right?`幫李阿嬤繳費，找零 ${r.bills} 張／個`:"繳費金額算錯了",
-     res:r=>{G.f.paid=r.right?1:0;return r.right?[["ama","小姐你算得好快。"],[null,"收據上寫著安安媽媽的名字。阿嬤把收據折好，放進信封。"]]:[[null,"阿嬤開心地走了。你沒發現抽屜裡的錢少了一點。"]];}},
+    {label:"算錢、找零、開收據",mini:"change",fx:r=>({par:r.right&&r.exact?8:r.right?3:-8,ord:r.right?4:-4,cash:r.right?0:(r.diff||-600)}),log:r=>r.right?`幫李阿嬤繳費，找零 ${r.bills} 張／個`:"繳費金額算錯了",
+     res:r=>{G.f.paid=r.right?1:0;G.f.payDiff=r.right?0:(r.diff||-600);return r.right?[["ama","小姐你算得好快。"],[null,"收據上寫著安安媽媽的名字。阿嬤把收據折好，放進信封。"]]:G.f.payDiff<0?[[null,"阿嬤開心地走了。你沒發現少收了 600 元，多找了她六張百元鈔。"]]:[[null,"阿嬤沒有數找回來的錢，直接收進信封。你沒發現多收了她 600 元。"]];}},
     {label:"請阿嬤先坐，等一下再算",fx:{par:-4,pat:2},log:"請阿嬤等一下再繳費",res:[[null,"阿嬤坐在沙發上等了二十分鐘。她說沒關係，但她看了四次時鐘。"]]}]},
   {id:"y_trial",t:"17:52",target:{npc:"parent"},goal:"試聽家長到了",npc:{parent:AT("door",0,-.8),trial:AT("door",.7,-.6)},after:{trial:[...SEAT("c9","trial"),DOOR],parent:AT("sofa",0,.2,Math.PI)},
    pages:G=>[["parent","你好，我們是來[[試聽]]的，我姓王。"],["parent","想先問一下學費……對面那間說，現在報名打八折耶。"],["trial","（小聲）媽……"]],
@@ -91,7 +91,7 @@ LINES.yun={
      if(G.f.discount)l.push(["parent","早鳥價還算數吧？"]);return l;},
    choices:G=>{const n=enrolledT(G),c=[];
     if(n)c.push({label:"拿報名表和收據",fx:{par:5,cash:0},set:{enrolled:1},log:"試聽生報名",res:[[null,"王媽媽填好報名表。試聽生在旁邊偷偷鬆了一口氣。"]]});
-    else c.push({label:"約下週再試聽一次",fx:{trial:10,par:3},set:{retry:1},log:"約試聽生再來一次",res:[["parent","好啊，那就明天同一個時間。"],[null,"你在行事曆上寫：王，試聽第二次。"]]});
+    else c.push({label:"約明天再試聽一次",fx:{trial:10,par:3},set:{retry:1},log:"約試聽生再來一次",res:[["parent","好啊，那就明天同一個時間。"],[null,"你在行事曆上寫：王，試聽第二次。"]]});
     c.push({label:"說名額快滿了",note:"推一把",fx:G=>G.h.trial>=55?{trial:5,par:-3}:{trial:-10,par:-5},set:{pushed:1},onResolve:G=>{if(G.h.trial>=55)G.f.enrolled=1;},log:"跟家長說名額快滿",res:G=>G.h.trial>=55?[["parent","那……我們先報名吧。"]]:[["parent","（皺眉）我們不喜歡被催。"]]});
     return c;}},
   {id:"y_close",chapter:{t:"21:15",title:"日結",sub:"現金、收據、刷卡紀錄。對得起來才能下班。",status:"日結中"},
@@ -118,31 +118,34 @@ LINES.yun={
 MINIS.change={
   head:"櫃台・繳費",zone:"櫃台",title:"算錢、找零、開收據",cost:5,
   intro:"先算出這個月要收多少，再從抽屜裡拿零錢找給阿嬤。",
-  bill:[["十月安親費",6800],["點心費",600],["評量費",350]],paid:10000,
+  bill:[["十月安親費",6800],["點心費",600],["練習卷・講義費",350]],paid:10000,
   mount(el,done){const self=this,total=this.bill.reduce((a,b)=>a+b[1],0),opts=[total,total-600,total+600].sort(()=>Math.random()-.5);let right=false,stage=1;
     el.innerHTML=`<div class="paper"><div class="q">安安・十月</div>${this.bill.map(b=>`<div style="display:flex;justify-content:space-between"><span>${b[0]}</span><b style="font-family:var(--mono)">${b[1].toLocaleString()}</b></div>`).join("")}<div style="margin-top:6px">阿嬤給了 <b style="font-family:var(--mono)">${this.paid.toLocaleString()}</b> 元</div></div>
       <div id="chStage"><div class="lbl">應收多少？</div><div class="choices">${opts.map(v=>`<button class="choice" data-k="${v}">${v.toLocaleString()} 元</button>`).join("")}</div></div><p class="feed" aria-live="polite"></p>`;
     const feed=el.querySelector(".feed"),box=el.querySelector("#chStage");
-    box.querySelectorAll("[data-k]").forEach(b=>b.addEventListener("click",()=>{if(stage!==1)return;stage=2;right=+b.dataset.k===total;
-      feed.textContent=right?"對，應收 "+total.toLocaleString()+" 元。":"再算一次……應收是 "+total.toLocaleString()+" 元。";
-      let left=self.paid-total;const used=[],den=[1000,500,100,50,10,5,1];
+    box.querySelectorAll("[data-k]").forEach(b=>b.addEventListener("click",()=>{if(stage!==1)return;stage=2;const charge=+b.dataset.k;right=charge===total;
+      // 算錯就照算錯的金額收、找（不替玩家更正），差額留到日結
+      feed.textContent="應收 "+charge.toLocaleString()+" 元。";
+      let left=self.paid-charge;const used=[],den=[1000,500,100,50,10,5,1];
       box.innerHTML=`<div class="lbl">要找 <b id="chLeft" style="font-family:var(--mono)">${left}</b> 元。點抽屜裡的錢。</div><div class="choices" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">${den.map(d=>`<button class="choice" data-n="${d}" style="text-align:center">${d>=100?"💵":"🪙"} ${d}</button>`).join("")}</div><div class="lbl">已拿：<span id="chUsed">—</span></div><div class="actions" hidden><button class="go" data-next>開收據</button></div>`;
       const sync=()=>{box.querySelectorAll("[data-n]").forEach(x=>x.disabled=+x.dataset.n>left);box.querySelector("#chLeft").textContent=left;box.querySelector("#chUsed").textContent=used.length?used.join("＋"):"—";box.querySelector(".actions").hidden=left!==0;};
       box.querySelectorAll("[data-n]").forEach(x=>x.addEventListener("click",()=>{const d=+x.dataset.n;if(d>left)return;left-=d;used.push(d);sync();}));
       box.querySelector("[data-next]").addEventListener("click",function(){if(this.disabled)return;this.disabled=true;
-        let rem=self.paid-total,opt=0;den.forEach(d=>{while(rem>=d){rem-=d;opt++;}});const exact=used.length<=opt;
-        feed.textContent=`找了 ${used.length} 張／個${exact?"，剛剛好。":"。其實可以用更少張。"}收據上寫：安安媽媽。`;done({right,bills:used.length,exact});});
+        let rem=self.paid-charge,opt=0;den.forEach(d=>{while(rem>=d){rem-=d;opt++;}});const exact=used.length<=opt;
+        feed.textContent=`找了 ${used.length} 張／個${exact?"，剛剛好。":"。其實可以用更少張。"}收據上寫：安安媽媽。`;done({right,bills:used.length,exact,diff:charge-total});});
       sync();}));}
 };
 /* 日結：收據和現金逐筆對，找出差在哪 */
 MINIS.ledger={
   head:"櫃台・日結",zone:"櫃台",title:"現金和收據對不起來？",cost:5,
   intro:"今天開了四張收據。點出跟抽屜現金對不起來的那一筆；都對就按「都對」。",
-  mount(el,done){const short=G&&G.h&&G.h.cash<0;
-    const rows=[["安安（李阿嬤）",7750,short?7150:7750],["補課講義費・九年級",300,300],["美語分班測驗報名",500,500],["國中便當代墊回收",170,170]];
-    el.innerHTML=`<div class="paper">${rows.map((r,i)=>`<button class="stepl" data-i="${i}" style="display:flex;justify-content:space-between;width:100%"><span>${r[0]}</span><span style="font-family:var(--mono)">收據 ${r[1]}｜抽屜 ${r[2]}</span></button>`).join("")}</div><div class="actions"><button class="go" data-ok>都對</button></div><p class="feed" aria-live="polite"></p>`;
+  mount(el,done){
+    const diff=G&&G.h&&G.h.cash||0;
+    // 第二天：昨天的錯帳已經在當天更正，今天的收據都對得上
+    const rows=G&&G.day===2?[["小米（十月安親費）",7750,7750],["段考模擬卷印製・九年級",300,300],["美語分班測驗報名",500,500],["國中便當代墊回收",170,170]]:[["安安（李阿嬤）",7750,7750+diff],["補課講義費・九年級",300,300],["美語分班測驗報名",500,500],["國中便當代墊回收",170,170]];
+    el.innerHTML=`<div class="paper">${rows.map((r,i)=>`<button class="stepl" data-i="${i}" style="display:flex;justify-content:space-between;width:100%"><span>${r[0]}</span><span style="font-family:var(--mono)">應收 ${r[1]}｜抽屜 ${r[2]}</span></button>`).join("")}</div><div class="actions"><button class="go" data-ok>都對</button></div><p class="feed" aria-live="polite"></p>`;
     const feed=el.querySelector(".feed");let doneOnce=false;const finish=(pick)=>{if(doneOnce)return;doneOnce=true;const bad=rows.findIndex(r=>r[1]!==r[2]),diff=bad<0?0:rows[bad][1]-rows[bad][2];
-      const ok=pick===bad;feed.textContent=bad<0?(pick<0?"都對。今天可以準時下班。":"這一筆其實沒問題。"):ok?`找到了：${rows[bad][0]}，少了 ${diff} 元。是下午算錯的那一筆。`:`不是這一筆。差的是：${rows[bad][0]}，少了 ${diff} 元。`;
+      const ok=pick===bad;feed.textContent=bad<0?(pick<0?"都對。今天可以準時下班。":"這一筆其實沒問題。"):ok?`找到了：${rows[bad][0]}，${diff>0?"少了":"多了"} ${Math.abs(diff)} 元。是下午算錯的那一筆。`:`不是這一筆。差的是：${rows[bad][0]}，${diff>0?"少了":"多了"} ${Math.abs(diff)} 元。`;
       done({ok:bad<0?pick<0:ok,diff});};
     el.querySelectorAll("[data-i]").forEach(b=>b.addEventListener("click",()=>finish(+b.dataset.i)));el.querySelector("[data-ok]").addEventListener("click",()=>finish(-1));}
 };
