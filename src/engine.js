@@ -6,6 +6,10 @@ const plain=s=>esc(String(s).replace(/\[\[|\]\]/g,""));
 const val=(x,a)=>typeof x==="function"?x(a):x;
 const clamp=v=>Math.max(0,Math.min(100,v));
 const store={get(k,d){try{const v=localStorage.getItem("ten-pm:"+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem("ten-pm:"+k,JSON.stringify(v));}catch(e){}}};
+/* 存檔版本：舊的高中版存檔（場景、旗標、玩過的位子）跟國小＋國中版對不上，換版時清掉進度，保留設定、名字和圖鑑 */
+const SAVE_VER=2;
+if(store.get("ver",1)!==SAVE_VER){const old=["save","out","out2","done"].some(k=>{try{return localStorage.getItem("ten-pm:"+k)!=null;}catch(e){return false;}});
+  ["save","out","out2","done","line","day"].forEach(k=>{try{localStorage.removeItem("ten-pm:"+k);}catch(e){}});if(old)store.set("verNote",true);store.set("ver",SAVE_VER);}
 
 let guiding=false,G=null,mode="title",path=null,keys={},near=null,pickedLine=store.get("line","teacher"),pickedDay=store.get("day",1),clockT=new THREE.Clock();
 
@@ -271,7 +275,7 @@ function showTitle(){
   if(!LINES[pickedLine])pickedLine="teacher";
   const L=LINES[pickedLine];
   c.innerHTML=`<div class="card fade"><div class="ticker"><span class="r">●</span><span>11:30</span><span>安親 8 位・九年級試聽 1 位</span><span>ON-DUTY ▸ 你</span></div>
-   <h1>晚上<em>十點</em>下課</h1><p class="lede">國小安親＋國中部，補習班打工人的一天</p>
+   <h1>晚上<em>十點</em>下課</h1><p class="lede">國小安親＋國中部，補習班打工人的一天</p>${store.get("verNote",false)?`<p class="hint" style="border-left:3px solid var(--amber);padding-left:8px">改版了：補習班改成國小安親＋國中部，多了安親老師和國中班導兩個位子。舊版的進度已經清除，圖鑑和設定都還在。</p>`:""}
    <div class="lbl">你的名字</div><input id="nameIn" maxlength="8" placeholder="許（可以不填）" value="${esc(store.get("name",""))}" style="width:100%;font:inherit;padding:10px 12px;border:1px solid var(--rule);border-radius:4px;background:var(--tray);color:var(--ink)">
    <div class="lbl">今天你是</div><div class="roles">${["care","jh","teacher","yun","boss"].map(id=>{const l=LINES[id];return l?`<button class="role" data-role="${id}" aria-pressed="${id===pickedLine}"><b>${esc(l.role)}${doneLines.has(id)?" ✓":""}</b><small style="display:block;font-family:var(--mono);color:var(--muted)">${l.shift||""}</small><small>${esc(l.pick)}</small></button>`:`<button class="role" disabled><b>${{yun:"櫃台班導",boss:"補習班主任"}[id]}</b><small>製作中</small></button>`;}).join("")}</div>
    <div class="lbl">哪一天</div><div class="seg" role="radiogroup" aria-label="哪一天" style="grid-template-columns:1fr 1fr">${[1,2].map(d=>{const ok=d===1||(doneLines.has(pickedLine)&&!!LINES2[pickedLine]);return `<button role="radio" data-day="${d}" aria-checked="${(pickedDay===d||(d===1&&!(doneLines.has(pickedLine)&&LINES2[pickedLine])))&&ok}" ${ok?"":"disabled"}>${d===1?"第一天・週二":"第二天・週三"}${d===2&&doneLines.has(pickedLine+"@2")?" ✓":""}${ok?"":`<small style="display:block;font-size:.75rem;opacity:.8">${LINES2[pickedLine]?"先玩完第一天":"之後推出"}</small>`}</button>`;}).join("")}</div>
@@ -287,6 +291,7 @@ function showTitle(){
    <div class="links"><button data-act="codex">圖鑑</button><button data-act="settings">設定</button><button data-act="about">關於</button></div>
    <p class="hint">人物、補習班、數字與情節都是虛構的遊戲設定。</p></div>`;
   $("nameIn").addEventListener("input",e=>store.set("name",e.target.value));
+  store.set("verNote",false); // 改版提示只出現一次
 }
 function remember(r){
   const f=G.f,add=k=>knowSet.add(k);

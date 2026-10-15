@@ -84,8 +84,6 @@ docs/              改版規格與進度
 tests/             自動測試
 ```
 
-`links.js`、`extras2.js`、`consistency*.js`、`art_phase2_env.js`、`art_phase2_light.js`、`art_phase2_story.js` 是高中版留下的檔案，目前不會被打包。
-
 3D 使用 [three.js r128](https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js)（CDN 載入）。
 
 ## 建置
@@ -107,6 +105,7 @@ python3 build.py stub.js tests/test.html  # 產生測試用頁面（用替身取
 - `navigation.js`：三層樓每個地點、每個座位都走得到；國中生到班、國小生週三回班都能坐好；玩家能跨樓層走到三樓。
 - `redesign-layout.js`：格局資料沒有在未經確認下改變。
 - `continuous-clock.js`、`resume.js`、`extras.js`：時間推進、存檔讀檔、閒聊與加班小遊戲。
+- `report-fixes.js`：代玩回報修過的問題（小遊戲中開設定、點名人數、短款、報名紀錄、加班扣時、第二天支線）。
 - `play2.js`、`play3.js`：自動玩完五條線的第一天、第二天，以及連玩三條線解鎖「一個月後」。
 
 ```bash
@@ -122,3 +121,5 @@ npm test
 ## 說明
 
 補習班、人物、數字與情節都是虛構的遊戲設定，不代表任何一家補習班。
+
+舊的高中版存檔在第一次打開新版時會自動清除（設定、名字、圖鑑保留），標題畫面會提示一次「改版了」。

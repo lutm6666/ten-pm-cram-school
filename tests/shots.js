@@ -1,6 +1,8 @@
 // 用真的 three.js 截圖（CI 用）：python3 build.py --dbg <three-url> tests/shots.html && node tests/shots.js
+// 國小＋國中版：三層樓（1F x 0–36、2F x 48–84、3F x 96–132）。
 const {chromium}=require('playwright');const fs=require('fs');
 const OUT=process.env.OUT||'shots';fs.mkdirSync(OUT,{recursive:true});
+const F2=x=>48+x,F3=x=>96+x;
 (async()=>{const b=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
 for(const [tag,vp] of [['phone',{width:390,height:844,hasTouch:true,isMobile:true,deviceScaleFactor:2}],['desktop',{width:1280,height:800}]]){
   const p=await b.newPage({viewport:{width:vp.width,height:vp.height},hasTouch:!!vp.hasTouch,isMobile:!!vp.isMobile,deviceScaleFactor:vp.deviceScaleFactor||1});
@@ -8,32 +10,25 @@ for(const [tag,vp] of [['phone',{width:390,height:844,hasTouch:true,isMobile:tru
   await p.goto('file://'+__dirname+'/shots.html');await p.waitForTimeout(2500);
   const shot=async n=>{await p.waitForTimeout(1600);await p.screenshot({path:`${OUT}/${tag}-${n}.png`});};
   const perf=async label=>{const v=await p.evaluate(()=>window.__p2PerfAudit?window.__p2PerfAudit():null);if(v){fs.writeFileSync(`${OUT}/${tag}-perf-${label}.json`,JSON.stringify(v,null,2));console.log(`[perf:${tag}:${label}] ${JSON.stringify(v)}`);}return v;};
-  const consistency=async label=>{const v=await p.evaluate(()=>window.__consistencyAudit?window.__consistencyAudit():null);if(v)fs.writeFileSync(`${OUT}/${tag}-consistency-${label}.json`,JSON.stringify(v,null,2));return v;};
-  await shot('01-title');
-  await p.click('[data-act=start]');
   const vis=s=>p.isVisible(s).catch(()=>false);
   const drain=async()=>{for(let i=0;i<20;i++){if(await vis('[data-act=chapterGo]'))await p.click('[data-act=chapterGo]');else if(await vis('#dlg .choice'))await p.click('#dlg .choice >> nth=0');else if(await vis('[data-act=dnext]'))await p.click('[data-act=dnext]');else break;}};
-  await drain();await perf('teacher');await shot('02-start');
-  await p.evaluate(()=>__dbg.tp(20,3.4,0));await shot('03-whiteboard');
-  await p.evaluate(()=>__dbg.tp(10.4,10,Math.PI/2));await shot('04-schedule');
-  await p.evaluate(()=>__dbg.tp(2.4,10.6,0));await shot('05-lobby-sign');
-  await p.evaluate(()=>__dbg.tp(1.6,15.4,Math.PI/2));await shot('06-rank');
-  await p.evaluate(()=>__dbg.tp(5,1.2,0));await shot('07-boss-room');
-  await p.evaluate(()=>__dbg.tp(26,16,0));await shot('08-edge-arrow');
-  await p.evaluate(()=>__dbg.tp(15,4,Math.PI));await shot('09-edge-arrow2');
-  await p.evaluate(()=>{__dbg.G.clock=22*60+9;__dbg.tp(4.5,15.6,0);});await shot('10-overtime-hud');
-  await p.evaluate(()=>{__dbg.CAM.tilt=.5;__dbg.CAM.zoom=1.6;__dbg.tp(4.5,15.6,Math.PI);});await shot('11-night-out');
-  // 下午場：安親班
-  await p.evaluate(()=>{localStorage.removeItem('ten-pm:save')});await p.reload();await p.waitForTimeout(1500);
-  await p.click('[data-role=care]');await p.click('[data-act=start]');await drain();await perf('care');await shot('12-care-start');
-  await p.evaluate(()=>__dbg.jump('c_homework'));await drain();await p.waitForTimeout(9000);await p.evaluate(()=>__dbg.tp(18,8,0));await consistency('care-kids');await shot('13-care-kids');
-  await p.evaluate(()=>__dbg.tp(4.5,14,0));await shot('14-care-lobby');
-  // 18:20：最後一個小朋友尚未接走時，高三生應已陸續進 B 班。
-  await p.evaluate(()=>__dbg.jump('c_late'));await p.waitForTimeout(5600);await p.evaluate(()=>__dbg.tp(19.5,8.0,0));await consistency('care-late');await shot('15-care-late-highschool');
-  // 國中部
-  await p.evaluate(()=>{localStorage.removeItem('ten-pm:save')});await p.reload();await p.waitForTimeout(1500);
-  await p.click('[data-role=jh]');await p.click('[data-act=start]');await drain();await perf('jh');await consistency('jh-pre');
-  await p.evaluate(()=>__dbg.jump('j_class'));await drain();await p.waitForTimeout(3000);await p.evaluate(()=>__dbg.tp(32,8.6,0));await consistency('jh-class');await shot('16-jh-class');
-  await p.evaluate(()=>__dbg.tp(31,14.5,0));await shot('17-jh-lockers');
+  const role=async id=>{await p.evaluate(()=>{localStorage.removeItem('ten-pm:save')});await p.reload();await p.waitForTimeout(1500);await p.click(`[data-role=${id}]`);await p.click('[data-act=start]');await drain();};
+  await shot('01-title');
+  // 櫃台：1F
+  await role('yun');await perf('yun');await shot('02-yun-start');
+  await p.evaluate(()=>__dbg.tp(6,13.5,Math.PI));await shot('03-lobby-counter');
+  await p.evaluate(()=>__dbg.tp(23,5,0));await shot('04-staff-meeting');
+  await p.evaluate(()=>__dbg.tp(28,13,0));await shot('05-store-mop');
+  await p.evaluate(()=>__dbg.tp(4,4.5,0));await shot('06-boss-room');
+  // 安親：2F
+  await role('care');await perf('care');await shot('07-care-start');
+  await p.evaluate(()=>__dbg.jump('c_snack'));await drain();await p.waitForTimeout(6000);await p.evaluate(()=>__dbg.tp(48+15,5.5,0));await shot('08-care-snack');
+  await p.evaluate(()=>__dbg.tp(48+15,13.5,0));await shot('09-2f-reading');
+  await p.evaluate(()=>__dbg.jump('c_late'));await drain();await p.waitForTimeout(4000);await p.evaluate(()=>__dbg.tp(48+15,5.5,0));await shot('10-care-late');
+  // 九年級班導：3F
+  await role('jh');await perf('jh');
+  await p.evaluate(()=>__dbg.jump('j_roll'));await drain();await p.waitForTimeout(6000);await p.evaluate(()=>__dbg.tp(96+25,6,0));await shot('11-jh-c9');
+  await p.evaluate(()=>__dbg.tp(96+31,14,0));await shot('12-jh-office');
+  await p.evaluate(()=>{__dbg.G.clock=21*60+40;__dbg.tp(96+14,13.5,0);});await shot('13-night-tutor');
   fs.writeFileSync(`${OUT}/${tag}-errors.txt`,errs.join('\n')||'none');await p.close();}
 await b.close();})();

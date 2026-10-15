@@ -1,8 +1,8 @@
 # 試玩檢查清單（給代玩測試用）
 
-試玩網址：<https://lutm6666.github.io/ten-pm-cram-school/preview/>
-（國小＋國中改版，分支 `redesign-elem-jh`。正式版網址仍是舊的高中版，不要測正式版。）
-預覽頁的存檔和正式版分開，可以放心清除重玩。
+試玩網址：<https://lutm6666.github.io/ten-pm-cram-school/>
+（國小＋國中版，已合併到 main。）
+可以在瀏覽器清除網站資料重玩。
 
 ## 怎麼玩
 
