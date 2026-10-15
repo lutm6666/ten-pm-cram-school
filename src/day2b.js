@@ -114,6 +114,7 @@ MINIS.grade2={...MINIS.grade,head:"九年級・模擬考檢討",zone:"九年級�
 
 /* ---------- 櫃台・第二天 ---------- */
 LINES2.yun={...LINES.yun,day:2,
+ busy:[["12:00","17:25",null,"櫃台日常","接電話、收講義費、回家長訊息。",15],["17:55","21:15",null,"國中上課中","補印講義、接電話、整理今天的收據。",15]],
  carryH:(G,h)=>{G.h.missed=Math.max(0,Math.round((h.missed||0)-(h.cleared||0)));},
  pick:"第二天・週三。國小中午就放學，櫃台十二點開。昨天沒回的電話，今天都會再打來。",
  coda:"第二天的電話，有一半是昨天的回音。你記得每一通的開頭。",
@@ -140,6 +141,11 @@ LINES2.yun={...LINES.yun,day:2,
    choices:G=>[
     {label:"蹲下來問她：「你的兔子叫什麼名字？」",fx:{par:4,pat:-2},log:"在門口安撫小米",res:[["mi","……布丁。"],[null,"她牽著蔡老師的手上了二樓。回頭看了你一眼。"]]},
     {label:"請蔡老師先帶她上樓",fx:{ord:3},log:"請安親老師帶小米上樓",res:[[null,"大廳空了。只剩一隻掉在地上的室內鞋。"]]}]},
+  {id:"y2_quiet",t:"13:15",target:{spot:"counterIn"},goal:"午休時間，電話又響了",action:"接電話",
+   pages:G=>[[null,"二樓在午休，整棟樓安靜得聽得到冷氣聲。櫃台的電話響了第三聲。"]],
+   choices:G=>[
+    {label:"壓低聲音接，記下來再回",fx:{par:4,hp:-1},log:"午休時間小聲接電話",res:[[null,"是國中家長問段考前的課輔時間。你用氣音講完，對方也跟著小聲起來。"]]},
+    {label:"把鈴聲調小，讓它轉語音",fx:{pat:3,par:-2},set:{missedNap:1},log:"午休時讓電話轉語音",res:[[null,"語音信箱多了一則留言。你在便利貼上寫：13:15，回電。"]]}]},
   {id:"y2_zhang",t:"14:10",target:{npc:"zhangma"},goal:"張媽媽又來了",npc:{zhangma:PC.zhangLobby},after:{zhangma:null},
    pages:G=>{const c=pa(G,"care"),b=pa(G,"boss"),l=[];
      if(c.trialKid||b.trialWeek)l.push(["zhangma","我來填下週一試讀的資料。"],["zhangma",b.carePrice?"還有，主任說的早鳥價，可以寫在收據上嗎？":"試讀那一週，需要先繳什麼嗎？"]);
@@ -191,6 +197,11 @@ LINES2.yun={...LINES.yun,day:2,
       c.push({label:"「那是說明會的價格，我昨天說錯了。」",fx:{par:-8,ord:4},log:"收回私下的折扣",res:[["parent","……你們補習班講話是不是不算話？"]]});}
      else c.push({label:"說明今天的流程，請她在沙發等",fx:{par:5},log:"說明試聽流程",res:[["parent","好，那我在這等。"]]});
      return c;}},
+  {id:"y2_mock",t:"18:40",target:{spot:"counterIn"},goal:"三樓分機：模擬考的卷子有問題",action:"接分機",
+   pages:G=>[["hr","小芸，模擬考的英文卷有一張第二頁印歪了，看不到最後兩題。"],["hr","我在監考走不開。"]],
+   choices:G=>[
+    {label:"去教材室重印一張，送上三樓",fx:{ord:5,hp:-4},log:"重印模擬考卷送上三樓",res:[[null,"你印好、爬樓梯上三樓，從後門把卷子遞進去。鄭老師比了一個「謝謝」的口型。"]]},
+    {label:"請她先把題目寫在白板上",fx:{pat:2,ord:-2},log:"請班導把題目抄在白板",res:[["hr","……好，我抄。"],[null,"你聽見分機那頭，白板筆唰唰地響。"]]}]},
   {id:"y2_bo",chapter:{t:"19:25",title:"國中下課",sub:"下課鐘一響，有人往門口走。",status:"國中下課"},
    t:"19:27",target:{npc:"bo"},goal:"小柏要出門",npc:{bo:AT("cardreader",.4,-.4,Math.PI)},after:{bo:SEAT("c8","bo")},
    pages:G=>{const p=pv(G),l=[["bo","姊姊，我下課去一下 7-11，十分鐘就回來。"]];
@@ -224,6 +235,7 @@ LINES2.yun={...LINES.yun,day:2,
 
 /* ---------- 主任・第二天 ---------- */
 LINES2.boss={...LINES.boss,day:2,
+ busy:[["11:50","17:25",null,"主任的下午","回總部的信、看續班名單、打給還在考慮的家長。",15],["17:55","21:15",null,"巡班","在三層樓之間走一圈：看課、聽電話、跟老師講兩句。",15]],
  pick:"第二天・週三。總部回信了。昨天答應老師、櫃台、家長的事，今天都要兌現。",
  coda:"第二天，你開始知道哪些承諾是真的。",
  msgs:[["11:52","總部","已收到貴分校週報。"],["14:20","粉專通知","有一則新的留言"],["18:15","老婆","女兒問你今天可不可以早點回來。"],["20:50","小芸","主任，我等一下可以跟你說一件事嗎？"]],
@@ -280,6 +292,11 @@ LINES2.boss={...LINES.boss,day:2,
      if(p.baseClass||pa(G,"teacher").zheOpen)c.push({label:"拿出基礎班的時間表",note:"週二、週四，從分數開始",fx:{rep:10,sales:4,calm:-4},set:{linSign:1},log:"林媽媽改報基礎班",res:[["mom","從分數開始……他國一就卡在那裡。"],[null,"她看了很久，最後在報名表上簽了名。"],["mom","如果他還是聽不懂，我會再來。"]]});
      c.push({label:"先讓她把話說完",note:"她今天是來吵架的",mini:"calm",fx:r=>({calm:-8,rep:r.anger<=20?8:r.anger<=45?3:-5}),log:r=>`安撫林媽媽（怒氣 ${r.anger}）`,res:r=>r.anger<=45?[["mom","……好，我再給他一個月。"]]:[["mom","退費單我放這裡。"],[null,"她走的時候，退費單壓在你的茶杯底下。"]]});
      c.push({label:"照規定辦退費",fx:{sales:-6,rep:2},set:{refunded:1},log:"幫林媽媽辦退費",res:[[null,"你算給她看：退一半。她點點頭，簽了名。"],[null,"九年級的名單上，少了一個人。"]]});return c;}},
+  {id:"b2_sched",t:"15:40",target:{spot:"bossdesk"},goal:"排段考後一週的課表",action:"打開課表",
+   pages:G=>[[null,"段考後那一週，學生最想休息，家長最想加課。"],[null,"許老師的時數已經滿了，鄭老師上週也說她很累。"]],
+   choices:G=>[
+    {label:"段考後減一天課，讓老師喘口氣",fx:{morale:6,sales:-3},set:{restWeek:1},log:"段考後一週減課",res:[[null,"你在群組裡公告：段考後週一停課一天，改成線上錯題檢討。"]]},
+    {label:"照常上課，加開錯題檢討班",fx:{sales:5,morale:-4},log:"段考後加開檢討班",res:[[null,"報名表貼出去，第一個小時就有六個人。鄭老師看到公告，沒有說話。"]]}]},
   {id:"b2_rush",chapter:{t:"17:00",title:"放學高峰",sub:"大廳擠滿了家長。",status:"放學中"},
    t:"17:25",target:G=>pv(G).bossDesk?{spot:"counterIn"}:{npc:"yun"},goal:G=>pv(G).bossDesk?"你答應過，放學這一小時下去顧櫃台":"小芸一個人在櫃台",action:G=>pv(G).bossDesk?"站進櫃台":null,
    npc:{yun:PC.yunDesk},

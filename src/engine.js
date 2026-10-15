@@ -479,8 +479,8 @@ function teachingNow(){return !!(G&&TEACHING[G.line.id]&&phaseOf()==="class");}
    line.busy：[開始, 結束, 站回的地點, 標題, 說明]。 */
 function busyNow(){if(!G||!G.line.busy)return null;return G.line.busy.find(b=>G.clock>=toMin(b[0])&&G.clock<toMin(b[1]))||null;}
 function busySkip(){
-  const b=busyNow(),st=step();if(!b||!st)return false;const to=Math.min(toMin(st.t),toMin(b[1]));if(to<=G.clock)return false;
-  const sp=SPOTS[b[2]];if(sp){player.position.set(sp.pos[0],0,sp.pos[1]);player.rotation.y=Math.PI;if(floorOf(sp.pos[0])!==curFloor)showFloor(floorOf(sp.pos[0]));}
+  const b=busyNow(),st=step();if(!b||!st)return false;const to=Math.min(toMin(st.t),toMin(b[1]));if(to<=G.clock||to-G.clock<(b[5]||0))return false;
+  const sp=b[2]&&SPOTS[b[2]];if(sp){player.position.set(sp.pos[0],0,sp.pos[1]);player.rotation.y=Math.PI;if(floorOf(sp.pos[0])!==curFloor)showFloor(floorOf(sp.pos[0]));}
   const from=fmt(G.clock);skipTo(to);showBanner(b[3],`${from}–${fmt(to)}　${b[4]}`);return true;
 }
 function lessonSkip(){

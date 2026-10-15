@@ -148,6 +148,7 @@ MINIS.kidgrade2={...MINIS.kidgrade,intro:"小宇的數習 p.34，三題。點出
 const zheGone2=G=>!!(pv(G).refundForm&&!(pa(G,"boss").baseClass||pa(G,"teacher").zheOpen||pv(G).bossKnowsZhe));
 const c9Here2=G=>12-(zheGone2(G)?1:0),CN={9:"九",12:"十二",11:"十一",33:"三十三",36:"三十六"};
 LINES2.jh={...LINES.jh,day:2,
+ busy:[["13:30","17:35",null,"整理班務","改小考、回家長訊息、整理聯絡本。",15],["19:35","21:03",null,"顧班","在教室和辦公室之間來回：顧秩序、接家長電話、簽聯絡本。",15]],
  pick:"第二天・週三。段考倒數五天。昨天的聯絡本，今天都有家長的回覆。",
  coda:"班導的工作沒有下課鐘。但今天，有人在聯絡本上回了一句「謝謝老師」。",
  msgs:[["13:40","何主任","鄭老師，段考模擬卷今天要印好喔"],["15:20","品妤媽媽","老師您好，方便的話下午想跟您通個電話"],["18:05","阿翔媽媽","老師我六點半到，在三樓等您"],["20:40","許老師","九年級今天狀況不錯👍"]],
@@ -175,6 +176,11 @@ LINES2.jh={...LINES.jh,day:2,
    choices:G=>[
     {label:"一份一份印，印完自己裝訂",mini:"jam",fx:r=>({hp:-3-2*Math.min(3,r.tears),stu:r.tears?0:3}),log:r=>r.tears?`印模擬卷，撕破 ${r.tears} 張`:"順利印完模擬卷",res:r=>r.tears?[[null,"卡了兩次。最後一份的第三頁，印歪了一點。"]]:[[null,"四十五份，裝訂好，疊成三疊。"]]},
     {label:"請櫃台幫忙印，自己回去排座位",fx:{hp:2,pat:-2},log:"請櫃台幫忙印模擬卷",res:[["yun","好……我盡量。（電話又響了）"]]}]},
+  {id:"j2_seatplan",t:"14:40",target:{spot:"hrdesk"},goal:"排今晚模擬考的座位",action:"拿出座位表",
+   pages:G=>[[null,"模擬考要照段考的規矩：座位拉開、書包放後面、手機收籃子。"],[null,"十二張桌子，有人要坐在講台正前面。"]],
+   choices:G=>[
+    {label:"照學號排，不讓學生自己選",fx:{stu:-1,par:3},log:"模擬考照學號排座位",res:[[null,"你在白板上畫了座位圖。阿翔的位子剛好在最前面，你沒有改。"]]},
+    {label:"讓常分心的人坐前面",fx:{stu:3,pat:-2},log:"模擬考座位照狀況排",res:[[null,"阿翔和阿哲一前一後，坐在講台正前方。你寫完，覺得自己有點壞。"]]}]},
   {id:"j2_pinyuma",t:"15:30",target:{spot:"hrdesk"},goal:"品妤媽媽打來",action:"接電話",
    pages:G=>{const p=pv(G),l=[];
      if(p.pinyuSleep)l.push(["pinyuma","老師，您在聯絡本最後寫：「品妤說她兩點睡、六點起。」是什麼意思？"]);

@@ -244,7 +244,10 @@ function check(label,detail){results.push({label,...detail});console.log('PASS',
     // 「等到 HH:MM」：等待中可直接快轉。時鐘落在排定時間、步驟啟動，路上的人都已到位。
     for(const line of ['teacher','yun','boss','care','jh']){
       await start(line);await finishMain(({teacher:1,yun:1,boss:1,care:1,jh:0})[line]);
-      const before=await state();assert.strictEqual(before.ready,false,line+' waits after early completion');
+      const before=await state();
+      // 有忙碌時段（line.busy）的位子，長空檔直接接到下一件事，不會停在等待
+      if(before.ready&&(await page.evaluate(()=>!!__clockQA.G.line.busy))){check(line+': busy window skips the long gap',{at:before.time,id:before.id});continue;}
+      assert.strictEqual(before.ready,false,line+' waits after early completion');
       assert(await page.isVisible('[data-act="waitNext"]'),line+' shows the wait button while waiting');
       const target=toMinute(await page.evaluate(()=>__clockQA.step().t));
       await page.locator('[data-act="waitNext"]').click();
