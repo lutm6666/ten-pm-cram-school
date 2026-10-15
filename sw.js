@@ -1,5 +1,5 @@
 /* 晚上十點下課：離線快取。頁面走「網路優先」（有更新就拿新的），three.js 與字型走「快取優先」。 */
-const V="ten-pm-v1";
+const V="ten-pm-v2";
 const CORE=["./","index.html","manifest.webmanifest","assets/icon-192.png","assets/icon-512.png","https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(CORE.map(u=>c.add(u).catch(()=>{})))).then(()=>self.skipWaiting()));});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
