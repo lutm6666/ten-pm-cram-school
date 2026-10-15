@@ -18,7 +18,7 @@ const expectedHashes={
   "SPOTS": "0c7d5469094c93a5265109da693c174a0e25722feba8f7578641130ecfe4d9f7",
   "WALLS": "1ed304f3cc1bf31987d855c2267e4242cd2ef37adfeaf51d3757802e1e30d4db",
   "PORTALS": "837eec11315cd6d540a33c9d4c9f83e677921f272752c00e40a3fd7bf5284c48",
-  "CLASS_SEATS": "595ba470e04f28b1bfd1f19202cf88172fb4003b72d85985cd541d46c68c659a"
+  "CLASS_SEATS": "9c85934dc9a342f11ebaff9eb8c48d1908950d0cf579955dd984ef22de81842a"
 };
 for(const [k,hash]of Object.entries(expectedHashes))assert.equal(crypto.createHash('sha256').update(JSON.stringify(A[k])).digest('hex'),hash,k+' changed without coordinate review');
 const bad=[],door=A.SPOTS.door.pos;let samples=0;

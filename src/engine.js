@@ -136,7 +136,7 @@ function dueText0(){if(mode==="walk"&&G.due!=null){const r=Math.floor(G.due-G.cl
 let lastClockMin=-1;
 function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}saveGame();tickStaff(false);{const dl=G.clock<T("17:40");if(dl!==MUSIC_DAY)setDaylight(dl);}if(!lessonSkip())activateStep();}else activateStep();}
 function checkBell(){if(!G)return;const ph=phaseOf();if(ph===crowdPhase)return;const prev=crowdPhase;setCrowd(ph);G.status=statusOf();renderHud();
-  const B=G.line.bells||{class:["上課鐘響了","學生陸續回到座位。"],break:["下課了","下課 15 分鐘，20:05 上第二節。"],leave:["下課了","今天的課上完了，學生陸續離開。"]};
+  const B=G.line.bells||{class:["上課鐘響了","學生陸續回到座位。"],break:["下課了","下課十分鐘，19:35 上第二節。"],leave:["下課了","今天的課上完了，學生陸續離開。"]};
   if(ph==="class"){chime();showBanner(...B.class);}else if(ph==="break"){chime();showBanner(...B.break);}else if(ph==="leave"&&prev!=="close"){chime();showBanner(...B.leave);}}
 function spend(min){if(G){G.clock+=min;checkBell();}}
 function renderNext(){
@@ -311,8 +311,8 @@ function epilogue(){
   const any=k=>CA[k]||JH[k]||T[k]||Y[k]||B[k]||C2[k]||J2[k]||T2[k]||Y2[k]||B2[k];
   const P=[];
   /* 國中部 */
-  P.push(["阿哲",any("linSign")||any("baseClass")||any("baseWinter")?"阿哲每週二、四去上分數的基礎班。段考數學從 42 分進步到 61 分。他在講義角落畫了一個機器人，手上拿著一個「½」。":any("refunded")?"阿哲沒有再來了。林媽媽辦了退費。有一次在公車站遇到他，他戴著耳機，在畫畫。":any("zheOpen")||any("zheTalk")?"阿哲還坐在後排，但他開始在計算紙上寫題目了。分數的那種。":"阿哲還坐在最後一排。有時候睡覺，有時候畫機器人。沒有人知道他聽懂了多少。"]);
-  P.push(["品妤",any("toldPinyuMa")||any("pinyuMa")?"段考她第五名，比上次退一名。媽媽沒有說話，帶她去吃了一碗牛肉麵。她說那是這學期最好吃的一餐。":any("stayedPinyu")||any("pinyuBoard")?"段考她考進前三。她在講台上留了一張紙條：「謝謝老師那天留下來。」":"她還是每天念到一點多。段考第三名，黑眼圈比上次深一點。"]);
+  P.push(["阿哲",any("linSign")||any("baseClass")||any("baseWinter")?"阿哲報了寒假的分數基礎班，週二、週四晚上。段考數學 42 分，他說寒假之後要再考一次給大家看。他在講義角落畫了一個機器人，手上拿著一個「½」。":any("refunded")?"阿哲沒有再來了。林媽媽辦了退費。有一次在公車站遇到他，他戴著耳機，在畫畫。":any("zheOpen")||any("zheTalk")?"阿哲還坐在後排，但他開始在計算紙上寫題目了。分數的那種。":"阿哲還坐在最後一排。有時候睡覺，有時候畫機器人。沒有人知道他聽懂了多少。"]);
+  P.push(["品妤",any("toldPinyuMa")||any("pinyuMa")?"段考她第五名，比上次退一名。媽媽沒有說話，帶她去吃了一碗牛肉麵。她說那是這學期最好吃的一餐。":any("stayedPinyu")||any("pinyuBoard")?"段考她考進前三。她在講台上留了一張紙條：「謝謝老師那天留下來。」":"她還是每天念到兩點多。段考第三名，黑眼圈比上次深一點。"]);
   P.push(["阿翔",any("heardXiangma")||any("askedXiang")?"阿翔現在每天五點半到，手機自己放進籃子。他跟鄭老師說，會考完想去念汽修。他媽媽說：「好。」":any("metXiangma")||any("calledXiang")?"阿翔沒有再去網咖了，至少週二沒有。他媽媽每天傳訊息問：「到了嗎？」":"阿翔的手機還是常常沒交。不過他開始在籃子旁邊背單字卡了。"]);
   if(Object.keys(JH).length||Object.keys(J2).length)P.push(["子晴",any("heardSpeech")||JH.speech?"子晴的英文演講拿了第二名。題目是「我最想改變的一件事」，她講的是成績單上的排名。":JH.talkMom||J2.callQingMa?"子晴媽媽來補習班找了鄭老師一次。之後，子晴的週四晚上空出來了。":"子晴的報名表沒有交出去。段考英文 99，排第二。"]);
   /* 安親 */

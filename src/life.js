@@ -14,7 +14,7 @@ function statusOf(){const ph=phaseOf();return (G&&G.line.phaseStatus&&G.line.pha
    劇情時鐘跳過時（快轉、讀檔），直接補到該在的位置。 */
 const KID_COLORS=[0xf59f00,0x4dabf7,0x69db7c,0xff8787,0xb197fc,0x63e6be,0xffa94d,0x74c0fc],JH_COLORS=[0x1971c2,0x2f9e44,0x5f3dc4,0xe8590c,0x0c8599,0x495057,0xc2255c,0x364fc7],PARENT_COLORS=[0x8d7b68,0x5c6b7a,0x9c6644,0x6d597a,0x4a6670,0xa0785a];
 /* 每班有幾個座位留給有名字的角色（由劇情控制） */
-const NAMED_SEATS={g4:{yu:0,anan:4,mi:6},c9:{zhe:11,pinyu:1,xiang:7,qing:2,trial:9},c8:{bo:6}};
+const NAMED_SEATS={g4:{yu:0,anan:4,mi:6},c9:{zhe:13,pinyu:1,xiang:8,qing:2,trial:11},c8:{bo:6}};
 function buildCrowd(){
   const add=(kind,room,seat,opts={})=>{const s=seatsOf(room)[seat];if(!s)return;const kid=kind==="kid"||kind==="eng";
     const p=person((kind==="jh"?JH_COLORS:KID_COLORS)[(seat*3+room.length)%8],{hair:[0x2a2421,0x3b2b20,0x151515,0x5a3a22][seat%4],kid});
@@ -27,13 +27,19 @@ function buildCrowd(){
   for(let i=0;i<8;i++){const p=person(PARENT_COLORS[i%6],{hair:[0x2a2421,0x3b2b20,0x8a8a8a][i%3]});p.visible=false;extras.push({p,kind:"parent",room:"lobby",home:[FLX(0,5.5+((i*1.7)%5.5)),12.4+(i%3)*1.1,Math.PI],state:"away",idx:extras.length});}
   // 八年級名單十二人：其餘三席補在最後（不改動前面人群的編號與到班時間）
   {const taken=new Set(Object.values(NAMED_SEATS.c8)),used=new Set(extras.filter(e=>e.room==="c8").map(e=>e.home.join()));seatsOf("c8").forEach((s,i)=>{if(!taken.has(i)&&!used.has(s.join()))add("jh","c8",i);});}
+  // 五年級 10 人、六年級 12 人：補在最後（不改動前面人群的編號）。週三五年級兩人請假、四年級阿凱看完牙醫下午才來。
+  const more=(room,kind,total)=>{const used=new Set(extras.filter(e=>e.room===room).map(e=>e.home.join()));let n=extras.filter(e=>e.room===room).length,k=0;seatsOf(room).forEach((s,i)=>{if(n+k<total&&!used.has(s.join())){add(kind,room,i,room==="g5"&&k<2?{offDay2:1}:{});k++;}});};
+  more("g5","kid",10);more("g6","kid",12);
+  {const ak=extras.find(e=>e.room==="g4");if(ak)ak.akai=1;}
 }
 /* 當天的時間表（分鐘） */
 function crowdTimes(e,day){const i=e.idx,j=(i*37)%11;
-  if(e.kind==="kid"){const arr=day===2?T("12:50")+(i%6)*.8:T("15:52")+(i%6)*.8,leave=T("17:00")+((i*23)%15)*6+(i%4===0?60:0);
-    // 四年級（玩家的班）：劇情 18:15 起「只剩一個人」，其他小朋友六點前都被接走
-    return [arr,e.room==="g4"?Math.min(leave,T("17:58")):leave];}
-  if(e.kind==="jh")return [T("17:20")+((i*13)%34),T("21:00")+(i%8)*1.5];
+  if(e.kind==="kid"){if(day===2&&e.offDay2)return [0,0];
+    const arr=day===2?(e.akai?T("16:00"):T("12:52")+(i%6)*.8):T("15:52")+(i%6)*.8,leave=T("17:00")+((i*23)%15)*6+(i%4===0?60:0);
+    // 四年級（玩家的班）：劇情 18:15 起「只剩一個人」，其他小朋友六點前都被接走。
+    // 五、六年級：老師 18:40 下班，最後一個小朋友 18:30 前被接走，教室不會只剩小朋友。
+    return [arr,Math.min(leave,e.room==="g4"?T("17:58"):T("18:30"))];}
+  if(e.kind==="jh")return [T("17:20")+((i*13)%28),T("21:00")+(i%3)*.6];
   if(e.kind==="eng")return [T("18:15")+(i%6)*2,T("20:00")+(i%6)*1.2];
   if(e.kind==="parent"){const a=T("17:24")+((i*11)%8)*5.5+(day===2?3:0);return [a,a+3+(i%3)];}
   return [0,0];}
@@ -75,7 +81,9 @@ const STAFF_DAY={
 };
 /* 同一個地點有好幾位老師時錯開站，不要疊在一起 */
 const STAFF_OFF={door:{lin:[-1.5,-1.3],wu:[1.5,-1.3],cai:[0,-1.6]}};
-const STAFF_DAY2={lin:[["11:30","g5podium"],["12:20","door"],["12:25",null],["12:52","g5podium"],["18:40",null]],wu:[["11:30","g6podium"],["12:20","door"],["12:25",null],["12:52","g6podium"],["18:40",null]],cai:[["11:30","g4podium"],["12:20","door"],["12:25",null],["12:52","g4podium"],["19:00",null]]};
+/* 週三：國小 12:40 吃完午餐放學。12:30 出發、12:55 帶回來；櫃台 12:00、主任 11:50 就到班。 */
+const STAFF_DAY2={lin:[["11:30","g5podium"],["12:30","door"],["12:35",null],["12:55","g5podium"],["18:40",null]],wu:[["11:30","g6podium"],["12:30","door"],["12:35",null],["12:55","g6podium"],["18:40",null]],cai:[["11:30","g4podium"],["12:30","door"],["12:35",null],["12:55","g4podium"],["19:00",null]],
+ boss:[["11:50","bossdesk"],["21:30",null]],yun:[["12:00","counterIn"],["21:30",null]]};
 function staffSpec(id){const sch=((G&&G.day===2&&STAFF_DAY2[id])||STAFF_DAY[id]);if(!sch)return undefined;let at=null;for(const [t,s] of sch){if(G.clock>=T(t))at=s;}
   if(!at)return null;if(at==="bossdesk")return AT("bossdesk",0,-2.3,0);if(at==="counterIn")return AT("counterIn",0,0,0);const off=STAFF_OFF[at]&&STAFF_OFF[at][id];if(off)return AT(at,off[0],off[1],Math.PI);const s=SPOTS[at];return[s.pos[0]+(at.endsWith("podium")?0:.6),s.pos[1]+(at.endsWith("podium")?0:.4),at.endsWith("podium")?0:Math.PI];}
 let staffLast={};

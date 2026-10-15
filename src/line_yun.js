@@ -8,7 +8,7 @@ LINES.yun={
  stats:{hp:["體力",55],pat:["耐心",60],par:["家長",50],ord:["秩序",50]},hidden:{trial:50,missed:0,cleared:0,cash:0},
  late:{fx:{par:-4,ord:-3},text:"等你的人臉色不太好看。"},
  coda:"櫃台的電話明天還會響。你記得的是每個打來的人叫什麼名字。",
- msgs:[["13:44","何主任","下午有一位張媽媽會來問安親，麻煩先接待"],["16:12","鄭老師","小芸，九年級的便當今天訂 11 個喔"],["18:40","妹妹","今天幾點回家？毛線又把衛生紙抓爛了"],["20:48","許老師","林媽媽的電話謝謝你🙏"],["21:36","媽","菜幫你留在電鍋裡。"]],
+ msgs:[["13:44","何主任","下午有一位張媽媽會來問安親，麻煩先接待"],["16:12","鄭老師","小芸，九年級的便當今天訂 11 個喔"],["18:40","妹妹","今天幾點回家？毛線又把衛生紙抓爛了"],["20:48","鄭老師",G=>G.f.teacherNoBreak?"小芸，林媽媽的電話我下課講完了，謝謝你轉給我🙏":G.f.linAppt?"小芸，林媽媽的事謝謝你先接住🙏":"小芸，林媽媽剛剛傳訊息說她打來找我，你有接到嗎？"],["21:36","媽","菜幫你留在電鍋裡。"]],
  preStatus:"營業中",endAt:"21:30",daylight:true,
  staff:["lin","wu","amy","hong","cai"],
  busy:[["13:30","17:25",null,"櫃台日常","接電話、收講義費、回家長訊息。",15],["17:55","21:15",null,"國中上課中","補印講義、接電話、整理今天的收據。",15]],
@@ -38,7 +38,7 @@ LINES.yun={
   {id:"y_consult",t:"14:30",target:{npc:"zhangma"},goal:"張媽媽來問四年級安親",npc:{zhangma:PC.zhangLobby},after:{zhangma:PC.zhangConsult},
    pages:G=>[["zhangma","你好，我想問一下四年級的安親……我兒子在對面國小。"],[null,"她手上拿著對面補習班的傳單，摺得很整齊。"]],
    choices:G=>[
-    {label:"請她到諮詢室，叫四年級的蔡老師下來說明",fx:{par:6,hp:-2},set:{callCai:1},log:"請安親老師下樓說明",res:[[null,"你打電話上二樓。蔡老師說：「我馬上下去。」"],["zhangma","有老師親自說明，真好。"]]},
+    {label:"請她在沙發坐，叫四年級的蔡老師下來說明",fx:{par:6,hp:-2},set:{callCai:1},log:"請安親老師下樓說明",res:[[null,"你打電話上二樓。蔡老師說：「我馬上下去。」"],["zhangma","有老師親自說明，真好。"]]},
     {label:"自己說明安親時間和學費",fx:{par:2,ord:3},log:"自己說明安親",res:[["zhangma","學費我了解了……那老師會幫忙看應用題嗎？"],[null,"這題你答不出來。"]]},
     {label:"請主任出來談",fx:{pat:-3,par:3},log:"請主任接待",res:[[null,"主任在講總部的電話，讓張媽媽在沙發等了十分鐘。"]]}]},
   {id:"y_watch",chapter:{t:"15:20",title:"安親老師去接人了",sub:"二樓空了，大廳只剩你。",status:"營業中"},
@@ -48,12 +48,12 @@ LINES.yun={
     {label:"先簽收，再回電話",fx:{ord:3,par:-2},log:"先簽收點心",res:[[null,"布丁收進冰箱。電話那頭已經掛了。你在便利貼寫：「阿翔媽媽 17:30」。"]]},
     {label:"夾著電話簽收",fx:{pat:-4,par:3,hp:-2},log:"邊講電話邊簽收",res:[[null,"脖子很痛。但兩件事都處理好了。"]]}]},
   {id:"y_list",t:"16:00",target:{spot:"counterIn"},goal:"整理今天的接送表",action:"拿出接送表",
-   pages:G=>[[null,"四、五、六年級的接送表攤在櫃台上。有三個小朋友今天換人接，家長在群組裡講過，但表上還是舊的。"]],
+   pages:G=>[[null,"四、五、六年級的接送表攤在櫃台上。有三個四年級的小朋友今天換人接，家長在群組裡講過，但表上還是舊的。"]],
    choices:G=>[
-    {label:"一個一個改，傳到安親老師的群組",fx:{ord:6,hp:-3},set:{pickupList:1},log:"更新今天的接送表",res:[[null,"你把三格劃掉重寫，拍照傳給二樓。林老師回了一個 👍。"]]},
-    {label:"先貼張便利貼在表上",fx:{ord:2,pat:2},log:"在接送表貼便利貼",res:[[null,"便利貼上寫：「小安、子恩、大頭今天換人接。」放學高峰的時候，希望有人看得到。"]]}]},
+    {label:"一個一個改，傳到安親老師的群組",fx:{ord:6,hp:-3},set:{pickupList:1},log:"更新今天的接送表",res:[[null,"你把三格劃掉重寫，拍照傳給二樓。蔡老師回了一個 👍。"]]},
+    {label:"先貼張便利貼在表上",fx:{ord:2,pat:2},log:"在接送表貼便利貼",res:[[null,"便利貼上寫：「安安、子恩、大頭今天換人接。」放學高峰的時候，希望有人看得到。"]]}]},
   {id:"y_remind",t:"16:30",target:{npc:"boss"},goal:"主任叫你",npc:{boss:AT("counter",.6,1.2,Math.PI)},after:{boss:PC.bossDesk},
-   pages:G=>[["boss","小芸，上週請假的三個國中生，補課還沒排。今天能打完嗎？"],["boss","還有，今晚九年級有一位試聽，媽媽姓王，五點五十到。"]],
+   pages:G=>[["boss","小芸，上週請假的三個國中生，補課還沒排。今天能打完嗎？"],["boss","還有，今晚九年級有一位試聽，媽媽姓王，五點五十送他來。她說下課的時候再回來談。"]],
    choices:G=>[
     {label:"現在就打",fx:{hp:-6,par:6,cleared:1},log:"下午打完補課電話",res:[[null,"三通打完。一個約週六、一個要看錄影、一個說「段考完再說」。"]]},
     {label:"「放學高峰前打不完，晚上再打。」",fx:{pat:3,missed:1},log:"補課電話延到晚上",res:[["boss","好，那晚上記得。"]]}]},
@@ -62,7 +62,7 @@ LINES.yun={
    pages:G=>[[null,"刷卡機嗶個不停，國中生陸續到班。三個家長站在櫃台前，電話在響，二樓還在等你廣播。"],[null,"你只有一雙手。"]],
    choices:G=>[
     {label:"一件一件處理",mini:"rush",fx:r=>({par:r.ok*2-8-(r.wrong||0)*2,ord:r.ok>=7?6:r.ok>=5?2:-4,pat:-6,missed:r.drop}),log:r=>`放學高峰處理好 ${r.ok} 件${r.wrong?`，弄錯 ${r.wrong} 件`:""}，漏掉 ${r.drop} 件`,
-     res:r=>r.ok>=7?[[null,"十八點整，大廳空了一半。你喝了今天第一口水。"]]:[[null,"有幾件沒顧到。便利貼又多了兩張。"]]},
+     res:r=>r.ok>=7?[[null,"這一波過去了，大廳空了一半。你喝了今天第一口水。"]]:[[null,"有幾件沒顧到。便利貼又多了兩張。"]]},
     {label:"請主任出來幫忙",fx:{pat:-2,par:3,ord:2},log:"請主任支援放學高峰",res:[[null,"主任出來接了兩通電話。家長看到主任，語氣都客氣了一點。"]]}]},
   {id:"y_pay",t:"17:46",target:{npc:"ama"},goal:"李阿嬤來繳安安的學費",npc:{ama:PC.amaLobby},after:{ama:null},
    pages:G=>[["ama","小姐，我來繳安安這個月的錢。"],[null,"她從布包裡拿出一個信封，裡面是一疊折得整整齊齊的千元鈔。"],["ama","收據要寫她媽媽的名字喔，她公司有子女教育補助。"]],
@@ -70,12 +70,12 @@ LINES.yun={
     {label:"算錢、找零、開收據",mini:"change",fx:r=>({par:r.right&&r.exact?8:r.right?3:-8,ord:r.right?4:-4,cash:r.right?0:(r.diff||-600)}),log:r=>r.right?`幫李阿嬤繳費，找零 ${r.bills} 張／個`:"繳費金額算錯了",
      res:r=>{G.f.paid=r.right?1:0;G.f.payDiff=r.right?0:(r.diff||-600);return r.right?[["ama","小姐你算得好快。"],[null,"收據上寫著安安媽媽的名字。阿嬤把收據折好，放進信封。"]]:G.f.payDiff<0?[[null,"阿嬤開心地走了。你沒發現少收了 600 元，多找了她六張百元鈔。"]]:[[null,"阿嬤沒有數找回來的錢，直接收進信封。你沒發現多收了她 600 元。"]];}},
     {label:"請阿嬤先坐，等一下再算",fx:{par:-4,pat:2},log:"請阿嬤等一下再繳費",res:[[null,"阿嬤坐在沙發上等了二十分鐘。她說沒關係，但她看了四次時鐘。"]]}]},
-  {id:"y_trial",t:"17:52",target:{npc:"parent"},goal:"試聽家長到了",npc:{parent:AT("door",0,-.8),trial:AT("door",.7,-.6)},after:{trial:[...SEAT("c9","trial"),DOOR],parent:AT("sofa",0,.2,Math.PI)},
+  {id:"y_trial",t:"17:52",target:{npc:"parent"},goal:"試聽家長到了",npc:{parent:AT("door",0,-.8),trial:AT("door",.7,-.6)},after:{trial:[...SEAT("c9","trial"),DOOR],parent:null},
    pages:G=>[["parent","你好，我們是來[[試聽]]的，我姓王。"],["parent","想先問一下學費……對面那間說，現在報名打八折耶。"],["trial","（小聲）媽……"]],
    choices:G=>[
-    {label:"說明試聽流程，學費請主任說明",note:"折扣是主任的事",fx:{par:5,trial:2},log:"說明試聽流程",res:[["me","同學請到三樓九年級，家長可以在這邊沙發等。下課的時候主任會跟您談。"],["parent","好，那我在這等。"]]},
+    {label:"說明試聽流程，學費請主任說明",note:"折扣是主任的事",fx:{par:5,trial:2},log:"說明試聽流程",res:[["me","同學請到三樓九年級。媽媽可以先去忙，七點二十五下課時再回來，主任會跟您談。"],["parent","好，那我七點半前回來。"]]},
     {label:"偷偷給她早鳥價",note:"先把人留住",fx:{trial:12,par:5},set:{discount:1},log:"私下答應早鳥價",res:[["me","（壓低聲音）今天試聽完報名，我幫您算[[早鳥優惠]]。"],["parent","真的嗎？"],[null,"你想起主任說過，折扣只能在說明會用。"]]},
-    {label:"倒杯茶，帶她看榜單和教室",fx:{pat:-3,trial:6,par:4},log:"帶試聽家長看環境",res:[[null,"王媽媽在榜單前站了很久。「建中兩個啊……」"]]}]},
+    {label:"倒杯茶，帶她看榜單和教室",fx:{pat:-3,trial:6,par:4},log:"帶試聽家長看環境",res:[[null,"王媽媽在榜單前站了很久。「建中兩個啊……」她說先去吃飯，下課再回來。"]]}]},
   {id:"y_engfee",t:"18:40",target:{spot:"counterIn"},goal:"美語班的家長來報名分班測驗",action:"開收據",
    pages:G=>[[null,"一位國小美語班的媽媽遞來五百元：「下週六的分班測驗，幫我女兒報名。」"],[null,"她女兒在旁邊小聲問：「考不好會怎樣？」"]],
    choices:G=>[
@@ -83,10 +83,10 @@ LINES.yun={
     {label:"開收據，請她問 Amy 老師",fx:{pat:2},log:"收美語分班測驗報名費，請家長問 Amy",res:[[null,"收據開好了。媽媽牽著女兒往美語教室走。"]]}]},
   {id:"y_mom",chapter:{t:"19:25",title:"國中下課",sub:"下課鐘一響，櫃台電話也響了。",status:"國中下課"},
    t:"19:26",target:{spot:"counterIn"},goal:"林媽媽打來找許老師",action:"接電話",
-   pages:G=>[["mom","小芸，許老師下課了沒？我要跟他講話。"],["mom","阿哲說他不想補了。我們繳了一整年的錢耶。"],[null,"許老師在三樓。下課只有十分鐘。"]],
+   pages:G=>[["mom","小芸，鄭老師下課了沒？我要跟她講話。"],["mom","阿哲說他不想補了。我們繳了一整年的錢耶。"],[null,"鄭老師是阿哲的班導，在三樓。下課只有十分鐘。"]],
    choices:G=>[
     {label:"自己先安撫，約明天下午的時間",mini:"calm",fx:r=>({pat:-10,par:r.anger<=20?10:r.anger<=45?5:-5,cleared:1}),set:{linAppt:1},log:r=>`先安撫林媽媽（怒氣 ${r.anger}），約隔天談`,res:r=>[["me","林媽媽，主任明天下午有空，我幫您約三點好嗎？"],["mom",r.anger<=45?"……好吧。三點喔。":"三點！不要再放我鴿子！"]]},
-    {label:"轉上三樓給許老師",fx:{par:8},set:{teacherNoBreak:1},log:"把林媽媽轉給許老師",res:[[null,"許老師的下課十分鐘，全部在講電話。"]]},
+    {label:"轉上三樓給鄭老師",fx:{par:8},set:{teacherNoBreak:1},log:"把林媽媽轉給班導",res:[[null,"鄭老師的下課十分鐘，全部在講電話。"]]},
     {label:"「老師在忙，下課後回您。」",fx:{par:-8,missed:1},log:"跟林媽媽說老師在忙",res:[["mom","每次都在忙！"],[null,"電話被掛斷了。"]]}]},
   {id:"y_bo",chapter:{t:"21:00",title:"國中放學",sub:"家長在樓下等，國中生搶電梯。",status:"放學"},
    t:"21:02",target:{npc:"chenba"},goal:"陳爸爸來接小柏",npc:{chenba:AT("counter",.9,.8)},
@@ -102,7 +102,7 @@ LINES.yun={
      if(G.f.discount)l.push(["parent","早鳥價還算數吧？"]);return l;},
    choices:G=>{const n=enrolledT(G),c=[];
     if(n)c.push({label:"拿報名表和收據",fx:{par:5,cash:0},set:{enrolled:1},log:"試聽生報名",res:[[null,"王媽媽填好報名表。試聽生在旁邊偷偷鬆了一口氣。"]]});
-    else c.push({label:"約明天再試聽一次",fx:{trial:10,par:3},set:{retry:1},log:"約試聽生再來一次",res:[["parent","好啊，那就明天同一個時間。"],[null,"你在行事曆上寫：王，試聽第二次。"]]});
+    else c.push({label:"約明天傍晚來談報名細節",fx:{trial:10,par:3},set:{retry:1},log:"約王媽媽明天再談",res:[["parent","好啊，那我明天五點多過來。"],[null,"你在行事曆上寫：王，明天談報名。"]]});
     c.push({label:"說名額快滿了",note:"推一把",fx:G=>G.h.trial>=55?{trial:5,par:-3}:{trial:-10,par:-5},set:{pushed:1},onResolve:G=>{if(G.h.trial>=55)G.f.enrolled=1;},log:"跟家長說名額快滿",res:G=>G.h.trial>=55?[["parent","那……我們先報名吧。"]]:[["parent","（皺眉）我們不喜歡被催。"]]});
     return c;}},
   {id:"y_close",chapter:{t:"21:15",title:"日結",sub:"現金、收據、刷卡紀錄。對得起來才能下班。",status:"日結中"},
@@ -146,14 +146,15 @@ MINIS.change={
         feed.textContent=`找了 ${used.length} 張／個${exact?"，剛剛好。":"。其實可以用更少張。"}收據上寫：安安媽媽。`;done({right,bills:used.length,exact,diff:charge-total});});
       sync();}));}
 };
-/* 日結：收據和現金逐筆對，找出差在哪 */
+/* 日結：收據和現金逐筆對，找出差在哪。第二天：阿嬤那筆 600 元在下午更正，日結多一列。 */
 MINIS.ledger={
   head:"櫃台・日結",zone:"櫃台",title:"現金和收據對不起來？",cost:5,
-  intro:"今天開了四張收據。點出跟抽屜現金對不起來的那一筆；都對就按「都對」。",
+  intro:"點出跟抽屜現金對不起來的那一筆；都對就按「都對」。",
   mount(el,done){
     const diff=G&&G.h&&G.h.cash||0;
-    // 第二天：昨天的錯帳已經在當天更正，今天的收據都對得上
-    const rows=G&&G.day===2?[["小米（十月安親費）",7750,7750],["段考模擬卷印製・九年級",300,300],["美語分班測驗報名",500,500],["國中便當代墊回收",170,170]]:[["安安（李阿嬤）",7750,7750+diff],["補課講義費・九年級",300,300],["美語分班測驗報名",500,500],["國中便當代墊回收",170,170]];
+    // 第二天：昨天的錯帳在下午阿嬤來的時候更正（多收退回、少收補回），今天的收據都對得上
+    const fix=G&&G.day===2&&G.f.amaFix?(((G.prev||{}).payDiff||0)>0?[["安安（退還昨日多收）",-600,-600]]:[["安安（昨日少收補回）",600,600]]):[];
+    const rows=G&&G.day===2?[["小米（十月安親費）",7750,7750],["段考模擬卷印製・九年級",300,300],["美語分班測驗報名",500,500],["國中便當代墊回收",170,170],...fix]:[["安安（李阿嬤）",7750,7750+diff],["補課講義費・九年級",300,300],["美語分班測驗報名",500,500],["八年級講義費",240,240]];
     el.innerHTML=`<div class="paper">${rows.map((r,i)=>`<button class="stepl" data-i="${i}" style="display:flex;justify-content:space-between;width:100%"><span>${r[0]}</span><span style="font-family:var(--mono)">應收 ${r[1]}｜抽屜 ${r[2]}</span></button>`).join("")}</div><div class="actions"><button class="go" data-ok>都對</button></div><p class="feed" aria-live="polite"></p>`;
     const feed=el.querySelector(".feed");let doneOnce=false;const finish=(pick)=>{if(doneOnce)return;doneOnce=true;const bad=rows.findIndex(r=>r[1]!==r[2]),diff=bad<0?0:rows[bad][1]-rows[bad][2];
       const ok=pick===bad;feed.textContent=bad<0?(pick<0?"都對。今天可以準時下班。":"這一筆其實沒問題。"):ok?`找到了：${rows[bad][0]}，${diff>0?"少了":"多了"} ${Math.abs(diff)} 元。是下午算錯的那一筆。`:`不是這一筆。差的是：${rows[bad][0]}，${diff>0?"少了":"多了"} ${Math.abs(diff)} 元。`;

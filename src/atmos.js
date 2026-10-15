@@ -19,7 +19,7 @@ function buildNight(){
   [[-6,3,4,10,8],[-6,13,4,8,5],[42,2,5,9,10],[42,12,4,7,6],[3,-6,9,4,7],[18,-6,12,4,9],[32,-6,6,4,5],[-2,27,10,5,6],[16,27,8,5,9],[30,27,9,5,7]].forEach(([x,z,w,d,h])=>{
     const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),bmat);b.position.set(x,h/2-.1,z);scene.add(b);});
   // 對面補習班的招牌
-  const sign=wallSign("對面補習班　學測衝刺 8 折",16,3.4,24.5,0,7,.9,"#ffffff","#c9302a",58);sign.material.side=THREE.DoubleSide;
+  const sign=wallSign("對面補習班　會考衝刺 8 折",16,3.4,24.5,0,7,.9,"#ffffff","#c9302a",58);sign.material.side=THREE.DoubleSide;
   // 會動的機車燈
   for(let i=0;i<5;i++){const c=new THREE.Group();const body=new THREE.Mesh(new THREE.BoxGeometry(.9,.4,.35),new THREE.MeshLambertMaterial({color:[0x6b7a8f,0x9a4a3a,0xd0d0d0,0x3a5a3a,0x222222][i]}));body.position.y=.35;c.add(body);
     const hl=new THREE.Mesh(new THREE.BoxGeometry(.06,.12,.12),new THREE.MeshBasicMaterial({color:0xfff2c0}));hl.position.set(.48,.42,0);c.add(hl);
