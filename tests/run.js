@@ -3,14 +3,20 @@ const {spawnSync}=require('child_process'),path=require('path');
 const root=path.resolve(__dirname,'..');
 function run(command,args,env={}){
   console.log(`\n> ${command} ${args.join(' ')}`);
-  const result=spawnSync(command,args,{cwd:root,env:{...process.env,...env},stdio:'inherit'});
+  const result=spawnSync(command,args,{cwd:root,env:{...process.env,...env},stdio:['inherit','pipe','pipe'],maxBuffer:64*1024*1024});
   if(result.error)throw result.error;
-  if(result.status!==0)process.exit(result.status||1);
+  process.stdout.write(result.stdout||'');process.stderr.write(result.stderr||'');
+  if(result.status!==0){
+    // GitHub Actions 的失敗摘要（annotation）會顯示這段，不用打開完整紀錄也看得到哪裡壞了。
+    if(process.env.GITHUB_ACTIONS){const tail=(String(result.stdout||'')+String(result.stderr||'')).trim().split('\n').slice(-25).join('\n');
+      console.log(`::error title=${args.join(' ')} failed::${tail.replace(/%/g,'%25').replace(/\r/g,'').replace(/\n/g,'%0A')}`);}
+    process.exit(result.status||1);
+  }
 }
 run(process.env.PYTHON||(process.platform==='win32'?'python':'python3'),['build.py','stub.js','tests/test.html']);
 const P2=JSON.stringify;
 const suite=[
-  ['timeline.js'],['consistency.js'],['navigation.js'],['continuous-clock.js'],['resume.js'],['extras.js'],['report-fixes.js'],
+  ['timeline.js'],['consistency.js'],['navigation.js'],['continuous-clock.js'],['resume.js'],['extras.js'],['report-fixes.js'],['audit-fixes.js'],
   // 第一天：五條線
   ['play2.js','care','0'],['play2.js','jh','1'],['play2.js','teacher','0'],['play2.js','yun','1'],['play2.js','boss','2'],
   // 第二天：帶著第一天的旗標

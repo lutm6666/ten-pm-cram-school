@@ -12,7 +12,7 @@ const OT_EVENTS=[
   choices:G=>[
    {label:"陪她等",note:"多待一陣子",mini:"wait",min:20,fx:r=>byLine(G,{jh:{hp:-5,stu:6,par:4},yun:{hp:-6,par:8},boss:{calm:-4,rep:6}}),set:{waitedPinyu:1},log:"陪品妤等家長",
     res:r=>r&&r.mood>=3?[["pinyu","……謝謝。其實我有點不想回家，回家又要被問段考。"],[null,`她媽媽的車停在門口時，是 ${fmt(Math.floor(G.clock))}。她媽媽搖下車窗，跟你點了點頭。`]]:[[null,"她媽媽終於來了。品妤上車前回頭揮了一下手。"]]},
-   {label:"打給家長確認",min:6,fx:G=>byLine(G,{jh:{par:4,pat:-2},yun:{par:4,pat:-2},boss:{rep:3}}),log:"打電話確認接送",res:[[null,"電話那頭很吵：「我十五分鐘到！真的很不好意思！」"],[null,"你讓品妤在櫃台旁邊等，燈先不關。"]]},
+   {label:"打給家長確認",note:"打完還要等家長到",min:21,fx:G=>byLine(G,{jh:{par:4,pat:-2},yun:{par:4,pat:-2},boss:{rep:3}}),log:"打電話確認接送，等到家長來接",res:[[null,"電話那頭很吵：「我十五分鐘到！真的很不好意思！」"],[null,"你讓品妤在櫃台旁邊等，燈先不關。"],[null,"十五分鐘後，品妤媽媽的車停在門口。你看著品妤上車，才把鐵門拉到底。"]]},
    {label:"讓她自己去搭公車",fx:G=>byLine(G,{jh:{hp:3,par:-6},yun:{hp:4,par:-6},boss:{calm:4,rep:-5}}),set:{pinyuBus:1},log:"讓國三學生自己搭公車",res:[[null,"品妤點點頭，往公車站走。你看著她的背影在路口轉彎。"],[null,"一直到睡前，你都在想她有沒有到家。"]]}]})},
  {id:"group",lines:["care","jh","yun","boss"],auto:true,make:L=>({auto:true,goal:"群組又跳出訊息",
   pages:G=>[[null,"手機震個不停。是家長群組。"],[null,G.line.id==="care"?"小朋友都接走了。最上面一則是：「老師請問明天要帶什麼？」底下還有三則。":"最上面一則是：「老師請問明天小考範圍是？」底下還有三則。"]],

@@ -12,7 +12,9 @@ const CHATS={
  yun:{hi:{pre:"欸，你找我？我手上還有三件事，你先說。",class:"（小聲）國中上課了，電話終於少一點。怎麼了？",break:"下課了！電話又要開始響了。要聊什麼？",after:"今天辛苦了……你也還沒走喔？"},
   qs:[
    Q("你現在在忙什麼？",["忙","在做","做什麼"],{pre:"回電話、排試讀、收學費。下午的影印機已經卡第二次了。",class:"打補課電話，把今天的繳費輸入電腦。",break:"國中生來借雨傘、借充電線、問考卷。",after:"日結。抽屜的錢跟收據要一樣，才能下班。"}),
-   Q("放學那一小時是什麼狀況？",["放學","高峰","五點","最忙"],{_:"電話、廣播、家長交代事情、繳費、國中生刷卡，全部在半小時裡。我只有一雙手。",boss:"電話、廣播、繳費、刷卡全部擠在一起。主任你可以來站一次看看。","d2.boss":"昨天你說要下來……今天會來嗎？"}),
+   Q("放學那一小時是什麼狀況？",["放學","高峰","五點","最忙"],{_:"電話、廣播、家長交代事情、繳費、國中生刷卡，全部在半小時裡。我只有一雙手。",boss:"電話、廣播、繳費、刷卡全部擠在一起。主任你可以來站一次看看。","d2.boss":G=>{const p=pv(G),came=p.bossDesk||G.f.deskHelp,over=G.clock>=T("18:00");
+     if(over)return came?"剛剛那一小時，你真的在。兩支電話一起接，差很多。":p.yunStay?"剛剛那一小時，還是我一個人。加薪我很感謝，可是電話不會因為加薪就少響一通。":"剛剛那一小時？電話、廣播、繳費、刷卡全部擠在一起。主任你下次可以來站一次看看。";
+     return p.bossDesk?"昨天你說要下來……今天會來嗎？":p.yunStay?"電話、廣播、繳費、刷卡全部擠在一起。加薪我很感謝，可是那一小時還是只有我一雙手。":"電話、廣播、繳費、刷卡全部擠在一起。主任你可以來站一次看看。";}}),
    Q("接下來會發生什麼事？",["接下來","等一下","之後","下一"],{pre:"四點以後安親的家長會開始打來，五點半最亂。",class:"七點二十五下課，又是一波電話。",break:"第二節上完九點下課，家長會在大廳等。",after:"對完帳就可以回家了。如果對得起來的話。"}),
    Q("便利貼上寫什麼？",["便利貼","貼","寫什麼"],{_:"待辦。有一張是「記得吃晚餐」，我自己寫的，今天還沒撕掉。"}),
    Q("影印機為什麼一直卡？",["影印機","卡紙","卡"],{_:"它用了八年了。我幫它取了名字叫「阿卡」。卡紙要順著出紙方向拉，硬扯就會撕破。"}),
@@ -148,7 +150,7 @@ const CHAT_FX={
   xiangma:{care:{par:2},jh:{par:2},yun:{par:1},boss:{rep:1}},mima:{care:{par:1}},anma:{care:{par:2}}};
 const CHAT_IDK={yu:"蛤？我不知道啦！",anan:"……我不知道。",mi:"（搖頭）",ama:"這個阿嬤不懂啦。",zhangma:"這我不太清楚耶。",yun:"嗯……這個我不太清楚耶。你問問看別的？",boss:"這個嘛……我們改天再聊。",teacher:"這題我答不出來。真的。",hr:"這個……我還沒想過。",cai:"嗯？我剛剛在想別的事。",lin:"這個你要問主任喔。",wu:"……不知道。",amy:"Sorry，我不太確定。",pinyu:"……我不知道。",zhe:"不知道。",xiang:"蛤？",qing:"這個……我要想一下。",hong:"這個我也不確定欸。",bo:"……蛤？",parent:"這個我不太懂耶。",chenba:"這我不清楚。",xiangma:"……抱歉，我現在腦袋很亂。",mima:"啊？不好意思我在看訊息。",anma:"這個我不太清楚耶。"};
 /* 回答查找順序：第二天 → 職業.時段 → 職業 → 時段 → 不分時段。這樣同一題可以依「你是誰」換說法。 */
-function chatAnswer(c,pk){const a=c.a,r=G.line.id,d2=G.day===2;return (d2?a["d2."+r]??a["d2."+pk]??a["d2"]:undefined)??a[r+"."+pk]??a[r]??a[pk]??a._??Object.values(a)[0];}
+function chatAnswer(c,pk){const a=c.a,r=G.line.id,d2=G.day===2;const v=(d2?a["d2."+r]??a["d2."+pk]??a["d2"]:undefined)??a[r+"."+pk]??a[r]??a[pk]??a._??Object.values(a)[0];return typeof v==="function"?v(G):v;}
 function matchQ(qs,text){const t=text.replace(/\s/g,"");let best=-1,score=0;
   qs.forEach((q,i)=>{let s=0;q.keys.forEach(k=>{if(t.includes(k))s+=k.length;});if(t&&q.q.replace(/[？?]/g,"").includes(t))s+=t.length;if(s>score){score=s;best=i;}});return best;}
 function chatTargets(){

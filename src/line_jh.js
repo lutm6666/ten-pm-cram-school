@@ -69,10 +69,10 @@ LINES.jh={
    choices:G=>[
     {label:"照刷卡紀錄一個一個點",mini:"roll",fx:r=>({stu:r.miss?1:4,pat:-2}),set:{rollDone:1},log:r=>`確認到班，點錯 ${r.miss} 次`,res:r=>[[null,r.miss?"點錯了一次，被阿哲說：「老師我在這啦。」":"阿翔、子涵沒到。"],[null,G.f.calledZihan?"子涵下午就請過假了。阿翔沒有。":"子涵的媽媽下午傳過請假訊息。阿翔沒有。"]]},
     {label:"在群組發一則「還沒到的請回覆」",fx:{par:-2,hp:2},log:"在群組請家長回覆",res:[[null,"群組安靜了三分鐘。然後子涵媽媽回：「下午有傳訊息請假喔」。阿翔家沒有回。"]]}]},
-  {id:"j_callma",t:"17:55",auto:true,goal:"打給阿翔媽媽",
+  {id:"j_callma",t:"17:55",auto:true,goal:"打給阿翔媽媽",after:{xiangma:null,yu:null},
    pages:G=>[[null,"你撥了阿翔媽媽的電話。背景很吵，有小孩的聲音。"],["xiangma","老師？我還在你們樓下，剛跟主任講完話。阿翔說他會晚一點，可是我打給他都不接……"],[null,"電話那頭安靜了一下。你們都想到同一個地方：學校旁邊那間網咖。"]],
    choices:G=>[
-    {label:"「我下樓跟您當面說。」",fx:{hp:-3,par:10},set:{metXiangma:1},log:"下樓跟阿翔媽媽當面談",res:[[null,"你搭電梯下樓。阿翔媽媽一手牽著小宇，一手在撥阿翔的手機。"],["xiangma","老師對不起……他最近都這樣。我先去網咖找他。"]]},
+    {label:"「我下樓跟您當面說。」",go:{at:AT("counter",-1.4,2.3,Math.PI),npc:{xiangma:PC.xiangmaLobby,yu:AT("counter",-2.1,1,Math.PI)}},fx:{hp:-3,par:10},set:{metXiangma:1},log:"下樓跟阿翔媽媽當面談",res:[[null,"你搭電梯下樓。阿翔媽媽一手牽著小宇，一手在撥阿翔的手機。"],["xiangma","老師對不起……他最近都這樣。我先去網咖找他。"],[null,"她牽著小宇出門。第一節六點開始，你得再搭電梯回三樓。"]]},
     {label:"「我先打給阿翔看看。」",fx:{stu:3,pat:-2},set:{calledXiang:1},log:"直接打給阿翔",res:[[null,"第三通，阿翔接了：「……我在路上啦。」背景有鍵盤聲。"]]},
     {label:"「我記下來，到了再跟您說。」",fx:{hp:2,par:-4},log:"記下阿翔缺席",res:[["xiangma","……好。"],[null,"她掛電話的聲音很重。"]]}]},
   {id:"j_xiang",chapter:{t:"18:00",title:"第一節",sub:"18:00–19:25・數學・許老師",status:"上課中"},

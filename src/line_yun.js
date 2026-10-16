@@ -29,7 +29,7 @@ LINES.yun={
    choices:G=>[
     {label:"挑最急的三件先處理",mini:"summary",fx:r=>({ord:r.v>=7?10:r.v>=4?4:-4,pat:-2,cleared:r.v>=7?1:0}),log:r=>`挑三件事先做（${r.v>=7?"挑得很準":r.v>=4?"還可以":"挑錯了"}）`,
      res:r=>r.v>=7?[[null,"三張便利貼撕下來，揉成一團。剩下的三張，晚一點也沒關係。"]]:[[null,"你處理完三件，才發現最急的那件還貼在螢幕上。"]]},
-    {label:"從最上面一張開始，照順序來",fx:{pat:-5,ord:2},log:"便利貼照順序處理",res:[[null,"第一張是「冷氣遙控器：阿宏要」。這件事花了你十分鐘。"]]}]},
+    {label:"從最上面一張開始，照順序來",min:10,fx:{pat:-5,ord:2},log:"便利貼照順序處理",res:[[null,"第一張是「冷氣遙控器：阿宏要」。這件事花了你十分鐘。"]]}]},
   {id:"y_call",t:"14:05",target:{spot:"counterIn"},goal:"電話響了",action:"接電話",
    pages:G=>[[null,"「你好，我想問國小美語。我女兒三年級，你們有分班測驗嗎？」"],[null,"美語的 Amy 老師四點半才到。"]],
    choices:G=>[
@@ -40,7 +40,7 @@ LINES.yun={
    choices:G=>[
     {label:"請她在沙發坐，叫四年級的蔡老師下來說明",fx:{par:6,hp:-2},set:{callCai:1},log:"請安親老師下樓說明",res:[[null,"你打電話上二樓。蔡老師說：「我馬上下去。」"],["zhangma","有老師親自說明，真好。"]]},
     {label:"自己說明安親時間和學費",fx:{par:2,ord:3},log:"自己說明安親",res:[["zhangma","學費我了解了……那老師會幫忙看應用題嗎？"],[null,"這題你答不出來。"]]},
-    {label:"請主任出來談",fx:{pat:-3,par:3},log:"請主任接待",res:[[null,"主任在講總部的電話，讓張媽媽在沙發等了十分鐘。"]]}]},
+    {label:"請主任出來談",min:10,fx:{pat:-3,par:3},log:"請主任接待",res:[[null,"主任在講總部的電話，讓張媽媽在沙發等了十分鐘。"]]}]},
   {id:"y_watch",chapter:{t:"15:20",title:"安親老師去接人了",sub:"二樓空了，大廳只剩你。",status:"營業中"},
    t:"15:30",target:{npc:"deliv"},goal:"門口有人送東西來",npc:{deliv:AT("door",0,-.6)},after:{deliv:null,zhangma:null},
    pages:G=>[["deliv","你好，點心！三十個布丁，已經付款了。"],[null,"櫃台電話同時響了。是阿翔媽媽：「我今天五點半接小宇，可以嗎？」"]],
@@ -69,7 +69,7 @@ LINES.yun={
    choices:G=>[
     {label:"算錢、找零、開收據",mini:"change",fx:r=>({par:r.right&&r.exact?8:r.right?3:-8,ord:r.right?4:-4,cash:r.right?0:(r.diff||-600)}),log:r=>r.right?`幫李阿嬤繳費，找零 ${r.bills} 張／個`:"繳費金額算錯了",
      res:r=>{G.f.paid=r.right?1:0;G.f.payDiff=r.right?0:(r.diff||-600);return r.right?[["ama","小姐你算得好快。"],[null,"收據上寫著安安媽媽的名字。阿嬤把收據折好，放進信封。"]]:G.f.payDiff<0?[[null,"阿嬤開心地走了。你沒發現少收了 600 元，多找了她六張百元鈔。"]]:[[null,"阿嬤沒有數找回來的錢，直接收進信封。你沒發現多收了她 600 元。"]];}},
-    {label:"請阿嬤先坐，等一下再算",fx:{par:-4,pat:2},log:"請阿嬤等一下再繳費",res:[[null,"阿嬤坐在沙發上等了二十分鐘。她說沒關係，但她看了四次時鐘。"]]}]},
+    {label:"請阿嬤先坐，等一下再算",min:5,fx:{par:-4,pat:2},set:{paid:1,payDiff:0,payLate:1},log:"請阿嬤等一下，晚一點才收學費",res:[[null,"阿嬤坐到沙發上。你先接完兩通電話、刷完三張卡，才回來慢慢算錢、找零。"],[null,"收據上寫著安安媽媽的名字。阿嬤說沒關係，但她看了四次時鐘。"]]}]},
   {id:"y_trial",t:"17:52",target:{npc:"parent"},goal:"試聽家長到了",npc:{parent:AT("door",0,-.8),trial:AT("door",.7,-.6)},after:{trial:[...SEAT("c9","trial"),DOOR],parent:null},
    pages:G=>[["parent","你好，我們是來[[試聽]]的，我姓王。"],["parent","想先問一下學費……對面那間說，現在報名打八折耶。"],["trial","（小聲）媽……"]],
    choices:G=>[
@@ -91,8 +91,8 @@ LINES.yun={
   {id:"y_bocheck",t:"19:40",target:{spot:"counterIn"},goal:"刷卡機跳出提醒",action:"看刷卡紀錄",
    pages:G=>[[null,"刷卡紀錄：八年級小柏 19:27 刷卡離班。第二節開始了，還沒刷回來。"],[null,"規定是：國中生下課不能自己離開，除非家長同意。"]],
    choices:G=>{const c=[
-    {label:"打給小柏",fx:{par:4,pat:-2},set:{boFound:1},log:"打電話找小柏回來",res:[[null,"第三通，小柏接了：「我在 7-11 啦……」"],[null,"五分鐘後，他捧著一碗關東煮走進門，刷卡、上樓。你在接送表上記了一筆。"]]},
-    {label:"打給陳爸爸，也通知八年級班導",fx:{par:2,ord:4},set:{boDad:1},log:"通知陳爸爸和八年級班導",res:[[null,"陳爸爸沒有接。八年級班導說教室裡確實少一個人。"],[null,"十五分鐘後，小柏自己刷卡回來了。班導在門口等他。"]]}];
+    {label:"打給小柏",min:5,fx:{par:4,pat:-2},set:{boFound:1},log:"打電話找小柏回來",res:[[null,"第三通，小柏接了：「我在 7-11 啦……」"],[null,"五分鐘後，他捧著一碗關東煮走進門，刷卡、上樓。你在接送表上記了一筆。"]]},
+    {label:"打給陳爸爸，也通知八年級班導",min:15,fx:{par:2,ord:4},set:{boDad:1},log:"通知陳爸爸和八年級班導",res:[[null,"陳爸爸沒有接。八年級班導說教室裡確實少一個人。"],[null,"十五分鐘後，小柏自己刷卡回來了。班導在門口等他。"]]}];
     if(K.has("boSeven")||G.f.knowBo)c.unshift({label:"直接去 7-11 找他",note:K.has("boSeven")?ECHO:"阿宏說過他常去 7-11",fx:{hp:-3,par:6,ord:3},set:{boFound:1},log:"去 7-11 找回小柏",res:[[null,"你在 7-11 找到小柏，他正在挑關東煮。"],["bo","……姊姊你怎麼知道。"]]});
     return c;}},
   {id:"y_bo",chapter:{t:"21:00",title:"國中放學",sub:"家長在樓下等，國中生搶電梯。",status:"放學"},
