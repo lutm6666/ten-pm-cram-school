@@ -1,0 +1,90 @@
+{
+  "meshes": 4360,
+  "visibleMeshes": 4350,
+  "uniqueGeometries": 902,
+  "uniqueMaterials": 538,
+  "cachedRoundGeometries": 13,
+  "cachedChamferGeometries": 16,
+  "topGeometries": [
+    {
+      "count": 216,
+      "key": "chamfer:0.7600|0.0250|0.0250|0.0060",
+      "vertices": 84
+    },
+    {
+      "count": 186,
+      "key": "BoxGeometry",
+      "vertices": 24
+    },
+    {
+      "count": 186,
+      "key": "BoxGeometry",
+      "vertices": 24
+    },
+    {
+      "count": 186,
+      "key": "BoxGeometry",
+      "vertices": 24
+    },
+    {
+      "count": 186,
+      "key": "BoxGeometry",
+      "vertices": 24
+    },
+    {
+      "count": 186,
+      "key": "BoxGeometry",
+      "vertices": 24
+    },
+    {
+      "count": 184,
+      "key": "chamfer:0.0450|0.4200|0.0450|0.0108",
+      "vertices": 84
+    },
+    {
+      "count": 162,
+      "key": "chamfer:0.0450|0.1200|0.0450|0.0108",
+      "vertices": 84
+    },
+    {
+      "count": 156,
+      "key": "chamfer:0.0450|0.6600|0.0450|0.0108",
+      "vertices": 84
+    },
+    {
+      "count": 144,
+      "key": "chamfer:0.8000|0.0350|0.0350|0.0084",
+      "vertices": 84
+    },
+    {
+      "count": 144,
+      "key": "chamfer:0.0250|0.1600|0.3000|0.0060",
+      "vertices": 84
+    },
+    {
+      "count": 140,
+      "key": "chamfer:0.0450|0.3025|0.0450|0.0108",
+      "vertices": 84
+    },
+    {
+      "count": 132,
+      "key": "chamfer:0.0450|0.4700|0.0450|0.0108",
+      "vertices": 84
+    },
+    {
+      "count": 93,
+      "key": "BoxGeometry",
+      "vertices": 24
+    },
+    {
+      "count": 93,
+      "key": "BoxGeometry",
+      "vertices": 24
+    },
+    {
+      "count": 93,
+      "key": "BoxGeometry",
+      "vertices": 24
+    }
+  ]
+}
