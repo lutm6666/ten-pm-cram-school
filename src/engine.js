@@ -137,7 +137,8 @@ let lastClockMin=-1;
 function tickClock(dt){if(!G||mode!=="walk")return;G.clock+=dt*MIN_PER_SEC*SET.speed;const m=Math.floor(G.clock);if(m!==lastClockMin){lastClockMin=m;checkMsgs();checkBell();const c=$("clk");if(c){c.textContent=G.time;$("clksub").innerHTML=dueText();}saveGame();tickStaff(false);{const dl=G.clock<T("17:40");if(dl!==MUSIC_DAY)setDaylight(dl);}if(!lessonSkip())activateStep();}else activateStep();}
 function checkBell(){if(!G)return;const ph=phaseOf();if(ph===crowdPhase)return;const prev=crowdPhase;setCrowd(ph);G.status=statusOf();renderHud();
   const B=G.line.bells||{class:["上課鐘響了","學生陸續回到座位。"],break:["下課了","下課十分鐘，19:35 上第二節。"],leave:["下課了","今天的課上完了，學生陸續離開。"]};
-  if(ph==="class"){chime();showBanner(...B.class);}else if(ph==="break"){chime();showBanner(...B.break);}else if(ph==="leave"&&prev!=="close"){chime();showBanner(...B.leave);}}
+  const bell=k=>val(B[k],G);
+  if(ph==="class"){chime();showBanner(...bell("class"));}else if(ph==="break"){chime();showBanner(...bell("break"));}else if(ph==="leave"&&prev!=="close"){chime();showBanner(...bell("leave"));}}
 function spend(min){if(G){G.clock+=min;checkBell();}}
 function renderNext(){
   const el=$("next");if(mode!=="walk"){el.hidden=true;return;}el.hidden=false;
@@ -165,7 +166,10 @@ let D=null; // {pages,i,choices,onChoice,endLabel,onEnd,deltas}
 function speaker(who){
   if(!who)return{name:"現場狀況",title:"",abbr:"!",color:null};
   if(who==="me")return G.line.me(G);
-  const c=CHARS[who];return{name:c.name,title:c.title,abbr:c.abbr,color:c.color};
+  const c=CHARS[who];
+  // 共用角色資料把「電話中」寫在副標；人已經站在現場時，改用現場的稱呼。
+  if(/・電話中$/.test(c.title)&&npcs[who]&&npcs[who].visible)return{name:c.name,title:c.title.replace(/・電話中$/,""),abbr:c.name[0],color:c.color};
+  return{name:c.name,title:c.title,abbr:c.abbr,color:c.color};
 }
 function runDialog(o){D={i:0,...o};mode="dialog";path=null;guiding=false;renderAll();drawDialog();}
 function drawDialog(){
@@ -190,11 +194,20 @@ function applyFx(fx){const out=[];for(const k in fx){if(!fx[k])continue;
   if(k in G.s){const b=G.s[k];G.s[k]=clamp(b+fx[k]);const dv=G.s[k]-b;if(dv)out.push(`<span class="d ${dv>0?"up":"down"}">${G.line.stats[k][0]} ${dv>0?"+":""}${dv}</span>`);}
   else G.h[k]=k==="cash"?(G.h[k]??0)+fx[k]:clamp((G.h[k]??50)+fx[k]);}
   return out.join("");}
+/* 選項寫著「下樓當面說」之類的跨樓層移動時（choice.go）：把玩家和在場的人搬到那裡，並算進搭電梯的時間。
+   go:{at:[x,z,朝向],npc:{id:[x,z,朝向]|null}} */
+function goScene(g){
+  const to=g.at,from=floorOf(player.position.x),dest=floorOf(to[0]);
+  if(from!==dest){const q=floorTravelQuote("elev",from,dest,G.clock);if(q)spend((q.min+q.max)/2);}
+  if(g.npc)for(const id in g.npc)setNPC(id,val(g.npc[id],G),true);
+  player.position.set(to[0],0,to[1]);if(to[2]!=null)player.rotation.y=to[2];path=null;guiding=false;
+  if(dest!==curFloor)showFloor(dest);
+}
 function resolveChoice(c,onDone,arg){
   const a=arg!==undefined?arg:G;
   if(c.onResolve)c.onResolve(a);
   const fx=val(c.fx,a)||{},res=val(c.res,a),log=val(c.log,a);
-  if(c.min&&!c.mini)spend(c.min);if(c.set)Object.assign(G.f,c.set);if(log)G.log.push([G.time,log]);
+  if(c.min&&!c.mini)spend(c.min);if(c.go)goScene(val(c.go,a));if(c.set)Object.assign(G.f,c.set);if(log)G.log.push([G.time,log]);
   const deltas=applyFx(fx);renderHud();
   const pages=typeof res==="string"?[[null,res]]:res||[[null,"……"]];
   if(G.s.voice!==undefined&&G.s.voice>0&&G.s.voice<20&&!G.f.hoarse){G.f.hoarse=1;pages.push([null,"你的聲音開始沙啞了。"]);}

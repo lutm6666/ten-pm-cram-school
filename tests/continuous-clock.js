@@ -103,10 +103,13 @@ function check(label,detail){results.push({label,...detail});console.log('PASS',
         const q=__clockQA,nt=q.toMin(q.G.steps[1].t);q.G.clock=Math.max(q.toMin(q.G.steps[0].t),nt-14);q.renderAll();
         return {start:q.G.clock,next:nt,nextId:q.G.steps[1].id};
       });
-      await finishMain(({teacher:1,yun:1,boss:1,care:1,jh:0})[line]);
+      const pick=({teacher:1,yun:1,boss:1,care:1,jh:0})[line];
+      // A choice whose result narrates elapsed time pays it with min; nothing else may advance the clock.
+      const paid=await page.evaluate(i=>{const q=__clockQA,c=q.G.steps[0].choices,cs=typeof c==='function'?c(q.G):c;return (cs[i]&&!cs[i].mini&&cs[i].min)||0;},pick);
+      await finishMain(pick);
       const pending=await state();
-      assert.strictEqual(pending.id,fixture.nextId);assert.strictEqual(pending.clock,fixture.start+2,`${line} cannot fast-forward at nextStep`);
-      assert.strictEqual(fixture.next-pending.clock,fixture.next-fixture.start-2);assert.strictEqual(pending.ready,false);assert.strictEqual(pending.due,null);
+      assert.strictEqual(pending.id,fixture.nextId);assert.strictEqual(pending.clock,fixture.start+2+paid,`${line} cannot fast-forward at nextStep`);
+      assert.strictEqual(fixture.next-pending.clock,fixture.next-fixture.start-2-paid);assert.strictEqual(pending.ready,false);assert.strictEqual(pending.due,null);
       assert.strictEqual(await page.textContent('#clk'),pending.time,'HUD shows actual clock');
       assert((await page.textContent('#clksub')).includes(qTime(fixture.next)),'HUD announces scheduled start');
       await blockedBeforeTime();

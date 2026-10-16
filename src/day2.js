@@ -61,7 +61,7 @@ LINES2.care={...LINES.care,day:2,
      if(p.leftMi)l.push([null,"昨天她在櫃台旁邊等媽媽的時候，也是這樣握著兔子吊飾。今天她不太看你。"]);return l;},
    choices:G=>[
     {label:"先陪她找",fx:{pat:-3,par:5},set:{foundBunny:1},log:"陪小米找兔子",res:[[null,"布丁從書包上掉下來，卡在桌子和牆壁的縫裡，耳朵被壓扁了。"],["mi","牠剛剛也在睡覺。"],[null,"她把兔子吊飾掛回書包，回座位拿出了國習。"]]},
-    {label:"「先寫作業，寫完老師幫你找。」",fx:{ord:4,par:-3},log:"請小米先寫作業",res:[[null,"她坐回位子，國習翻開了，一個字也沒寫。"],[null,"二十分鐘後，你在桌子和牆壁的縫裡找到了兔子。"]]}]},
+    {label:"「先寫作業，寫完老師幫你找。」",min:20,fx:{ord:4,par:-3},log:"請小米先寫作業",res:[[null,"她坐回位子，國習翻開了，一個字也沒寫。"],[null,"二十分鐘後，你在桌子和牆壁的縫裡找到了兔子。"]]}]},
   {id:"c2_yu",t:"14:20",target:{npc:"yu"},goal:"小宇的數習又卡住了",
    pages:G=>{const p=pv(G),j=pa(G,"jh"),l=[[null,"數習 p.34，三位數乘二位數。第一題又是進位。"]];
      if(p.toldXiangma)l.push(["yu","我媽說叫我哥教我，可是我哥昨天很晚才回來。"],["yu",j.metXiangma?"我媽去網咖找他。回來的時候她都沒講話。":"他回來就關在房間。"]);
@@ -83,7 +83,7 @@ LINES2.care={...LINES.care,day:2,
    choices:G=>[
     {label:"兩個人分開坐，一個一個聽",note:"先聽完再判斷",fx:{pat:-5,ord:6,par:4},set:{heardBoth:1},log:"分開聽兩個人說",res:[[null,"安安說：筆是媽媽買的，筆蓋上有她自己畫的星星。"],[null,"阿凱說：他的那支今天早上掉在學校了。"],[null,"筆蓋上真的有一顆歪歪的星星。阿凱擦擦眼淚，說：「……那我的在哪裡？」"]]},
     {label:"筆先收起來，放學再說",fx:{ord:4,par:-4},log:"把鉛筆先沒收",res:[[null,"兩個人都不哭了，也都不說話了。"],[null,"安安一直盯著你的抽屜。"]]},
-    {label:"「借來借去很正常，大家好好相處。」",fx:{pat:2,ord:-4,par:-3},log:"請兩個人和好",res:[[null,"他們都說好。五分鐘後，閱讀角又吵起來了。"]]}]},
+    {label:"「借來借去很正常，大家好好相處。」",min:5,fx:{pat:2,ord:-4,par:-3},log:"請兩個人和好",res:[[null,"他們都說好。五分鐘後，閱讀角又吵起來了。"]]}]},
   {id:"c2_anma",chapter:{t:"17:00",title:"放學",sub:"櫃台開始廣播。今天安安的媽媽會自己來。",status:"放學中"},
    t:"17:20",target:{npc:"anma"},goal:"安安的媽媽到了",npc:{anma:PC.mimaLobby},after:{anma:null,anan:null},
    pages:G=>{const p=pv(G),l=[["anma","蔡老師！我是安安媽媽，終於見到您了。"]];
@@ -155,6 +155,8 @@ LINES2.jh={...LINES.jh,day:2,
  boards:{c9:"會考倒數 209 天\n段考：下週二、三"},
  eventSlots:[{after:"j2_pinyuma",t:"15:50",phase:"pre"},{after:"j2_class",t:"18:20",phase:"class"},{after:"j2_qing",t:"19:33",phase:"break"}],
  npcs:{...LINES.jh.npcs,xiangma:null,mom:null},
+ // 週三第一節是英文模擬考，班導發卷監考；第二節才是許老師的數學模擬。
+ bells:{...LINES.jh.bells,class:G=>G.clock<T("19:30")?["段考模擬開始","手機進籃子。英文模擬考，你發卷監考。"]:["上課了","手機進籃子。第二節，許老師的數學模擬。"]},
  steps:[
   {id:"j2_arrive",chapter:{t:"13:30",title:"第二天・週三",sub:"段考倒數五天。昨晚家長的回覆都傳來了。",status:"準備中",rush:["家長在群組和私訊的回覆要看完。","段考模擬卷要印。"]},
    t:"13:30",target:{spot:"hrdesk"},goal:"上三樓，看家長的回覆",action:"打開手機",
@@ -232,7 +234,7 @@ LINES2.jh={...LINES.jh,day:2,
      l.push(["xiangma",p.askedXiang?"昨天回家，阿翔跟我說了……他說他覺得我一直拿他跟小宇比。":"昨天我在網咖找到他。回家他一句話都沒說。"]);
      l.push(["xiangma","我一個人帶兩個，下午接小的，晚上接大的。我真的不知道要怎麼辦。"]);return l;},
    choices:G=>[
-    {label:"先聽她說完，再談阿翔在班上的樣子",note:"花點時間",fx:{par:10,hp:-5,pat:-3},set:{heardXiangma:1},log:"聽阿翔媽媽說完",res:[[null,"她講了二十分鐘。你只在最後說了一句：「他今天五點三十五就到了，比昨天早了四十分鐘。」"],["xiangma","……真的嗎？"],[null,"她低頭擦眼睛。二樓傳來小朋友的笑聲。"]]},
+    {label:"先聽她說完，再談阿翔在班上的樣子",note:"花點時間",min:20,fx:{par:10,hp:-5,pat:-3},set:{heardXiangma:1},log:"聽阿翔媽媽說完",res:[[null,"她講了二十分鐘。你只在最後說了一句：「他今天五點三十五就到了，比昨天早了四十分鐘。」"],["xiangma","……真的嗎？"],[null,"她低頭擦眼睛。二樓傳來小朋友的笑聲。"]]},
     {label:"給她看今天的到班紀錄和小考成績",fx:{par:5,stu:3},log:"給阿翔媽媽看到班紀錄",res:[["xiangma","數學八十二……他以前都不到六十。"],[null,"她把成績單拍下來，說要給爸爸看。"]]},
     {label:"「建議您們家裡先好好談一次。」",fx:{par:-3,hp:2},log:"請阿翔媽媽回家談",res:[["xiangma","……好。謝謝老師。"],[null,"她起身的時候，看起來比剛來的時候更累。"]]}]},
   {id:"j2_qing",chapter:{t:"19:25",title:"下課十分鐘",sub:"英文考完了，第二節是許老師的數學模擬。",status:"下課"},

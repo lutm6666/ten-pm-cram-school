@@ -79,3 +79,13 @@ On Windows, `tests/run.js` accepts `PYTHON` for the Python executable. Local
 Chromium validation used installed Chrome because the pinned Chromium 129
 binary fails the Windows side-by-side loader. GitHub Actions continues using
 the repository's pinned Playwright and its Linux Chromium.
+
+## Choice durations
+
+A choice result that narrates elapsed time (「等了二十分鐘」「十五分鐘後」)
+must spend that time with `min`, unless a minigame already charges it. Work
+that finishes later is narrated when it actually happens (for example the
+reprinted page arrives during the first lesson), never as already done.
+`choice.go` moves the player and the people present to another floor for an
+in-person conversation and charges the elevator time. `tests/audit-fixes.js`
+scans every choice for unpaid narrated durations.
